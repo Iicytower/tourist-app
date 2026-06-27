@@ -36,7 +36,9 @@ dependencies {
     implementation(libs.compose.material3)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.navigation.compose)
+    implementation(libs.koin.android)
     implementation(libs.koin.compose)
+    implementation(libs.compose.material.icons.extended)
     implementation(libs.coroutines.android)
 
     debugImplementation(libs.compose.ui.tooling)
