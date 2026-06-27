@@ -8,6 +8,7 @@ import com.iicytower.wanderlist.domain.model.Location
 data class SearchUiState(
     val searchLocation: Location? = null,
     val searchLocationLabel: String = "",
+    val locationQuery: String = "",
     val radiusKm: Int = AppConstants.DEFAULT_SEARCH_RADIUS_KM,
     val selectedCategories: Set<AttractionCategory> = emptySet(),
     val results: List<Attraction> = emptyList(),

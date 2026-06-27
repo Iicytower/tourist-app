@@ -12,8 +12,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.GpsFixed
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Sort
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -23,6 +26,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.Text
@@ -32,6 +36,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.iicytower.wanderlist.core.constant.AppConstants
 import com.iicytower.wanderlist.core.util.formatDistance
@@ -53,17 +58,40 @@ fun SearchScreen(
             Text("Wyszukaj atrakcje", style = MaterialTheme.typography.headlineSmall)
             Spacer(Modifier.height(8.dp))
 
-            // Lokalizacja
+            // Wyszukiwanie miejsca po nazwie + GPS
+            OutlinedTextField(
+                value = state.locationQuery,
+                onValueChange = { viewModel.updateLocationQuery(it) },
+                label = { Text("Szukaj miejsca (miasto, adres...)") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                trailingIcon = {
+                    IconButton(
+                        onClick = { viewModel.searchLocationByName(state.locationQuery) },
+                        enabled = state.locationQuery.isNotBlank() && !state.isLoading
+                    ) {
+                        Icon(Icons.Default.Search, contentDescription = "Szukaj miejsca")
+                    }
+                },
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                keyboardActions = KeyboardActions(
+                    onSearch = { viewModel.searchLocationByName(state.locationQuery) }
+                )
+            )
+            Spacer(Modifier.height(4.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = state.searchLocationLabel.ifBlank { "Wybierz punkt wyszukiwania" },
                     modifier = Modifier.weight(1f),
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = MaterialTheme.typography.bodySmall,
                     color = if (state.searchLocation == null) MaterialTheme.colorScheme.onSurfaceVariant
-                            else MaterialTheme.colorScheme.onSurface
+                            else MaterialTheme.colorScheme.primary
                 )
-                IconButton(onClick = { viewModel.setLocationFromGps() }) {
-                    Icon(Icons.Default.GpsFixed, contentDescription = "Moja lokalizacja")
+                IconButton(
+                    onClick = { viewModel.setLocationFromGps() },
+                    enabled = !state.isLoading
+                ) {
+                    Icon(Icons.Default.GpsFixed, contentDescription = "Moja lokalizacja (GPS)")
                 }
             }
 

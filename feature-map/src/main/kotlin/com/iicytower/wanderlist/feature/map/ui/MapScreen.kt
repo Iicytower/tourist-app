@@ -41,8 +41,10 @@ fun MapScreen(
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
 
+    // Must be called before MapView is created (remember runs synchronously during composition)
+    remember(context) { MapLibre.getInstance(context) }
+
     LaunchedEffect(Unit) {
-        MapLibre.getInstance(context)
         viewModel.onMapReady()
     }
 
