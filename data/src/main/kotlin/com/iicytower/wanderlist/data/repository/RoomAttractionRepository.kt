@@ -1,12 +1,10 @@
 package com.iicytower.wanderlist.data.repository
 
 import com.iicytower.wanderlist.core.constant.AppConstants
-import com.iicytower.wanderlist.core.constant.toKindsParam
 import com.iicytower.wanderlist.data.local.dao.AttractionDao
 import com.iicytower.wanderlist.data.local.mapper.toDomain
 import com.iicytower.wanderlist.data.local.mapper.toEntity
-import com.iicytower.wanderlist.data.remote.opentripmap.OpenTripMapClient
-import com.iicytower.wanderlist.data.remote.opentripmap.mapper.toDomain
+import com.iicytower.wanderlist.data.remote.RemoteAttractionSource
 import com.iicytower.wanderlist.domain.model.Attraction
 import com.iicytower.wanderlist.domain.model.DescriptionSource
 import com.iicytower.wanderlist.domain.model.SearchParams
@@ -22,7 +20,7 @@ private data class DescriptionSourceDto(val name: String, val url: String)
 
 class RoomAttractionRepository(
     private val dao: AttractionDao,
-    private val otmClient: OpenTripMapClient
+    private val remoteSource: RemoteAttractionSource
 ) : AttractionRepository {
 
     private val json = Json { ignoreUnknownKeys = true }
@@ -34,10 +32,7 @@ class RoomAttractionRepository(
         dao.getByXid(xid)?.toDomain()
 
     override suspend fun searchAttractions(params: SearchParams): Result<List<Attraction>> = runCatching {
-        val kinds = params.categories.toKindsParam()
-        val radiusMeters = params.radiusKm * 1000
-        val dtos = otmClient.searchAttractions(params.latitude, params.longitude, radiusMeters, kinds).getOrThrow()
-        val attractions = dtos.map { it.toDomain() }
+        val attractions = remoteSource.searchAttractions(params).getOrThrow()
         dao.replaceSearchResults(attractions.map { it.toEntity() })
         attractions
     }
