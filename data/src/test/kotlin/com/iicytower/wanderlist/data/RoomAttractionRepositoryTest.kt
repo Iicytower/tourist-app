@@ -5,6 +5,7 @@ import androidx.test.core.app.ApplicationProvider
 import com.iicytower.wanderlist.core.model.AttractionCategory
 import com.iicytower.wanderlist.data.local.AppDatabase
 import com.iicytower.wanderlist.data.local.entity.AttractionEntity
+import com.iicytower.wanderlist.data.remote.opentripmap.FakeOpenTripMapClient
 import com.iicytower.wanderlist.data.repository.RoomAttractionRepository
 import com.iicytower.wanderlist.domain.model.DescriptionSource
 import kotlinx.coroutines.flow.first
@@ -27,25 +28,23 @@ class RoomAttractionRepositoryTest {
         db = Room.inMemoryDatabaseBuilder(
             ApplicationProvider.getApplicationContext(), AppDatabase::class.java
         ).allowMainThreadQueries().build()
-        repository = RoomAttractionRepository(db.attractionDao())
+        repository = RoomAttractionRepository(db.attractionDao(), FakeOpenTripMapClient())
     }
 
     @After
     fun tearDown() { db.close() }
 
     private fun insertEntity(xid: String, inMyList: Boolean = false) {
-        db.attractionDao().let {
-            kotlinx.coroutines.runBlocking {
-                it.upsert(
-                    AttractionEntity(
-                        xid = xid, name = "Name $xid", latitude = 50.0, longitude = 20.0,
-                        category = AttractionCategory.CASTLES_AND_FORTIFICATIONS.name,
-                        isInMyList = inMyList,
-                        dateAddedToList = if (inMyList) System.currentTimeMillis() else null,
-                        description = null, descriptionSources = null, isFromLastSearch = false
-                    )
+        kotlinx.coroutines.runBlocking {
+            db.attractionDao().upsert(
+                AttractionEntity(
+                    xid = xid, name = "Name $xid", latitude = 50.0, longitude = 20.0,
+                    category = AttractionCategory.CASTLES_AND_FORTIFICATIONS.name,
+                    isInMyList = inMyList,
+                    dateAddedToList = if (inMyList) System.currentTimeMillis() else null,
+                    description = null, descriptionSources = null, isFromLastSearch = false
                 )
-            }
+            )
         }
     }
 

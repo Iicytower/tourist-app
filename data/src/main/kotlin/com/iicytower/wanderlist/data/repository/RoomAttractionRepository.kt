@@ -1,24 +1,28 @@
 package com.iicytower.wanderlist.data.repository
 
 import com.iicytower.wanderlist.core.constant.AppConstants
+import com.iicytower.wanderlist.core.constant.toKindsParam
 import com.iicytower.wanderlist.data.local.dao.AttractionDao
 import com.iicytower.wanderlist.data.local.mapper.toDomain
 import com.iicytower.wanderlist.data.local.mapper.toEntity
+import com.iicytower.wanderlist.data.remote.opentripmap.OpenTripMapClient
+import com.iicytower.wanderlist.data.remote.opentripmap.mapper.toDomain
 import com.iicytower.wanderlist.domain.model.Attraction
 import com.iicytower.wanderlist.domain.model.DescriptionSource
 import com.iicytower.wanderlist.domain.model.SearchParams
 import com.iicytower.wanderlist.domain.repository.AttractionRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.Serializable
 
 @Serializable
 private data class DescriptionSourceDto(val name: String, val url: String)
 
 class RoomAttractionRepository(
-    private val dao: AttractionDao
+    private val dao: AttractionDao,
+    private val otmClient: OpenTripMapClient
 ) : AttractionRepository {
 
     private val json = Json { ignoreUnknownKeys = true }
@@ -29,8 +33,14 @@ class RoomAttractionRepository(
     override suspend fun getByXid(xid: String): Attraction? =
         dao.getByXid(xid)?.toDomain()
 
-    override suspend fun searchAttractions(params: SearchParams): Result<List<Attraction>> =
-        Result.failure(UnsupportedOperationException("searchAttractions requires OpenTripMapClient"))
+    override suspend fun searchAttractions(params: SearchParams): Result<List<Attraction>> = runCatching {
+        val kinds = params.categories.toKindsParam()
+        val radiusMeters = params.radiusKm * 1000
+        val dtos = otmClient.searchAttractions(params.latitude, params.longitude, radiusMeters, kinds).getOrThrow()
+        val attractions = dtos.map { it.toDomain() }
+        dao.replaceSearchResults(attractions.map { it.toEntity() })
+        attractions
+    }
 
     override suspend fun addToMyList(xid: String): Result<Unit> = runCatching {
         val count = dao.getMyListCount()
@@ -55,8 +65,4 @@ class RoomAttractionRepository(
 
     override suspend fun getLastSearchResults(): List<Attraction> =
         dao.getLastSearchResults().map { it.toDomain() }
-
-    suspend fun saveSearchResults(attractions: List<Attraction>) {
-        dao.replaceSearchResults(attractions.map { it.toEntity() })
-    }
 }
