@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.iicytower.wanderlist.core.model.AttractionCategory
 import com.iicytower.wanderlist.domain.model.Location
 import com.iicytower.wanderlist.domain.model.SearchParams
+import com.iicytower.wanderlist.domain.repository.GeocoderService
 import com.iicytower.wanderlist.domain.repository.LocationService
 import com.iicytower.wanderlist.domain.usecase.SearchAttractionsUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,7 +16,8 @@ import kotlinx.coroutines.launch
 
 class SearchViewModel(
     private val searchAttractionsUseCase: SearchAttractionsUseCase,
-    private val locationService: LocationService
+    private val locationService: LocationService,
+    private val geocoderService: GeocoderService
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SearchUiState())
@@ -36,6 +38,31 @@ class SearchViewModel(
                 },
                 onFailure = { e ->
                     _uiState.update { it.copy(isLoading = false, error = e.message ?: "Błąd GPS") }
+                }
+            )
+        }
+    }
+
+    fun updateLocationQuery(query: String) {
+        _uiState.update { it.copy(locationQuery = query) }
+    }
+
+    fun searchLocationByName(query: String) {
+        if (query.isBlank()) return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+            geocoderService.geocode(query).fold(
+                onSuccess = { (location, displayName) ->
+                    _uiState.update {
+                        it.copy(
+                            searchLocation = location,
+                            searchLocationLabel = displayName,
+                            isLoading = false
+                        )
+                    }
+                },
+                onFailure = { e ->
+                    _uiState.update { it.copy(isLoading = false, error = e.message ?: "Nie znaleziono miejsca") }
                 }
             )
         }

@@ -11,6 +11,7 @@ import com.iicytower.wanderlist.domain.repository.LocationService
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 
 class AndroidLocationService(
     private val context: Context
@@ -22,17 +23,16 @@ class AndroidLocationService(
         ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) ==
                 PackageManager.PERMISSION_GRANTED
 
-    override suspend fun getCurrentLocation(): Result<Location> {
+    override suspend fun getCurrentLocation(): Result<Location> = runCatching {
         if (!hasLocationPermission()) {
-            return Result.failure(SecurityException("Brak uprawnień do lokalizacji"))
+            throw SecurityException("Brak uprawnien do lokalizacji. Zezwol aplikacji na dostep do GPS.")
         }
-
         val lastKnown = tryGetLastKnown()
-        if (lastKnown != null) return Result.success(lastKnown)
+        if (lastKnown != null) return@runCatching lastKnown
 
-        val fresh = withTimeoutOrNull(15_000L) { requestFreshLocation() }
-        return fresh?.let { Result.success(it) }
-            ?: Result.failure(Exception("Nie udało się pobrać lokalizacji (timeout)"))
+        withTimeoutOrNull(15_000L) {
+            runCatching { requestFreshLocation() }.getOrNull()
+        } ?: throw Exception("Nie udalo sie pobrac lokalizacji. Sprawdz czy GPS jest wlaczony.")
     }
 
     @Suppress("MissingPermission")
@@ -61,7 +61,7 @@ class AndroidLocationService(
                 .filter { locationManager.isProviderEnabled(it) }
 
             if (providers.isEmpty()) {
-                continuation.cancel(Exception("Żaden provider GPS nie jest aktywny"))
+                continuation.resumeWithException(Exception("GPS i siec sa niedostepne na tym urzadzeniu"))
                 return@suspendCancellableCoroutine
             }
 

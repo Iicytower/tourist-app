@@ -23,6 +23,9 @@ class TavilyWebSearchService(
     override suspend fun search(query: String): Result<String> {
         val settings = settingsRepository.getSettings().first()
         val apiKey = settings.tavilyApiKey
+        if (apiKey.isBlank()) {
+            return Result.failure(Exception("Brak klucza API Tavily. Przejdz do Ustawien i dodaj klucz."))
+        }
         return runCatching {
             val response = httpClient.post(baseUrl) {
                 contentType(ContentType.Application.Json)

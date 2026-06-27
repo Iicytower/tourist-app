@@ -40,6 +40,10 @@ class OpenRouterLlmService(
     ): Flow<LlmEvent> = flow {
         val settings = settingsRepository.getSettings().first()
         val apiKey = settings.openRouterApiKey
+        if (apiKey.isBlank()) {
+            emit(LlmEvent.Error("Brak klucza API OpenRouter. Przejdz do Ustawien i dodaj klucz."))
+            return@flow
+        }
         val model = settings.aiModel
 
         val requestBody = OpenRouterRequest(
@@ -58,7 +62,14 @@ class OpenRouterLlmService(
             }
 
             if (!response.status.isSuccess()) {
-                emit(LlmEvent.Error("HTTP ${response.status.value}"))
+                val errorMsg = when (response.status.value) {
+                    401 -> "Nieprawidlowy klucz API OpenRouter (401). Sprawdz klucz w Ustawieniach."
+                    402 -> "Brak srodkow na koncie OpenRouter (402). Doladuj konto."
+                    429 -> "Przekroczono limit zapytan OpenRouter (429). Sprobuj pozniej."
+                    500, 502, 503 -> "Serwer OpenRouter jest chwilowo niedostepny (${response.status.value}). Sprobuj pozniej."
+                    else -> "Blad serwera OpenRouter: ${response.status.value}"
+                }
+                emit(LlmEvent.Error(errorMsg))
                 return@runCatching
             }
 

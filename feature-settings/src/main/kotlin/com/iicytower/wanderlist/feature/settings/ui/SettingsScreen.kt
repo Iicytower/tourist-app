@@ -315,7 +315,7 @@ private fun ApiKeySection(
                     )
                 }
             },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
         )
         Row(
             verticalAlignment = Alignment.CenterVertically,
