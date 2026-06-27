@@ -6,7 +6,7 @@ Osobista aplikacja turystyczna Android. Wyszukiwanie atrakcji, generowanie opis�
 
 - Spec funkcjonalna: `docs/functionalities_specs.md`
 - Spec techniczna: `docs/technical_specs.md`
-- Taski implementacji: `docs/tasks/todo/` (TASK-01 … TASK-17, wykonuj w kolejności)
+- Taski implementacji: `docs/tasks/todo/` (następny do zrobienia), `docs/tasks/done/` (ukończone)
 
 ## Stack techniczny (skrót)
 
@@ -92,6 +92,12 @@ emulator -list-avds
 # Uruchomienie emulatora
 emulator -avd <NAME> -no-audio -no-boot-anim
 ```
+
+## Zarządzanie taskami
+
+- Taski do zrobienia: `docs/tasks/todo/` (TASK-01 … TASK-17, wykonuj w kolejności)
+- Po ukończeniu taska: przenieś plik z `todo/` do `done/`
+- Każdy task realizuj na osobnym feature branchu zgodnie z Git Flow
 
 ## Autonomia w tym projekcie
 
