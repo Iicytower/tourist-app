@@ -121,6 +121,40 @@ Projekt używa Git Flow. Gałęzie:
 - Nie commituj bezpośrednio do `master` ani `develop`
 - Format commita: `type(scope): opis` (np. `feat(search): add OpenTripMap client`, `fix(domain): correct radius calculation`)
 
+## Skills
+
+### Build
+Buduje aplikację (debug):
+`./gradlew assembleDebug`
+
+### Test
+Uruchamia wszystkie testy jednostkowe:
+`./gradlew test`
+
+Uruchamia testy dla konkretnego modułu (np. domain):
+`./gradlew :domain:test`
+
+### Lint
+`./gradlew lint`
+
+### Emulator
+Lista dostępnych AVD:
+`emulator -list-avds`
+
+Uruchomienie emulatora (zastąp NAME nazwą AVD):
+`emulator -avd NAME -no-audio -no-boot-anim`
+
+### Install
+Instalacja debug apk na podłączonym urządzeniu/emulatorze:
+`./gradlew installDebug`
+
+### Connected tests (instrumentacja)
+`./gradlew connectedAndroidTest`
+
+### Room schema export
+Eksport schematu Room do pliku JSON:
+`./gradlew :data:kspDebugKotlin`
+
 ## Linki do API
 
 - OpenTripMap docs: https://dev.opentripmap.org/docs
