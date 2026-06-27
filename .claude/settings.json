@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "defaultMode": "bypassPermissions",
+    "allow": [
+      "Bash(flutter --version)",
+      "Bash(java -version)",
+      "WebSearch",
+      "git *"
+    ]
+  }
+}                  
