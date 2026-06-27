@@ -21,11 +21,21 @@ android {
     kotlinOptions {
         jvmTarget = "21"
     }
+
+    ksp {
+        arg("room.schemaLocation", "$projectDir/schemas")
+    }
+
+    testOptions {
+        unitTests.isIncludeAndroidResources = true
+    }
 }
 
 dependencies {
     implementation(project(":core"))
     implementation(project(":domain"))
+
+    implementation(libs.koin.android)
 
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
@@ -49,4 +59,6 @@ dependencies {
     testImplementation(libs.mockk)
     testImplementation(libs.coroutines.test)
     testImplementation(libs.room.testing)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.test.core)
 }
