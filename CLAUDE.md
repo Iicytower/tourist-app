@@ -93,6 +93,34 @@ emulator -list-avds
 emulator -avd <NAME> -no-audio -no-boot-anim
 ```
 
+## Autonomia w tym projekcie
+
+Bez pytania o zgodę:
+- instalacja pakietów
+- `git commit`, `git push`
+- usuwanie lokalnych plików w tym folderze
+
+Gdy niepewny — podejmij własną decyzję i zostaw notatkę `<!-- TODO: konsultacja -->` lub wpis w odpowiedzi do późniejszego przeglądu.
+
+## Git Flow
+
+Projekt używa Git Flow. Gałęzie:
+
+| Gałąź | Przeznaczenie |
+|---|---|
+| `master` | Stabilne wydania — tylko merge z `release/*` lub `hotfix/*` |
+| `develop` | Integracja — wszystkie feature branche trafiają tutaj |
+| `feature/<nazwa>` | Nowa funkcjonalność — bazuje na `develop`, merge do `develop` |
+| `release/<wersja>` | Stabilizacja wydania — bazuje na `develop`, merge do `master` + `develop` |
+| `hotfix/<nazwa>` | Pilna naprawa produkcji — bazuje na `master`, merge do `master` + `develop` |
+
+**Zasady:**
+- Każdy task (`TASK-XX`) realizuj na osobnym branchu `feature/task-XX-<skrót-nazwy>`
+- Branch twórz z `develop` i po zakończeniu merguj do `develop`
+- Commity na feature branchu — bez ograniczeń; do `develop` merge przez `--no-ff` (zachowaj historię)
+- Nie commituj bezpośrednio do `master` ani `develop`
+- Format commita: `type(scope): opis` (np. `feat(search): add OpenTripMap client`, `fix(domain): correct radius calculation`)
+
 ## Linki do API
 
 - OpenTripMap docs: https://dev.opentripmap.org/docs
