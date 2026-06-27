@@ -1,5 +1,6 @@
 package com.iicytower.wanderlist.feature.settings.ui
 
+import android.view.View
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,8 +14,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
@@ -24,7 +23,6 @@ import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -33,6 +31,7 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -40,11 +39,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.OffsetMapping
-import androidx.compose.ui.text.input.TransformedText
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.iicytower.wanderlist.core.constant.AppConstants
 import com.iicytower.wanderlist.core.model.AttractionCategory
@@ -59,6 +55,11 @@ fun SettingsScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val settings = uiState.settings
+
+    val view = LocalView.current
+    SideEffect {
+        view.importantForAutofill = View.IMPORTANT_FOR_AUTOFILL_NO_EXCLUDE_DESCENDANTS
+    }
 
     Scaffold(
         topBar = { TopAppBar(title = { Text("Ustawienia") }) }
@@ -79,10 +80,8 @@ fun SettingsScreen(
                 ApiKeySection(
                     label = "OpenRouter API Key",
                     value = settings?.openRouterApiKey ?: "",
-                    visible = uiState.openRouterKeyVisible,
                     testState = uiState.openRouterTestState,
                     onValueChange = { viewModel.updateOpenRouterKey(it) },
-                    onToggleVisibility = { viewModel.toggleOpenRouterKeyVisibility() },
                     onTest = { viewModel.testOpenRouterConnection() }
                 )
             }
@@ -91,10 +90,8 @@ fun SettingsScreen(
                 ApiKeySection(
                     label = "Tavily API Key",
                     value = settings?.tavilyApiKey ?: "",
-                    visible = uiState.tavilyKeyVisible,
                     testState = uiState.tavilyTestState,
                     onValueChange = { viewModel.updateTavilyKey(it) },
-                    onToggleVisibility = { viewModel.toggleTavilyKeyVisibility() },
                     onTest = { viewModel.testTavilyConnection() }
                 )
                 if (settings != null) {
@@ -295,10 +292,8 @@ private fun SectionHeader(title: String) {
 private fun ApiKeySection(
     label: String,
     value: String,
-    visible: Boolean,
     testState: ConnectionTestState,
     onValueChange: (String) -> Unit,
-    onToggleVisibility: () -> Unit,
     onTest: () -> Unit
 ) {
     Column {
@@ -308,16 +303,7 @@ private fun ApiKeySection(
             label = { Text(label) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
-            visualTransformation = if (visible) VisualTransformation.None else MaskTransformation,
-            trailingIcon = {
-                IconButton(onClick = onToggleVisibility) {
-                    Icon(
-                        if (visible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                        contentDescription = if (visible) "Ukryj klucz" else "Pokaz klucz"
-                    )
-                }
-            },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Ascii)
         )
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -352,7 +338,3 @@ private fun ApiKeySection(
     }
 }
 
-private object MaskTransformation : VisualTransformation {
-    override fun filter(text: AnnotatedString): TransformedText =
-        TransformedText(AnnotatedString("•".repeat(text.text.length)), OffsetMapping.Identity)
-}
