@@ -5,9 +5,11 @@ import androidx.test.core.app.ApplicationProvider
 import com.iicytower.wanderlist.core.model.AttractionCategory
 import com.iicytower.wanderlist.data.local.AppDatabase
 import com.iicytower.wanderlist.data.local.entity.AttractionEntity
-import com.iicytower.wanderlist.data.remote.opentripmap.FakeOpenTripMapClient
+import com.iicytower.wanderlist.data.remote.RemoteAttractionSource
 import com.iicytower.wanderlist.data.repository.RoomAttractionRepository
+import com.iicytower.wanderlist.domain.model.Attraction
 import com.iicytower.wanderlist.domain.model.DescriptionSource
+import com.iicytower.wanderlist.domain.model.SearchParams
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -20,6 +22,11 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 class RoomAttractionRepositoryTest {
 
+    private val fakeRemoteSource = object : RemoteAttractionSource {
+        override suspend fun searchAttractions(params: SearchParams): Result<List<Attraction>> =
+            Result.success(emptyList())
+    }
+
     private lateinit var db: AppDatabase
     private lateinit var repository: RoomAttractionRepository
 
@@ -28,7 +35,7 @@ class RoomAttractionRepositoryTest {
         db = Room.inMemoryDatabaseBuilder(
             ApplicationProvider.getApplicationContext(), AppDatabase::class.java
         ).allowMainThreadQueries().build()
-        repository = RoomAttractionRepository(db.attractionDao(), FakeOpenTripMapClient())
+        repository = RoomAttractionRepository(db.attractionDao(), fakeRemoteSource)
     }
 
     @After

@@ -7,7 +7,7 @@ import com.iicytower.wanderlist.data.local.settingsModule
 import com.iicytower.wanderlist.data.local.location.locationModule
 import com.iicytower.wanderlist.data.remote.openrouter.llmModule
 import com.iicytower.wanderlist.data.remote.opentripmap.httpClientModule
-import com.iicytower.wanderlist.data.remote.opentripmap.openTripMapModule
+import com.iicytower.wanderlist.data.remote.overpass.overpassModule
 import com.iicytower.wanderlist.data.remote.tavily.webSearchModule
 import com.iicytower.wanderlist.data.remote.wikipedia.wikipediaModule
 import com.iicytower.wanderlist.di.useCaseModule
@@ -32,7 +32,7 @@ class WanderListApp : Application() {
                 attractionRepositoryModule,
                 settingsModule,
                 httpClientModule,
-                openTripMapModule,
+                overpassModule,
                 webSearchModule,
                 wikipediaModule,
                 llmModule,
