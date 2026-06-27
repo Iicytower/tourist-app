@@ -11,6 +11,12 @@ import com.iicytower.wanderlist.data.remote.opentripmap.openTripMapModule
 import com.iicytower.wanderlist.data.remote.tavily.webSearchModule
 import com.iicytower.wanderlist.data.remote.wikipedia.wikipediaModule
 import com.iicytower.wanderlist.di.useCaseModule
+import com.iicytower.wanderlist.feature.assistant.di.assistantModule
+import com.iicytower.wanderlist.feature.detail.di.detailModule
+import com.iicytower.wanderlist.feature.map.di.mapModule
+import com.iicytower.wanderlist.feature.mylist.di.myListModule
+import com.iicytower.wanderlist.feature.search.di.searchModule
+import com.iicytower.wanderlist.feature.settings.di.settingsViewModelModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
 import timber.log.Timber
@@ -31,7 +37,13 @@ class WanderListApp : Application() {
                 wikipediaModule,
                 llmModule,
                 locationModule,
-                useCaseModule
+                useCaseModule,
+                searchModule,
+                mapModule,
+                myListModule,
+                assistantModule,
+                settingsViewModelModule,
+                detailModule
             )
         }
     }
