@@ -35,6 +35,7 @@ dependencies {
     implementation(libs.compose.ui.tooling.preview)
     implementation(libs.compose.material3)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.koin.android)
     implementation(libs.koin.compose)
     implementation(libs.coroutines.android)
 
