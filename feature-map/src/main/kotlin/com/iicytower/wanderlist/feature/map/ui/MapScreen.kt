@@ -65,7 +65,7 @@ fun MapScreen(
         AndroidView(
             factory = { mapView.apply {
                 getMapAsync { map ->
-                    map.setStyle(Style.Builder().fromUri("https://demotiles.maplibre.org/style.json")) {
+                    map.setStyle(Style.Builder().fromUri("https://tiles.openfreemap.org/styles/liberty")) {
                         map.cameraPosition = CameraPosition.Builder()
                             .target(LatLng(50.06, 19.94))
                             .zoom(11.0)
