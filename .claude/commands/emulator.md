@@ -2,10 +2,10 @@ Uruchamia emulator Android. Najpierw wylistuj dostępne AVD, potem uruchom wybra
 
 Lista dostępnych AVD:
 ```bash
-emulator -list-avds
+ANDROID_AVD_HOME=~/.config/.android/avd emulator -list-avds
 ```
 
 Uruchomienie (zastąp NAME nazwą AVD):
 ```bash
-emulator -avd NAME -no-audio -no-boot-anim
+ANDROID_AVD_HOME=~/.config/.android/avd emulator -avd NAME -no-audio -no-boot-anim
 ```
