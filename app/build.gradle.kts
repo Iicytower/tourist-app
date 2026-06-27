@@ -46,6 +46,7 @@ dependencies {
     implementation(project(":feature-mylist"))
     implementation(project(":feature-assistant"))
     implementation(project(":feature-settings"))
+    implementation(project(":feature-detail"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -55,6 +56,7 @@ dependencies {
     implementation(libs.compose.ui.graphics)
     implementation(libs.compose.ui.tooling.preview)
     implementation(libs.compose.material3)
+    implementation(libs.compose.material.icons.extended)
     implementation(libs.compose.activity)
 
     implementation(libs.navigation.compose)
