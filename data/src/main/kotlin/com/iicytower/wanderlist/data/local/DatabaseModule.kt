@@ -16,6 +16,5 @@ val databaseModule = module {
 }
 
 val attractionRepositoryModule = module {
-    single<AttractionRepository> { RoomAttractionRepository(get()) }
-    single { get<AttractionRepository>() as RoomAttractionRepository }
+    single<AttractionRepository> { RoomAttractionRepository(get(), get()) }
 }
