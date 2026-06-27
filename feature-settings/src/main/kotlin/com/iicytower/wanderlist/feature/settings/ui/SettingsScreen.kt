@@ -296,10 +296,17 @@ private fun ApiKeySection(
     onValueChange: (String) -> Unit,
     onTest: () -> Unit
 ) {
+    // Lokalny stan — klucz API trafia do EncryptedSharedPreferences, nie do DataStore,
+    // więc getSettings() flow nie re-emituje po zapisie. Bezpośrednie bindowanie value=
+    // do settings cofałoby każdy keystroke. Wzorzec taki jak pole AI Model: edytuj lokalnie,
+    // zapisz przyciskiem.
+    var localValue by remember(value) { mutableStateOf(value) }
+    val isDirty = localValue != value
+
     Column {
         OutlinedTextField(
-            value = value,
-            onValueChange = onValueChange,
+            value = localValue,
+            onValueChange = { localValue = it },
             label = { Text(label) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
@@ -310,17 +317,20 @@ private fun ApiKeySection(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.padding(top = 4.dp)
         ) {
+            if (isDirty) {
+                Button(onClick = { onValueChange(localValue) }) {
+                    Text("Zapisz")
+                }
+            }
             OutlinedButton(
                 onClick = onTest,
-                enabled = testState != ConnectionTestState.TESTING && value.isNotBlank()
+                enabled = testState != ConnectionTestState.TESTING && localValue.isNotBlank()
             ) {
                 Text("Przetestuj")
             }
             when (testState) {
                 ConnectionTestState.TESTING -> CircularProgressIndicator(
-                    modifier = androidx.compose.ui.Modifier.then(
-                        androidx.compose.ui.Modifier.height(24.dp)
-                    )
+                    modifier = Modifier.height(24.dp)
                 )
                 ConnectionTestState.SUCCESS -> Icon(
                     Icons.Default.Check,
