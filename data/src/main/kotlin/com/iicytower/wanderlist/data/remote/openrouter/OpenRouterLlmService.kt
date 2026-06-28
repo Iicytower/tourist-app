@@ -1,5 +1,6 @@
 package com.iicytower.wanderlist.data.remote.openrouter
 
+import com.iicytower.wanderlist.data.remote.openrouter.dto.OpenRouterCompleteResponse
 import com.iicytower.wanderlist.data.remote.openrouter.dto.OpenRouterRequest
 import com.iicytower.wanderlist.data.remote.openrouter.dto.OpenRouterStreamChunk
 import com.iicytower.wanderlist.data.remote.openrouter.mapper.toLlmEvent
@@ -11,6 +12,7 @@ import com.iicytower.wanderlist.domain.model.ToolDefinition
 import com.iicytower.wanderlist.domain.repository.LlmService
 import com.iicytower.wanderlist.domain.repository.SettingsRepository
 import io.ktor.client.HttpClient
+import io.ktor.client.call.body
 import io.ktor.client.plugins.timeout
 import io.ktor.client.request.header
 import io.ktor.client.request.post
@@ -78,8 +80,11 @@ class OpenRouterLlmService(
             }
 
             val channel = response.bodyAsChannel()
+            var lineCount = 0
             while (!channel.isClosedForRead) {
                 val line = channel.readUTF8Line() ?: break
+                lineCount++
+                Timber.tag("OpenRouter").v("SSE[%d]: %s", lineCount, line.take(120))
                 if (!line.startsWith("data: ")) continue
                 val data = line.removePrefix("data: ").trim()
                 if (data == "[DONE]") break
@@ -89,13 +94,44 @@ class OpenRouterLlmService(
                     val chunk = json.decodeFromString<OpenRouterStreamChunk>(data)
                     chunk.toLlmEvent()
                 }.onFailure { e ->
-                    Timber.tag("OpenRouter").w(e, "SSE parse failed: %s", data)
+                    Timber.tag("OpenRouter").w(e, "SSE parse failed: %s", data.take(200))
                 }.getOrNull()?.let { emit(it) }
             }
+            Timber.tag("OpenRouter").d("SSE done, read %d lines", lineCount)
             emit(LlmEvent.Done)
         }.onFailure { e ->
             emit(LlmEvent.Error(e.message ?: "Unknown error"))
         }
+    }
+
+    override suspend fun complete(
+        messages: List<ChatMessage>,
+        systemPrompt: String
+    ): Result<String> = runCatching {
+        val settings = settingsRepository.getSettings().first()
+        val apiKey = settings.openRouterApiKey
+        if (apiKey.isBlank()) return Result.failure(IllegalStateException("Brak klucza API OpenRouter. Wejdz w Ustawienia i zapisz klucz."))
+
+        val requestBody = OpenRouterRequest(
+            model = settings.aiModel,
+            messages = messages.toOpenRouterMessages(systemPrompt),
+            stream = false
+        )
+
+        val response = httpClient.post(baseUrl) {
+            contentType(ContentType.Application.Json)
+            header(HttpHeaders.Authorization, "Bearer $apiKey")
+            header("HTTP-Referer", "https://wanderlist.app")
+            setBody(requestBody)
+        }
+
+        if (!response.status.isSuccess()) {
+            error("OpenRouter HTTP ${response.status.value}")
+        }
+
+        val body = response.body<OpenRouterCompleteResponse>()
+        body.choices.firstOrNull()?.message?.content?.trim()
+            ?: error("Pusta odpowiedź od modelu")
     }
 
     override suspend fun testConnection(): Result<String> = runCatching {

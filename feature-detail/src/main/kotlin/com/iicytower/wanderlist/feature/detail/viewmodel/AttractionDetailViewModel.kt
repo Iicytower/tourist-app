@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 class AttractionDetailViewModel(
     private val getAttractionDetailUseCase: GetAttractionDetailUseCase,
@@ -34,27 +35,34 @@ class AttractionDetailViewModel(
         }
     }
 
-    fun loadDescription() {
+    fun loadDescription(force: Boolean = false) {
         val xid = _uiState.value.attraction?.xid ?: return
-        if (_uiState.value.attraction?.description != null) return
+        if (!force && _uiState.value.attraction?.description != null) return
         viewModelScope.launch {
             _uiState.update { it.copy(isDescriptionLoading = true, descriptionError = null) }
-            generateDescriptionUseCase(xid).fold(
-                onSuccess = { (description, sources) ->
-                    _uiState.update { state ->
-                        state.copy(
-                            attraction = state.attraction?.copy(
-                                description = description,
-                                descriptionSources = sources
-                            ),
-                            isDescriptionLoading = false
-                        )
+            try {
+                generateDescriptionUseCase(xid).fold(
+                    onSuccess = { (description, sources) ->
+                        Timber.tag("Description").d("Generated %d chars for xid=%s", description.length, xid)
+                        _uiState.update { state ->
+                            state.copy(
+                                attraction = state.attraction?.copy(
+                                    description = description,
+                                    descriptionSources = sources
+                                ),
+                                isDescriptionLoading = false
+                            )
+                        }
+                    },
+                    onFailure = { e ->
+                        Timber.tag("Description").e(e, "generateDescription failed for xid=%s", xid)
+                        _uiState.update { it.copy(isDescriptionLoading = false, descriptionError = e.message ?: "Błąd generowania opisu") }
                     }
-                },
-                onFailure = { e ->
-                    _uiState.update { it.copy(isDescriptionLoading = false, descriptionError = e.message ?: "Błąd generowania opisu") }
-                }
-            )
+                )
+            } catch (e: Exception) {
+                Timber.tag("Description").e(e, "generateDescription threw for xid=%s", xid)
+                _uiState.update { it.copy(isDescriptionLoading = false, descriptionError = e.message ?: "Błąd generowania opisu") }
+            }
         }
     }
 

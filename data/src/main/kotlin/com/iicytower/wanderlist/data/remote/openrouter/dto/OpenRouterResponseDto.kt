@@ -9,6 +9,21 @@ data class OpenRouterStreamChunk(
 )
 
 @Serializable
+data class OpenRouterCompleteResponse(
+    val choices: List<OpenRouterCompleteChoice> = emptyList()
+)
+
+@Serializable
+data class OpenRouterCompleteChoice(
+    val message: OpenRouterCompleteMessage = OpenRouterCompleteMessage()
+)
+
+@Serializable
+data class OpenRouterCompleteMessage(
+    val content: String? = null
+)
+
+@Serializable
 data class OpenRouterChoice(
     val delta: OpenRouterDelta = OpenRouterDelta()
 )

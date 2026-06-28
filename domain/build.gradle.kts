@@ -24,6 +24,7 @@ android {
 dependencies {
     implementation(project(":core"))
     implementation(libs.coroutines.core)
+    implementation(libs.timber)
     testImplementation(libs.junit)
     testImplementation(libs.mockk)
     testImplementation(libs.coroutines.test)
