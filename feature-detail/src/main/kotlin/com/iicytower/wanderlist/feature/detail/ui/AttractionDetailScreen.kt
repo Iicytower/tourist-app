@@ -31,9 +31,13 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextDecoration
+import kotlinx.coroutines.launch
 import androidx.compose.ui.unit.dp
 import com.iicytower.wanderlist.core.util.formatDistance
 import com.iicytower.wanderlist.feature.detail.viewmodel.AttractionDetailViewModel
@@ -50,6 +54,8 @@ fun AttractionDetailScreen(
     val state by viewModel.uiState.collectAsState()
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    val clipboardManager = LocalClipboardManager.current
 
     LaunchedEffect(xid) {
         viewModel.load(xid, showDistance)
@@ -159,6 +165,19 @@ fun AttractionDetailScreen(
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Text("Nawiguj do")
+                        }
+
+                        OutlinedButton(
+                            onClick = {
+                                val coords = "${attraction.latitude},${attraction.longitude}"
+                                clipboardManager.setText(AnnotatedString(coords))
+                                scope.launch {
+                                    snackbarHostState.showSnackbar("Skopiowano: $coords")
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("Kopiuj lokalizację")
                         }
                     }
                 }
