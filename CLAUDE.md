@@ -95,9 +95,18 @@ emulator -avd <NAME> -no-audio -no-boot-anim
 
 ## Zarządzanie taskami
 
-- Taski do zrobienia: `docs/tasks/todo/` (TASK-01 … TASK-17, wykonuj w kolejności)
-- Po ukończeniu taska: przenieś plik z `todo/` do `done/`
+- Taski do zrobienia: `docs/tasks/todo/`
+- Taski ukończone: `docs/tasks/done/`
 - Każdy task realizuj na osobnym feature branchu zgodnie z Git Flow
+
+### Flow ukończenia taska
+
+Po tym jak użytkownik zatwierdzi wykonanie taska, wykonaj **w tej kolejności**:
+
+1. Przenieś plik taska z `docs/tasks/todo/` do `docs/tasks/done/`
+2. Zmerguj feature branch do `develop` przez `--no-ff`
+3. Wypchnij `develop` na remote (`git push origin develop`)
+4. Usuń lokalny feature branch (`git branch -d <nazwa>`)
 
 ## Autonomia w tym projekcie
 
