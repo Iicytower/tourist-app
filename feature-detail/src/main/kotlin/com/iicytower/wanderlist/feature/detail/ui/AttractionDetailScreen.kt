@@ -116,6 +116,12 @@ fun AttractionDetailScreen(
                                         }
                                     }
                                 }
+                                if (!state.isDescriptionLoading) {
+                                    OutlinedButton(
+                                        onClick = { viewModel.loadDescription(force = true) },
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) { Text("Przeładuj opis") }
+                                }
                             }
                             state.isDescriptionLoading -> {
                                 Row {

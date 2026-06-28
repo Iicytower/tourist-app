@@ -12,5 +12,10 @@ interface LlmService {
         tools: List<ToolDefinition>
     ): Flow<LlmEvent>
 
+    suspend fun complete(
+        messages: List<ChatMessage>,
+        systemPrompt: String
+    ): Result<String>
+
     suspend fun testConnection(): Result<String>
 }

@@ -19,7 +19,7 @@ fun createHttpClient(): HttpClient = HttpClient(OkHttp) {
         logger = object : Logger {
             override fun log(message: String) = Timber.tag("Ktor").d(message)
         }
-        level = LogLevel.BODY
+        level = LogLevel.HEADERS
     }
     install(HttpTimeout) {
         requestTimeoutMillis = 30_000

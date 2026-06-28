@@ -38,6 +38,7 @@ dependencies {
     implementation(libs.koin.android)
     implementation(libs.koin.compose)
     implementation(libs.coroutines.android)
+    implementation(libs.timber)
 
     debugImplementation(libs.compose.ui.tooling)
 
