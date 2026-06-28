@@ -40,6 +40,7 @@ dependencies {
     implementation(libs.koin.compose)
     implementation(libs.maplibre)
     implementation(libs.coroutines.android)
+    implementation(libs.timber)
 
     debugImplementation(libs.compose.ui.tooling)
 
