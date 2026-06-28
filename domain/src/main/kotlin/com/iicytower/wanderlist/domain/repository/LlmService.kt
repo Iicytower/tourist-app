@@ -17,5 +17,11 @@ interface LlmService {
         systemPrompt: String
     ): Result<String>
 
+    suspend fun completeChat(
+        messages: List<ChatMessage>,
+        systemPrompt: String,
+        tools: List<ToolDefinition>
+    ): Result<List<LlmEvent>>
+
     suspend fun testConnection(): Result<String>
 }

@@ -28,6 +28,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.jsonObject
 import timber.log.Timber
 
 class OpenRouterLlmService(
@@ -132,6 +134,72 @@ class OpenRouterLlmService(
         val body = response.body<OpenRouterCompleteResponse>()
         body.choices.firstOrNull()?.message?.content?.trim()
             ?: error("Pusta odpowiedź od modelu")
+    }
+
+    override suspend fun completeChat(
+        messages: List<ChatMessage>,
+        systemPrompt: String,
+        tools: List<ToolDefinition>
+    ): Result<List<LlmEvent>> = runCatching {
+        val settings = settingsRepository.getSettings().first()
+        val apiKey = settings.openRouterApiKey
+        if (apiKey.isBlank()) error("Brak klucza API OpenRouter. Przejdz do Ustawien i dodaj klucz.")
+
+        val requestBody = OpenRouterRequest(
+            model = settings.aiModel,
+            messages = messages.toOpenRouterMessages(systemPrompt),
+            tools = if (tools.isEmpty()) null else tools.toOpenRouterTools(),
+            stream = false
+        )
+
+        val response = httpClient.post(baseUrl) {
+            contentType(ContentType.Application.Json)
+            header(HttpHeaders.Authorization, "Bearer $apiKey")
+            header("HTTP-Referer", "https://wanderlist.app")
+            setBody(requestBody)
+        }
+
+        if (!response.status.isSuccess()) {
+            val errorMsg = when (response.status.value) {
+                401 -> "Nieprawidlowy klucz API OpenRouter (401)."
+                402 -> "Brak srodkow na koncie OpenRouter (402)."
+                429 -> "Przekroczono limit zapytan OpenRouter (429)."
+                else -> "Blad serwera OpenRouter: ${response.status.value}"
+            }
+            error(errorMsg)
+        }
+
+        val rawBody = response.bodyAsText()
+        val body = json.decodeFromString<OpenRouterCompleteResponse>(rawBody)
+        val message = body.choices.firstOrNull()?.message
+            ?: error("Pusta odpowiedź od modelu")
+
+        Timber.tag("OpenRouter").d("completeChat response: content=%s toolCalls=%d",
+            message.content?.take(100), message.toolCalls?.size ?: 0)
+
+        val events = mutableListOf<LlmEvent>()
+        when {
+            !message.toolCalls.isNullOrEmpty() -> {
+                message.toolCalls.forEach { call ->
+                    Timber.tag("OpenRouter").d("ToolCall: id=%s name=%s args=%s", call.id, call.function.name, call.function.arguments.take(200))
+                    val rawArgs = call.function.arguments
+                    val args = runCatching {
+                        val parsed = json.parseToJsonElement(rawArgs).jsonObject
+                        parsed.entries.associate { (k, v) ->
+                            k to ((v as? JsonPrimitive)?.content ?: v.toString()) as Any
+                        }
+                    }.getOrDefault(emptyMap())
+                    events.add(LlmEvent.ToolCall(id = call.id, name = call.function.name, arguments = args, rawArguments = rawArgs))
+                }
+            }
+            message.content != null -> {
+                Timber.tag("OpenRouter").d("TextChunk: %s", message.content.take(200))
+                events.add(LlmEvent.TextChunk(message.content.trim()))
+            }
+            else -> error("Pusta odpowiedź od modelu")
+        }
+        events.add(LlmEvent.Done)
+        events
     }
 
     override suspend fun testConnection(): Result<String> = runCatching {
