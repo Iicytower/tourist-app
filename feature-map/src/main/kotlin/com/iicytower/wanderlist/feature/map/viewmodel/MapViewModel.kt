@@ -60,4 +60,11 @@ class MapViewModel(
         }
         _uiState.update { it.copy(selectedAttraction = attraction) }
     }
+
+    fun pinTargetAttraction(xid: String) {
+        viewModelScope.launch {
+            val attraction = attractionRepository.getByXid(xid) ?: return@launch
+            _uiState.update { it.copy(pinnedAttraction = attraction, selectedAttraction = attraction) }
+        }
+    }
 }
