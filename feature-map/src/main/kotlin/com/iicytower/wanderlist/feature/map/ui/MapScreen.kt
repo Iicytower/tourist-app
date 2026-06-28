@@ -27,6 +27,7 @@ import com.iicytower.wanderlist.feature.map.viewmodel.MapViewModel
 import org.koin.androidx.compose.koinViewModel
 import org.maplibre.android.MapLibre
 import org.maplibre.android.camera.CameraPosition
+import org.maplibre.android.camera.CameraUpdateFactory
 import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.maps.MapView
@@ -40,6 +41,9 @@ import timber.log.Timber
 @Composable
 fun MapScreen(
     onAttractionClick: (String) -> Unit = {},
+    targetLat: Double? = null,
+    targetLon: Double? = null,
+    targetXid: String? = null,
     viewModel: MapViewModel = koinViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -55,6 +59,14 @@ fun MapScreen(
     remember(context) { MapLibre.getInstance(context) }
 
     LaunchedEffect(Unit) { viewModel.onMapReady() }
+
+    LaunchedEffect(targetLat, targetLon, mapRef.value) {
+        if (targetLat != null && targetLon != null) {
+            val map = mapRef.value ?: return@LaunchedEffect
+            map.animateCamera(CameraUpdateFactory.newLatLngZoom(LatLng(targetLat, targetLon), 15.0))
+            targetXid?.let { viewModel.selectAttraction(it) }
+        }
+    }
 
     LaunchedEffect(state.initialCameraPosition, mapRef.value) {
         val pos = state.initialCameraPosition ?: return@LaunchedEffect
