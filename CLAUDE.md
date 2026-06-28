@@ -161,6 +161,12 @@ Instalacja debug apk na podłączonym urządzeniu/emulatorze:
 Eksport schematu Room do pliku JSON:
 `./gradlew :data:kspDebugKotlin`
 
+### Deploy
+Kompiluje aplikację (debug) i kopiuje APK do root projektu jako `wanderlist-debug.apk`:
+```bash
+./gradlew assembleDebug && cp app/build/outputs/apk/debug/app-debug.apk ./wanderlist-debug.apk
+```
+
 ## Linki do API
 
 - OpenTripMap docs: https://dev.opentripmap.org/docs

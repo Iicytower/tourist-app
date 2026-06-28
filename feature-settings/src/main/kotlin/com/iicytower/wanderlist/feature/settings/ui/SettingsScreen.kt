@@ -14,7 +14,9 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
@@ -61,6 +63,28 @@ fun SettingsScreen(
         view.importantForAutofill = View.IMPORTANT_FOR_AUTOFILL_NO_EXCLUDE_DESCENDANTS
     }
 
+    uiState.openRouterTestError?.let { error ->
+        AlertDialog(
+            onDismissRequest = { viewModel.clearOpenRouterTestError() },
+            title = { Text("Blad polaczenia OpenRouter") },
+            text = { Text(error) },
+            confirmButton = {
+                TextButton(onClick = { viewModel.clearOpenRouterTestError() }) { Text("OK") }
+            }
+        )
+    }
+
+    uiState.tavilyTestError?.let { error ->
+        AlertDialog(
+            onDismissRequest = { viewModel.clearTavilyTestError() },
+            title = { Text("Blad polaczenia Tavily") },
+            text = { Text(error) },
+            confirmButton = {
+                TextButton(onClick = { viewModel.clearTavilyTestError() }) { Text("OK") }
+            }
+        )
+    }
+
     Scaffold(
         topBar = { TopAppBar(title = { Text("Ustawienia") }) }
     ) { padding ->
@@ -81,8 +105,9 @@ fun SettingsScreen(
                     label = "OpenRouter API Key",
                     value = settings?.openRouterApiKey ?: "",
                     testState = uiState.openRouterTestState,
+                    testError = uiState.openRouterTestError,
                     onValueChange = { viewModel.updateOpenRouterKey(it) },
-                    onTest = { viewModel.testOpenRouterConnection() }
+                    onTest = { viewModel.testOpenRouterConnection(it) }
                 )
             }
 
@@ -91,8 +116,9 @@ fun SettingsScreen(
                     label = "Tavily API Key",
                     value = settings?.tavilyApiKey ?: "",
                     testState = uiState.tavilyTestState,
+                    testError = uiState.tavilyTestError,
                     onValueChange = { viewModel.updateTavilyKey(it) },
-                    onTest = { viewModel.testTavilyConnection() }
+                    onTest = { viewModel.testTavilyConnection(it) }
                 )
                 if (settings != null) {
                     Text(
@@ -293,8 +319,9 @@ private fun ApiKeySection(
     label: String,
     value: String,
     testState: ConnectionTestState,
+    testError: String? = null,
     onValueChange: (String) -> Unit,
-    onTest: () -> Unit
+    onTest: (String) -> Unit
 ) {
     // Lokalny stan — klucz API trafia do EncryptedSharedPreferences, nie do DataStore,
     // więc getSettings() flow nie re-emituje po zapisie. Bezpośrednie bindowanie value=
@@ -323,7 +350,7 @@ private fun ApiKeySection(
                 }
             }
             OutlinedButton(
-                onClick = onTest,
+                onClick = { onTest(localValue) },
                 enabled = testState != ConnectionTestState.TESTING && localValue.isNotBlank()
             ) {
                 Text("Przetestuj")
@@ -344,6 +371,14 @@ private fun ApiKeySection(
                 )
                 ConnectionTestState.IDLE -> Unit
             }
+        }
+        if (testState == ConnectionTestState.FAILURE && testError != null) {
+            Text(
+                text = testError,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.padding(top = 4.dp)
+            )
         }
     }
 }
