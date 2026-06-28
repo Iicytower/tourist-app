@@ -33,6 +33,9 @@ import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.maps.MapView
 import org.maplibre.android.maps.Style
+import org.maplibre.android.style.layers.CircleLayer
+import org.maplibre.android.style.layers.PropertyFactory
+import org.maplibre.android.style.sources.GeoJsonSource
 
 @Composable
 fun MapScreen(
@@ -79,9 +82,12 @@ fun MapScreen(
                 getMapAsync { map ->
                     mapRef.value = map
                     map.setStyle(Style.Builder().fromUri("https://tiles.openfreemap.org/styles/liberty"))
-                    map.addOnMapClickListener {
-                        viewModel.selectAttraction(null)
-                        false
+                    map.addOnMapClickListener { latLng ->
+                        val point = map.projection.toScreenLocation(latLng)
+                        val features = map.queryRenderedFeatures(point, "attractions-layer")
+                        val xid = features.firstOrNull()?.getStringProperty("xid")
+                        viewModel.selectAttraction(xid)
+                        xid != null
                     }
                     map.addOnCameraIdleListener {
                         val target = map.cameraPosition.target ?: return@addOnCameraIdleListener
@@ -93,7 +99,25 @@ fun MapScreen(
                 mv.getMapAsync { map ->
                     map.getStyle { style ->
                         val attractions = if (state.showMyListOnly) state.myList else state.searchResults
-                        // Prosta implementacja pinezek — w pełnej wersji można użyć SymbolManager
+
+                        runCatching { style.removeLayer("attractions-layer") }
+                        runCatching { style.removeSource("attractions-source") }
+
+                        if (attractions.isEmpty()) return@getStyle
+
+                        val featuresJson = attractions.joinToString(",") { a ->
+                            val name = a.name.replace("\\", "\\\\").replace("\"", "\\\"")
+                            """{"type":"Feature","geometry":{"type":"Point","coordinates":[${a.longitude},${a.latitude}]},"properties":{"xid":"${a.xid}","name":"$name"}}"""
+                        }
+                        style.addSource(GeoJsonSource("attractions-source", """{"type":"FeatureCollection","features":[$featuresJson]}"""))
+                        style.addLayer(CircleLayer("attractions-layer", "attractions-source").apply {
+                            setProperties(
+                                PropertyFactory.circleRadius(10f),
+                                PropertyFactory.circleColor(android.graphics.Color.parseColor("#FF5722")),
+                                PropertyFactory.circleStrokeWidth(2f),
+                                PropertyFactory.circleStrokeColor(android.graphics.Color.WHITE)
+                            )
+                        })
                     }
                 }
             },
