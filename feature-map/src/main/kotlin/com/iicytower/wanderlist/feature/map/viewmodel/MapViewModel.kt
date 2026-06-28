@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 class MapViewModel(
     private val getMyListUseCase: GetMyListUseCase,
@@ -23,13 +24,19 @@ class MapViewModel(
     fun onMapReady() {
         viewModelScope.launch {
             val savedPosition = settingsRepository.getLastMapPosition()
-            val initialPosition = savedPosition ?: Triple(50.06, 19.94, 11.0)
-            _uiState.update { it.copy(initialCameraPosition = initialPosition) }
-        }
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
             val lastSearch = attractionRepository.getLastSearchResults()
-            _uiState.update { it.copy(searchResults = lastSearch, isLoading = false) }
+            val initialPosition = when {
+                savedPosition != null -> savedPosition
+                lastSearch.isNotEmpty() -> Triple(
+                    lastSearch.map { it.latitude }.average(),
+                    lastSearch.map { it.longitude }.average(),
+                    12.0
+                )
+                else -> Triple(50.06, 19.94, 11.0)
+            }
+            Timber.tag("MAP").d("camera: saved=%s results=%d pos=[%.4f,%.4f,z=%.1f]",
+                savedPosition, lastSearch.size, initialPosition.first, initialPosition.second, initialPosition.third)
+            _uiState.update { it.copy(initialCameraPosition = initialPosition, searchResults = lastSearch, isLoading = false) }
         }
         viewModelScope.launch {
             getMyListUseCase().collect { myList ->

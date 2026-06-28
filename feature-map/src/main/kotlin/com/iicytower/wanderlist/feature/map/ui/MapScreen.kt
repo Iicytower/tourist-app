@@ -1,9 +1,5 @@
 package com.iicytower.wanderlist.feature.map.ui
 
-import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.Paint
-import android.graphics.Path
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -35,37 +31,11 @@ import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.maps.MapView
 import org.maplibre.android.maps.Style
-import org.maplibre.android.style.expressions.Expression
-import org.maplibre.android.style.layers.Property
+import org.maplibre.android.style.layers.CircleLayer
 import org.maplibre.android.style.layers.PropertyFactory
-import org.maplibre.android.style.layers.SymbolLayer
 import org.maplibre.android.style.sources.GeoJsonSource
+import timber.log.Timber
 
-private fun createPinBitmap(): Bitmap {
-    val w = 64
-    val h = 80
-    val bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
-    val canvas = Canvas(bitmap)
-    val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-    val cx = w / 2f
-    val r = w / 2f
-
-    paint.color = android.graphics.Color.parseColor("#FF5722")
-    canvas.drawCircle(cx, r, r, paint)
-
-    val tail = Path().apply {
-        moveTo(cx - r * 0.45f, r + r * 0.55f)
-        lineTo(cx + r * 0.45f, r + r * 0.55f)
-        lineTo(cx, h.toFloat())
-        close()
-    }
-    canvas.drawPath(tail, paint)
-
-    paint.color = android.graphics.Color.WHITE
-    canvas.drawCircle(cx, r, r * 0.42f, paint)
-
-    return bitmap
-}
 
 @Composable
 fun MapScreen(
@@ -78,8 +48,9 @@ fun MapScreen(
     val mapRef = remember { mutableStateOf<MapLibreMap?>(null) }
     val styleRef = remember { mutableStateOf<Style?>(null) }
 
-    // Odczyt w scopie composable — ustanawia obserwację; zmiana styleRef wyzwala rekompozyację
     val currentStyle = styleRef.value
+    Timber.tag("MAP").d("compose: currentStyle=%b showMyList=%b search=%d my=%d",
+        currentStyle != null, state.showMyListOnly, state.searchResults.size, state.myList.size)
 
     remember(context) { MapLibre.getInstance(context) }
 
@@ -113,7 +84,16 @@ fun MapScreen(
                 getMapAsync { map ->
                     mapRef.value = map
                     map.setStyle(Style.Builder().fromUri("https://tiles.openfreemap.org/styles/liberty")) { style ->
-                        style.addImage("pin-icon", createPinBitmap())
+                        Timber.tag("MAP").d("setStyle callback fired — adding source/layers")
+                        style.addSource(GeoJsonSource("attractions-source", """{"type":"FeatureCollection","features":[]}"""))
+                        style.addLayer(CircleLayer("attractions-layer", "attractions-source").apply {
+                            setProperties(
+                                PropertyFactory.circleRadius(10f),
+                                PropertyFactory.circleColor(android.graphics.Color.parseColor("#FF5722")),
+                                PropertyFactory.circleStrokeWidth(2f),
+                                PropertyFactory.circleStrokeColor(android.graphics.Color.WHITE)
+                            )
+                        })
                         styleRef.value = style
                     }
                     map.addOnMapClickListener { latLng ->
@@ -130,41 +110,23 @@ fun MapScreen(
                 }
             }},
             update = { _ ->
+                Timber.tag("MAP").d("update: style=%b showMyList=%b search=%d my=%d",
+                    currentStyle != null, state.showMyListOnly, state.searchResults.size, state.myList.size)
                 val style = currentStyle ?: return@AndroidView
-                val attractions = if (state.showMyListOnly) state.myList else state.searchResults
-
-                runCatching { style.removeLayer("attractions-labels") }
-                runCatching { style.removeLayer("attractions-layer") }
-                runCatching { style.removeSource("attractions-source") }
-
-                if (attractions.isEmpty()) return@AndroidView
-
+                val attractions = if (state.showMyListOnly) state.myList else emptyList()
+                val source = style.getSource("attractions-source") as? GeoJsonSource ?: run {
+                    Timber.tag("MAP").w("attractions-source not found in style")
+                    return@AndroidView
+                }
                 val featuresJson = attractions.joinToString(",") { a ->
                     val name = a.name.replace("\\", "\\\\").replace("\"", "\\\"")
                     """{"type":"Feature","geometry":{"type":"Point","coordinates":[${a.longitude},${a.latitude}]},"properties":{"xid":"${a.xid}","name":"$name"}}"""
                 }
-                style.addSource(GeoJsonSource("attractions-source", """{"type":"FeatureCollection","features":[$featuresJson]}"""))
-                style.addLayer(SymbolLayer("attractions-layer", "attractions-source").apply {
-                    setProperties(
-                        PropertyFactory.iconImage("pin-icon"),
-                        PropertyFactory.iconSize(0.9f),
-                        PropertyFactory.iconAnchor(Property.ICON_ANCHOR_BOTTOM),
-                        PropertyFactory.iconAllowOverlap(true)
-                    )
-                })
-                style.addLayer(SymbolLayer("attractions-labels", "attractions-source").apply {
-                    setProperties(
-                        PropertyFactory.textField(Expression.get("name")),
-                        PropertyFactory.textSize(11f),
-                        PropertyFactory.textColor(android.graphics.Color.BLACK),
-                        PropertyFactory.textHaloColor(android.graphics.Color.WHITE),
-                        PropertyFactory.textHaloWidth(2f),
-                        PropertyFactory.textAnchor(Property.TEXT_ANCHOR_TOP),
-                        PropertyFactory.textOffset(arrayOf(0f, 0.3f)),
-                        PropertyFactory.textMaxWidth(8f),
-                        PropertyFactory.textOptional(true)
-                    )
-                })
+                Timber.tag("MAP").d("setGeoJson with %d features", attractions.size)
+                val geoJson = """{"type":"FeatureCollection","features":[$featuresJson]}"""
+                runCatching {
+                    source.setGeoJson(geoJson)
+                }.onFailure { Timber.tag("MAP").e(it, "setGeoJson failed") }
             },
             modifier = Modifier.fillMaxSize()
         )
