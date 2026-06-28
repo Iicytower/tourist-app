@@ -19,4 +19,4 @@ captures/
 *.keystore
 
 # Generated
-app/release/
+app/release/wanderlist-debug.apk
