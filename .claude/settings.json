@@ -5,7 +5,7 @@
       "Bash(flutter --version)",
       "Bash(java -version)",
       "WebSearch",
-      "git *"
+      "Bash(git*)"
     ]
   }
 }                  

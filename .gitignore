@@ -1,1 +1,22 @@
+# Gradle
+.gradle/
+build/
+**/build/
+
+# Local config
+local.properties
 .env
+
+# Android Studio
+*.iml
+.idea/
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Keystore
+*.jks
+*.keystore
+
+# Generated
+app/release/wanderlist-debug.apk

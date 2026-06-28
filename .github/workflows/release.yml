@@ -1,0 +1,53 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build debug APK
+        run: ./gradlew assembleDebug
+
+      - name: Get version info
+        id: version
+        run: |
+          VERSION_NAME=$(grep 'versionName' app/build.gradle.kts | grep -o '"[^"]*"' | tr -d '"')
+          VERSION_CODE=$(grep 'versionCode' app/build.gradle.kts | grep -o '[0-9]*')
+          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
+          echo "version_name=$VERSION_NAME" >> $GITHUB_OUTPUT
+          echo "version_code=$VERSION_CODE" >> $GITHUB_OUTPUT
+          echo "tag=v${VERSION_NAME}-${SHORT_SHA}" >> $GITHUB_OUTPUT
+
+      - name: Rename APK
+        run: |
+          cp app/build/outputs/apk/debug/app-debug.apk \
+             wanderlist-${{ steps.version.outputs.tag }}.apk
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: WanderList ${{ steps.version.outputs.version_name }} (${{ steps.version.outputs.version_code }})
+          body: |
+            Automatyczny build z brancha `master`.
+            Commit: ${{ github.sha }}
+          files: wanderlist-${{ steps.version.outputs.tag }}.apk
+          draft: false
+          prerelease: false

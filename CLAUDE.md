@@ -6,7 +6,7 @@ Osobista aplikacja turystyczna Android. Wyszukiwanie atrakcji, generowanie opis�
 
 - Spec funkcjonalna: `docs/functionalities_specs.md`
 - Spec techniczna: `docs/technical_specs.md`
-- Taski implementacji: `docs/tasks/todo/` (TASK-01 … TASK-17, wykonuj w kolejności)
+- Taski implementacji: `docs/tasks/todo/` (następny do zrobienia), `docs/tasks/done/` (ukończone)
 
 ## Stack techniczny (skrót)
 
@@ -93,6 +93,12 @@ emulator -list-avds
 emulator -avd <NAME> -no-audio -no-boot-anim
 ```
 
+## Zarządzanie taskami
+
+- Taski do zrobienia: `docs/tasks/todo/` (TASK-01 … TASK-17, wykonuj w kolejności)
+- Po ukończeniu taska: przenieś plik z `todo/` do `done/`
+- Każdy task realizuj na osobnym feature branchu zgodnie z Git Flow
+
 ## Autonomia w tym projekcie
 
 Bez pytania o zgodę:
@@ -120,6 +126,46 @@ Projekt używa Git Flow. Gałęzie:
 - Commity na feature branchu — bez ograniczeń; do `develop` merge przez `--no-ff` (zachowaj historię)
 - Nie commituj bezpośrednio do `master` ani `develop`
 - Format commita: `type(scope): opis` (np. `feat(search): add OpenTripMap client`, `fix(domain): correct radius calculation`)
+
+## Skills
+
+### Build
+Buduje aplikację (debug):
+`./gradlew assembleDebug`
+
+### Test
+Uruchamia wszystkie testy jednostkowe:
+`./gradlew test`
+
+Uruchamia testy dla konkretnego modułu (np. domain):
+`./gradlew :domain:test`
+
+### Lint
+`./gradlew lint`
+
+### Emulator
+Lista dostępnych AVD:
+`emulator -list-avds`
+
+Uruchomienie emulatora (zastąp NAME nazwą AVD):
+`emulator -avd NAME -no-audio -no-boot-anim`
+
+### Install
+Instalacja debug apk na podłączonym urządzeniu/emulatorze:
+`./gradlew installDebug`
+
+### Connected tests (instrumentacja)
+`./gradlew connectedAndroidTest`
+
+### Room schema export
+Eksport schematu Room do pliku JSON:
+`./gradlew :data:kspDebugKotlin`
+
+### Deploy
+Kompiluje aplikację (debug) i kopiuje APK do root projektu jako `wanderlist-debug.apk`:
+```bash
+./gradlew assembleDebug && cp app/build/outputs/apk/debug/app-debug.apk ./wanderlist-debug.apk
+```
 
 ## Linki do API
 
