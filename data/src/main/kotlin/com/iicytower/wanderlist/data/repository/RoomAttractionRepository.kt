@@ -20,10 +20,14 @@ private data class DescriptionSourceDto(val name: String, val url: String)
 
 class RoomAttractionRepository(
     private val dao: AttractionDao,
-    private val remoteSource: RemoteAttractionSource
+    private val remoteSource: RemoteAttractionSource,
+    private val statsProvider: () -> Map<String, Int> = { emptyMap() }
 ) : AttractionRepository {
 
     private val json = Json { ignoreUnknownKeys = true }
+
+    @Volatile
+    private var lastSearchStats: Map<String, Int> = emptyMap()
 
     override fun getMyList(): Flow<List<Attraction>> =
         dao.getMyList().map { entities -> entities.map { it.toDomain() } }
@@ -33,14 +37,17 @@ class RoomAttractionRepository(
 
     override suspend fun searchAttractions(params: SearchParams): Result<List<Attraction>> = runCatching {
         val attractions = remoteSource.searchAttractions(params).getOrThrow()
+        lastSearchStats = statsProvider()
         dao.replaceSearchResults(attractions.map { it.toEntity() })
         attractions
     }
 
+    override fun getLastSearchStats(): Map<String, Int> = lastSearchStats
+
     override suspend fun addToMyList(xid: String): Result<Unit> = runCatching {
         val count = dao.getMyListCount()
         if (count >= AppConstants.MY_LIST_MAX_SIZE) {
-            error("Lista pełna (${AppConstants.MY_LIST_MAX_SIZE}/${AppConstants.MY_LIST_MAX_SIZE})")
+            error("Lista pelna (${AppConstants.MY_LIST_MAX_SIZE}/${AppConstants.MY_LIST_MAX_SIZE})")
         }
         dao.addToMyList(xid, System.currentTimeMillis())
     }

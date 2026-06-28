@@ -10,13 +10,11 @@ val attractionSourceModule = module {
     single { OverpassApiClient(get()) }
     single { WikipediaGeoSearchSource(get()) }
     single { WikidataSparqlSource(get()) }
-    single<RemoteAttractionSource> {
+    single {
         CompositeAttractionSource(
-            listOf(
-                get<OverpassApiClient>(),
-                get<WikipediaGeoSearchSource>(),
-                get<WikidataSparqlSource>()
-            )
+            sources = listOf(get<OverpassApiClient>(), get<WikipediaGeoSearchSource>(), get<WikidataSparqlSource>()),
+            sourceNames = listOf("Overpass/OSM", "Wikipedia GeoSearch", "Wikidata SPARQL")
         )
     }
+    single<RemoteAttractionSource> { get<CompositeAttractionSource>() }
 }

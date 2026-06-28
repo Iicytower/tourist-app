@@ -13,4 +13,5 @@ interface AttractionRepository {
     suspend fun removeFromMyList(xid: String): Result<Unit>
     suspend fun saveDescription(xid: String, description: String, sources: List<DescriptionSource>): Result<Unit>
     suspend fun getLastSearchResults(): List<Attraction>
+    fun getLastSearchStats(): Map<String, Int>
 }

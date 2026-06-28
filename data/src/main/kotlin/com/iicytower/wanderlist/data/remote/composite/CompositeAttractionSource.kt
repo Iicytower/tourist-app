@@ -8,23 +8,25 @@ import kotlinx.coroutines.coroutineScope
 import kotlin.math.roundToInt
 
 class CompositeAttractionSource(
-    private val sources: List<RemoteAttractionSource>
+    private val sources: List<RemoteAttractionSource>,
+    private val sourceNames: List<String>
 ) : RemoteAttractionSource {
+
+    @Volatile
+    var lastStats: Map<String, Int> = emptyMap()
+        private set
 
     override suspend fun searchAttractions(params: SearchParams): Result<List<Attraction>> = runCatching {
         coroutineScope {
-            sources
-                .map { source -> async { source.searchAttractions(params).getOrElse { emptyList() } } }
-                .map { it.await() }
-                .flatten()
-                .let(::deduplicate)
-                .sortedBy { it.distanceKm ?: Double.MAX_VALUE }
+            val jobs = sources.map { source -> async { source.searchAttractions(params).getOrElse { emptyList() } } }
+            val results = jobs.map { it.await() }
+
+            lastStats = sourceNames.zip(results).associate { (name, list) -> name to list.size }
+
+            results.flatten().let(::deduplicate).sortedBy { it.distanceKm ?: Double.MAX_VALUE }
         }
     }
 
-    // Deduplikacja po zaokrąglonych koordynatach (3 miejsca dziesiętne ≈ 111m).
-    // Jeśli kilka źródeł zwróci to samo miejsce, zachowujemy wpis z najdłuższą nazwą
-    // (preferujemy bogatsze metadane).
     private fun deduplicate(attractions: List<Attraction>): List<Attraction> =
         attractions
             .groupBy { coordKey(it.latitude, it.longitude) }

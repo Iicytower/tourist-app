@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.iicytower.wanderlist.core.model.AttractionCategory
 import com.iicytower.wanderlist.domain.model.Location
 import com.iicytower.wanderlist.domain.model.SearchParams
+import com.iicytower.wanderlist.domain.repository.AttractionRepository
 import com.iicytower.wanderlist.domain.repository.GeocoderService
 import com.iicytower.wanderlist.domain.repository.LocationService
 import com.iicytower.wanderlist.domain.usecase.SearchAttractionsUseCase
@@ -17,7 +18,8 @@ import kotlinx.coroutines.launch
 class SearchViewModel(
     private val searchAttractionsUseCase: SearchAttractionsUseCase,
     private val locationService: LocationService,
-    private val geocoderService: GeocoderService
+    private val geocoderService: GeocoderService,
+    private val attractionRepository: AttractionRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SearchUiState())
@@ -105,11 +107,13 @@ class SearchViewModel(
             )
             searchAttractionsUseCase(params).fold(
                 onSuccess = { results ->
+                    val stats = attractionRepository.getLastSearchStats()
                     _uiState.update { state ->
                         state.copy(
                             results = sortResults(results, state.sortOrder),
                             isLoading = false,
-                            hasSearched = true
+                            hasSearched = true,
+                            debugSourceStats = stats
                         )
                     }
                 },

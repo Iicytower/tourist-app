@@ -131,6 +131,23 @@ fun SearchScreen(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             } else if (state.results.isNotEmpty()) {
+                if (state.debugSourceStats.isNotEmpty()) {
+                    androidx.compose.material3.Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = androidx.compose.material3.CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant
+                        )
+                    ) {
+                        Column(modifier = Modifier.padding(8.dp)) {
+                            Text("[DEBUG] Wyniki per zrodlo:", style = MaterialTheme.typography.labelSmall)
+                            state.debugSourceStats.forEach { (source, count) ->
+                                Text("  $source: $count", style = MaterialTheme.typography.labelSmall)
+                            }
+                            Text("  Po dedup: ${state.results.size}", style = MaterialTheme.typography.labelSmall)
+                        }
+                    }
+                    Spacer(Modifier.height(4.dp))
+                }
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
