@@ -1,0 +1,187 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 2,
+    "identityHash": "5e4c89d3da82de15f5670107228dfa2b",
+    "entities": [
+      {
+        "tableName": "attractions",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`xid` TEXT NOT NULL, `name` TEXT NOT NULL, `latitude` REAL NOT NULL, `longitude` REAL NOT NULL, `category` TEXT NOT NULL, `isInMyList` INTEGER NOT NULL, `dateAddedToList` INTEGER, `description` TEXT, `descriptionSources` TEXT, `isFromLastSearch` INTEGER NOT NULL, PRIMARY KEY(`xid`))",
+        "fields": [
+          {
+            "fieldPath": "xid",
+            "columnName": "xid",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "latitude",
+            "columnName": "latitude",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "longitude",
+            "columnName": "longitude",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "category",
+            "columnName": "category",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isInMyList",
+            "columnName": "isInMyList",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "dateAddedToList",
+            "columnName": "dateAddedToList",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "description",
+            "columnName": "description",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "descriptionSources",
+            "columnName": "descriptionSources",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "isFromLastSearch",
+            "columnName": "isFromLastSearch",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "xid"
+          ]
+        }
+      },
+      {
+        "tableName": "trip_lists",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `createdAt` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "attraction_list_crossref",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`attractionXid` TEXT NOT NULL, `listId` INTEGER NOT NULL, `addedAt` INTEGER NOT NULL, PRIMARY KEY(`attractionXid`, `listId`), FOREIGN KEY(`attractionXid`) REFERENCES `attractions`(`xid`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`listId`) REFERENCES `trip_lists`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "attractionXid",
+            "columnName": "attractionXid",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "listId",
+            "columnName": "listId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "addedAt",
+            "columnName": "addedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "attractionXid",
+            "listId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_attraction_list_crossref_listId",
+            "unique": false,
+            "columnNames": [
+              "listId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_attraction_list_crossref_listId` ON `${TABLE_NAME}` (`listId`)"
+          },
+          {
+            "name": "index_attraction_list_crossref_attractionXid",
+            "unique": false,
+            "columnNames": [
+              "attractionXid"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_attraction_list_crossref_attractionXid` ON `${TABLE_NAME}` (`attractionXid`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "attractions",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "attractionXid"
+            ],
+            "referencedColumns": [
+              "xid"
+            ]
+          },
+          {
+            "table": "trip_lists",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "listId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '5e4c89d3da82de15f5670107228dfa2b')"
+    ]
+  }
+}

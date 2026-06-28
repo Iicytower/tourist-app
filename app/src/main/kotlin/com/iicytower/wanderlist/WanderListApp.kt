@@ -3,6 +3,7 @@ package com.iicytower.wanderlist
 import android.app.Application
 import com.iicytower.wanderlist.data.local.attractionRepositoryModule
 import com.iicytower.wanderlist.data.local.databaseModule
+import com.iicytower.wanderlist.data.local.tripListRepositoryModule
 import com.iicytower.wanderlist.data.local.settingsModule
 import com.iicytower.wanderlist.data.local.location.locationModule
 import com.iicytower.wanderlist.data.remote.openrouter.llmModule
@@ -31,6 +32,7 @@ class WanderListApp : Application() {
             modules(
                 databaseModule,
                 attractionRepositoryModule,
+                tripListRepositoryModule,
                 settingsModule,
                 httpClientModule,
                 attractionSourceModule,

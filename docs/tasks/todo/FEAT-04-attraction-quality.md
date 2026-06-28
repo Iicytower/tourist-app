@@ -42,3 +42,48 @@ Do ustalenia po Etapie 1. Potencjalne kierunki:
 - Wyniki wyszukiwania w tym samym miejscu są wyraźnie bardziej interesujące niż przed zmianą
 - Brak obiektów bez nazwy lub z trywialną nazwą (ławka, parking, bankomat)
 - Czas odpowiedzi nie pogarsza się istotnie
+
+------------------------------------------------------------------------------
+notatka, pomysły do zbadania:
+# Filtrowanie i Źródła Danych POI w Aplikacji Turystycznej
+
+Dokument zawiera strategię odsiewania "szumu" (nieatrakcyjnych punktów POI) oraz alternatywne, darmowe źródła danych do wykorzystania w niekomercyjnym projekcie aplikacji turystycznej.
+
+---
+
+## 1. Filtrowanie i Optymalizacja Obecnych Źródeł (OSM & Wiki)
+
+Aby pozbyć się mało atrakcyjnych obiektów (np. stacji kolejowych, wiat przystankowych) i zapobiec timeoutom API, należy wdrożyć rygorystyczne kryteria selekcji.
+
+### OpenStreetMap (Overpass API)
+* **Zawężenie tagów:** Zamiast pobierać ogólne `tourism=*`, należy jawnie zdefiniować białą listę wartościowych tagów:
+  * `tourism=attraction` (atrakcje)
+  * `tourism=museum` (muzea)
+  * `tourism=viewpoint` (punkty widokowe)
+  * `historic=castle` / `historic=monument` / `historic=ruins` (zamki, pomniki, ruiny)
+* **Czarna lista (Ignorowane):** `tourism=hotel`, `tourism=guest_house`, `tourism=picnic_site`, `tourism=camp_site`.
+* **Optymalizacja zapytań:** 
+  * Ograniczenie promienia wyszukiwania (maksymalnie 5–10 km).
+  * Wprowadzenie jawnego parametru `[timeout:10]` w skrypcie Overpass.
+  * *Alternatywa:* Pobranie gotowych paczek danych dla regionu/kraju (np. z serwisu Geofabrik) i przetworzenie ich lokalnie do bazy SQLite (SpatiaLite).
+
+### Wikipedia i Wikidata
+* **Filtrowanie przez SPARQL (Wikidata Query Service):** Zamiast ogólnego Geosearch z Wikipedii, lepiej odpytywać Wikidatę o obiekty w danym promieniu, filtrując po właściwości `P31` (jest to / instance of), wybierając tylko konkretne klasy (np. *zabytek, muzeum, park narodowy*).
+* **Wskaźnik atrakcyjności (Sitelinks):** Dobrą heurystyką "ważności" obiektu jest liczba powiązanych artykułów w różnych językach. Jeśli obiekt posiada artykuł tylko w języku polskim, jego priorytet jest niski. Jeśli ma artykuły w 10+ językach, jest to kluczowa atrakcja.
+
+---
+
+## 2. Alternatywne, Darmowe Źródła Danych (Non-Profit / Self-Hosted)
+
+Gdy publiczne API są przeciążone lub komercyjne rozwiązania (Google Places, TripAdvisor) odpadają ze względu na koszty, warto wykorzystać otwarte zbiory danych do lokalnego przetworzenia.
+
+### Publiczne Dane Rządowe i Regionalne (Open Data)
+* **Dane.gov.pl:** Krajowy portal otwartych danych w Polsce. Zawiera oficjalne, zweryfikowane rejestry publiczne, w tym:
+  * Krajowy rejestr zabytków.
+  * Oficjalne wykazy muzeów i instytucji kultury.
+  * Bazy danych punktów informacji turystycznej.
+* **Regionalne portale GIS (Wojewódzkie bazy danych):** Urzędy marszałkowskie często udostępniają darmowe, wysokiej jakości warstwy geodezyjne (formaty SHP, KML, GeoJSON) zawierające szlaki turystyczne, ścieżki rowerowe, pomniki przyrody oraz lokalne atrakcje.
+
+### Overture Maps Foundation
+* **Charakterystyka:** Nowoczesna, darmowa alternatywa dla komercyjnych baz POI, rozwijana m.in. przez Amazon, Microsoft i Meta.
+* **Zastosowanie:** Agreguje dane m.in. z OSM, ale ich warstwa **POI (Places)** jest znacznie lepiej ustrukturyzowana, zweryfikowana i łatwiejsza do przefiltrowania pod kątem turystyki niż surowy dump OSM. Dane są udostępniane jako pliki Parquet, idealne do pobrania i zaimportowania do własnej bazy danych.
