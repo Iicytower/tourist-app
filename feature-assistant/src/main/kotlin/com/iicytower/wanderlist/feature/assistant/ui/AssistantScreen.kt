@@ -158,6 +158,7 @@ private fun MessageBubble(message: ChatMessage) {
         is ChatMessage.Assistant -> AssistantBubble(message.text)
         is ChatMessage.Error -> ErrorBubble(message.message)
         is ChatMessage.ToolResult -> Unit
+        is ChatMessage.AssistantWithToolCalls -> Unit
     }
 }
 

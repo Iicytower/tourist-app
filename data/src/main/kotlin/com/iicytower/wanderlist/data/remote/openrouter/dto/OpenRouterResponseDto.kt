@@ -20,12 +20,14 @@ data class OpenRouterCompleteChoice(
 
 @Serializable
 data class OpenRouterCompleteMessage(
-    val content: String? = null
+    val content: String? = null,
+    @SerialName("tool_calls") val toolCalls: List<OpenRouterToolCall>? = null
 )
 
 @Serializable
 data class OpenRouterChoice(
-    val delta: OpenRouterDelta = OpenRouterDelta()
+    val delta: OpenRouterDelta = OpenRouterDelta(),
+    val message: OpenRouterCompleteMessage? = null
 )
 
 @Serializable
