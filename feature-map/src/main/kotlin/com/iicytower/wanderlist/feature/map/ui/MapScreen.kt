@@ -78,6 +78,9 @@ fun MapScreen(
     val mapRef = remember { mutableStateOf<MapLibreMap?>(null) }
     val styleRef = remember { mutableStateOf<Style?>(null) }
 
+    // Odczyt w scopie composable — ustanawia obserwację; zmiana styleRef wyzwala rekompozyację
+    val currentStyle = styleRef.value
+
     remember(context) { MapLibre.getInstance(context) }
 
     LaunchedEffect(Unit) { viewModel.onMapReady() }
@@ -89,44 +92,6 @@ fun MapScreen(
             .target(LatLng(pos.first, pos.second))
             .zoom(pos.third)
             .build()
-    }
-
-    LaunchedEffect(state.searchResults, state.myList, state.showMyListOnly, styleRef.value) {
-        val style = styleRef.value ?: return@LaunchedEffect
-        val attractions = if (state.showMyListOnly) state.myList else state.searchResults
-
-        runCatching { style.removeLayer("attractions-labels") }
-        runCatching { style.removeLayer("attractions-layer") }
-        runCatching { style.removeSource("attractions-source") }
-
-        if (attractions.isEmpty()) return@LaunchedEffect
-
-        val featuresJson = attractions.joinToString(",") { a ->
-            val name = a.name.replace("\\", "\\\\").replace("\"", "\\\"")
-            """{"type":"Feature","geometry":{"type":"Point","coordinates":[${a.longitude},${a.latitude}]},"properties":{"xid":"${a.xid}","name":"$name"}}"""
-        }
-        style.addSource(GeoJsonSource("attractions-source", """{"type":"FeatureCollection","features":[$featuresJson]}"""))
-        style.addLayer(SymbolLayer("attractions-layer", "attractions-source").apply {
-            setProperties(
-                PropertyFactory.iconImage("pin-icon"),
-                PropertyFactory.iconSize(0.9f),
-                PropertyFactory.iconAnchor(Property.ICON_ANCHOR_BOTTOM),
-                PropertyFactory.iconAllowOverlap(true)
-            )
-        })
-        style.addLayer(SymbolLayer("attractions-labels", "attractions-source").apply {
-            setProperties(
-                PropertyFactory.textField(Expression.get("name")),
-                PropertyFactory.textSize(11f),
-                PropertyFactory.textColor(android.graphics.Color.BLACK),
-                PropertyFactory.textHaloColor(android.graphics.Color.WHITE),
-                PropertyFactory.textHaloWidth(2f),
-                PropertyFactory.textAnchor(Property.TEXT_ANCHOR_TOP),
-                PropertyFactory.textOffset(arrayOf(0f, 0.3f)),
-                PropertyFactory.textMaxWidth(8f),
-                PropertyFactory.textOptional(true)
-            )
-        })
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -164,6 +129,43 @@ fun MapScreen(
                     }
                 }
             }},
+            update = { _ ->
+                val style = currentStyle ?: return@AndroidView
+                val attractions = if (state.showMyListOnly) state.myList else state.searchResults
+
+                runCatching { style.removeLayer("attractions-labels") }
+                runCatching { style.removeLayer("attractions-layer") }
+                runCatching { style.removeSource("attractions-source") }
+
+                if (attractions.isEmpty()) return@AndroidView
+
+                val featuresJson = attractions.joinToString(",") { a ->
+                    val name = a.name.replace("\\", "\\\\").replace("\"", "\\\"")
+                    """{"type":"Feature","geometry":{"type":"Point","coordinates":[${a.longitude},${a.latitude}]},"properties":{"xid":"${a.xid}","name":"$name"}}"""
+                }
+                style.addSource(GeoJsonSource("attractions-source", """{"type":"FeatureCollection","features":[$featuresJson]}"""))
+                style.addLayer(SymbolLayer("attractions-layer", "attractions-source").apply {
+                    setProperties(
+                        PropertyFactory.iconImage("pin-icon"),
+                        PropertyFactory.iconSize(0.9f),
+                        PropertyFactory.iconAnchor(Property.ICON_ANCHOR_BOTTOM),
+                        PropertyFactory.iconAllowOverlap(true)
+                    )
+                })
+                style.addLayer(SymbolLayer("attractions-labels", "attractions-source").apply {
+                    setProperties(
+                        PropertyFactory.textField(Expression.get("name")),
+                        PropertyFactory.textSize(11f),
+                        PropertyFactory.textColor(android.graphics.Color.BLACK),
+                        PropertyFactory.textHaloColor(android.graphics.Color.WHITE),
+                        PropertyFactory.textHaloWidth(2f),
+                        PropertyFactory.textAnchor(Property.TEXT_ANCHOR_TOP),
+                        PropertyFactory.textOffset(arrayOf(0f, 0.3f)),
+                        PropertyFactory.textMaxWidth(8f),
+                        PropertyFactory.textOptional(true)
+                    )
+                })
+            },
             modifier = Modifier.fillMaxSize()
         )
 
