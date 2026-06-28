@@ -28,6 +28,7 @@ import com.iicytower.wanderlist.feature.assistant.ui.AssistantScreen
 import com.iicytower.wanderlist.feature.detail.ui.AttractionDetailScreen
 import com.iicytower.wanderlist.feature.map.ui.MapScreen
 import com.iicytower.wanderlist.feature.mylist.ui.MyListScreen
+import com.iicytower.wanderlist.feature.mylist.ui.TripListDetailScreen
 import com.iicytower.wanderlist.feature.search.ui.SearchScreen
 import com.iicytower.wanderlist.feature.settings.ui.SettingsScreen
 
@@ -49,8 +50,8 @@ private val bottomNavItems = listOf(
 fun WanderListNavGraph(navController: NavHostController = rememberNavController()) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
-    val showBottomBar = currentDestination?.route != Screen.AttractionDetail.route &&
-        currentDestination?.route?.startsWith("attraction/") != true
+    val showBottomBar = currentDestination?.route?.startsWith("attraction/") != true &&
+        currentDestination?.route?.startsWith("triplist/") != true
 
     Scaffold(
         bottomBar = {
@@ -106,9 +107,22 @@ fun WanderListNavGraph(navController: NavHostController = rememberNavController(
                 )
             }
             composable(Screen.MyList.route) {
-                MyListScreen(onAttractionClick = { xid ->
-                    navController.navigate(Screen.AttractionDetail.createRoute(xid))
+                MyListScreen(onListClick = { listId ->
+                    navController.navigate(Screen.TripListDetail.createRoute(listId))
                 })
+            }
+            composable(
+                route = Screen.TripListDetail.route,
+                arguments = listOf(navArgument("listId") { type = NavType.LongType })
+            ) { backStackEntry ->
+                val listId = backStackEntry.arguments?.getLong("listId") ?: return@composable
+                TripListDetailScreen(
+                    listId = listId,
+                    onBack = { navController.popBackStack() },
+                    onAttractionClick = { xid ->
+                        navController.navigate(Screen.AttractionDetail.createRoute(xid))
+                    }
+                )
             }
             composable(Screen.Assistant.route) {
                 AssistantScreen()

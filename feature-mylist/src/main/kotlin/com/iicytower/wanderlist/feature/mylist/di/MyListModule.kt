@@ -1,9 +1,11 @@
 package com.iicytower.wanderlist.feature.mylist.di
 
-import com.iicytower.wanderlist.feature.mylist.viewmodel.MyListViewModel
+import com.iicytower.wanderlist.feature.mylist.viewmodel.TripListDetailViewModel
+import com.iicytower.wanderlist.feature.mylist.viewmodel.TripListsViewModel
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
 
 val myListModule = module {
-    viewModel { MyListViewModel(get(), get()) }
+    viewModel { TripListsViewModel(get(), get(), get()) }
+    viewModel { TripListDetailViewModel(get(), get(), get()) }
 }
