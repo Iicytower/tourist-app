@@ -3,6 +3,7 @@ package com.iicytower.wanderlist.data.repository
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
+import kotlinx.coroutines.flow.firstOrNull
 import com.iicytower.wanderlist.core.model.AttractionCategory
 import com.iicytower.wanderlist.data.local.DefaultSettings
 import com.iicytower.wanderlist.data.local.PreferencesKeys
@@ -88,6 +89,22 @@ class DataStoreSettingsRepository(
                 prefs[PreferencesKeys.TAVILY_USAGE_COUNT] = 0
                 prefs[PreferencesKeys.TAVILY_USAGE_MONTH] = current
             }
+        }
+    }
+
+    override suspend fun getLastMapPosition(): Triple<Double, Double, Double>? {
+        val prefs = dataStore.data.firstOrNull() ?: return null
+        val lat = prefs[PreferencesKeys.MAP_LAST_LAT] ?: return null
+        val lon = prefs[PreferencesKeys.MAP_LAST_LON] ?: return null
+        val zoom = prefs[PreferencesKeys.MAP_LAST_ZOOM] ?: return null
+        return Triple(lat, lon, zoom)
+    }
+
+    override suspend fun updateLastMapPosition(lat: Double, lon: Double, zoom: Double) {
+        dataStore.edit { prefs ->
+            prefs[PreferencesKeys.MAP_LAST_LAT] = lat
+            prefs[PreferencesKeys.MAP_LAST_LON] = lon
+            prefs[PreferencesKeys.MAP_LAST_ZOOM] = zoom
         }
     }
 

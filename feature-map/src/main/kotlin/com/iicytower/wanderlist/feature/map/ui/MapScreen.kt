@@ -17,6 +17,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -29,6 +30,7 @@ import org.koin.androidx.compose.koinViewModel
 import org.maplibre.android.MapLibre
 import org.maplibre.android.camera.CameraPosition
 import org.maplibre.android.geometry.LatLng
+import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.maps.MapView
 import org.maplibre.android.maps.Style
 
@@ -40,12 +42,22 @@ fun MapScreen(
     val state by viewModel.uiState.collectAsState()
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
+    val mapRef = remember { mutableStateOf<MapLibreMap?>(null) }
 
     // Must be called before MapView is created (remember runs synchronously during composition)
     remember(context) { MapLibre.getInstance(context) }
 
     LaunchedEffect(Unit) {
         viewModel.onMapReady()
+    }
+
+    LaunchedEffect(state.initialCameraPosition, mapRef.value) {
+        val pos = state.initialCameraPosition ?: return@LaunchedEffect
+        val map = mapRef.value ?: return@LaunchedEffect
+        map.cameraPosition = CameraPosition.Builder()
+            .target(LatLng(pos.first, pos.second))
+            .zoom(pos.third)
+            .build()
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -65,15 +77,15 @@ fun MapScreen(
         AndroidView(
             factory = { mapView.apply {
                 getMapAsync { map ->
-                    map.setStyle(Style.Builder().fromUri("https://tiles.openfreemap.org/styles/liberty")) {
-                        map.cameraPosition = CameraPosition.Builder()
-                            .target(LatLng(50.06, 19.94))
-                            .zoom(11.0)
-                            .build()
-                    }
+                    mapRef.value = map
+                    map.setStyle(Style.Builder().fromUri("https://tiles.openfreemap.org/styles/liberty"))
                     map.addOnMapClickListener {
                         viewModel.selectAttraction(null)
                         false
+                    }
+                    map.addOnCameraIdleListener {
+                        val target = map.cameraPosition.target ?: return@addOnCameraIdleListener
+                        viewModel.saveMapPosition(target.latitude, target.longitude, map.cameraPosition.zoom)
                     }
                 }
             }},

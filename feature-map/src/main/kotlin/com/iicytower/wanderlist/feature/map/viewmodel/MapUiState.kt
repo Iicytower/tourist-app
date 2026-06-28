@@ -10,5 +10,6 @@ data class MapUiState(
     val searchCenterLocation: Location? = null,
     val selectedAttraction: Attraction? = null,
     val userLocation: Location? = null,
-    val isLoading: Boolean = false
+    val isLoading: Boolean = false,
+    val initialCameraPosition: Triple<Double, Double, Double>? = null
 )

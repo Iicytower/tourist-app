@@ -3,6 +3,7 @@ package com.iicytower.wanderlist.feature.map.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.iicytower.wanderlist.domain.repository.AttractionRepository
+import com.iicytower.wanderlist.domain.repository.SettingsRepository
 import com.iicytower.wanderlist.domain.usecase.GetMyListUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -12,13 +13,19 @@ import kotlinx.coroutines.launch
 
 class MapViewModel(
     private val getMyListUseCase: GetMyListUseCase,
-    private val attractionRepository: AttractionRepository
+    private val attractionRepository: AttractionRepository,
+    private val settingsRepository: SettingsRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(MapUiState())
     val uiState: StateFlow<MapUiState> = _uiState.asStateFlow()
 
     fun onMapReady() {
+        viewModelScope.launch {
+            val savedPosition = settingsRepository.getLastMapPosition()
+            val initialPosition = savedPosition ?: Triple(50.06, 19.94, 11.0)
+            _uiState.update { it.copy(initialCameraPosition = initialPosition) }
+        }
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             val lastSearch = attractionRepository.getLastSearchResults()
@@ -29,6 +36,10 @@ class MapViewModel(
                 _uiState.update { it.copy(myList = myList) }
             }
         }
+    }
+
+    fun saveMapPosition(lat: Double, lon: Double, zoom: Double) {
+        viewModelScope.launch { settingsRepository.updateLastMapPosition(lat, lon, zoom) }
     }
 
     fun toggleMyListMode() {
