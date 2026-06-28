@@ -48,6 +48,7 @@ import org.koin.androidx.compose.koinViewModel
 fun AttractionDetailScreen(
     xid: String,
     onBack: () -> Unit = {},
+    onShowOnMap: ((lat: Double, lon: Double, xid: String) -> Unit)? = null,
     showDistance: Boolean = false,
     viewModel: AttractionDetailViewModel = koinViewModel()
 ) {
@@ -178,6 +179,15 @@ fun AttractionDetailScreen(
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Text("Kopiuj lokalizację")
+                        }
+
+                        onShowOnMap?.let { callback ->
+                            OutlinedButton(
+                                onClick = { callback(attraction.latitude, attraction.longitude, attraction.xid) },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text("Pokaż na mapie")
+                            }
                         }
                     }
                 }
