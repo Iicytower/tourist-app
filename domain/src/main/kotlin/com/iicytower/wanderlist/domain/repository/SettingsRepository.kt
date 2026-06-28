@@ -16,4 +16,6 @@ interface SettingsRepository {
     suspend fun updateSystemPromptAssistant(prompt: String)
     suspend fun incrementTavilyUsage()
     suspend fun resetTavilyUsageIfNewMonth()
+    suspend fun getLastMapPosition(): Triple<Double, Double, Double>?
+    suspend fun updateLastMapPosition(lat: Double, lon: Double, zoom: Double)
 }
