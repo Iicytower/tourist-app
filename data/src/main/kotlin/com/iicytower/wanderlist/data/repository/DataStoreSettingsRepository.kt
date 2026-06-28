@@ -41,10 +41,12 @@ class DataStoreSettingsRepository(
 
     override suspend fun updateOpenRouterApiKey(key: String) {
         secureKeyStorage.saveKey(KEY_OPENROUTER, key)
+        dataStore.edit { prefs -> prefs[PreferencesKeys.API_KEYS_VERSION] = (prefs[PreferencesKeys.API_KEYS_VERSION] ?: 0) + 1 }
     }
 
     override suspend fun updateTavilyApiKey(key: String) {
         secureKeyStorage.saveKey(KEY_TAVILY, key)
+        dataStore.edit { prefs -> prefs[PreferencesKeys.API_KEYS_VERSION] = (prefs[PreferencesKeys.API_KEYS_VERSION] ?: 0) + 1 }
     }
 
     override suspend fun updateAiModel(model: String) {

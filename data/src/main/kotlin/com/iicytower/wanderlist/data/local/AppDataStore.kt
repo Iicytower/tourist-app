@@ -23,4 +23,5 @@ object PreferencesKeys {
     val LAST_SEARCH_LATITUDE = floatPreferencesKey("last_search_latitude")
     val LAST_SEARCH_LONGITUDE = floatPreferencesKey("last_search_longitude")
     val LAST_SEARCH_RADIUS_KM = intPreferencesKey("last_search_radius_km")
+    val API_KEYS_VERSION = intPreferencesKey("api_keys_version")
 }

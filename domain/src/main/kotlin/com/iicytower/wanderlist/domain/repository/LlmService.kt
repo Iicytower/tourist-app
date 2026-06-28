@@ -11,4 +11,6 @@ interface LlmService {
         systemPrompt: String,
         tools: List<ToolDefinition>
     ): Flow<LlmEvent>
+
+    suspend fun testConnection(): Result<String>
 }

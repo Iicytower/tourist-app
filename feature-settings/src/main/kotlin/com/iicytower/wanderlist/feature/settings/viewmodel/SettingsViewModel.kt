@@ -4,8 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.iicytower.wanderlist.core.constant.DefaultSettings
 import com.iicytower.wanderlist.core.model.AttractionCategory
-import com.iicytower.wanderlist.domain.model.ChatMessage
-import com.iicytower.wanderlist.domain.model.LlmEvent
 import com.iicytower.wanderlist.domain.repository.LlmService
 import com.iicytower.wanderlist.domain.repository.SettingsRepository
 import com.iicytower.wanderlist.domain.repository.WebSearchService
@@ -13,7 +11,6 @@ import com.iicytower.wanderlist.domain.usecase.GetSettingsUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -84,37 +81,39 @@ class SettingsViewModel(
         _uiState.update { it.copy(tavilyKeyVisible = !it.tavilyKeyVisible) }
     }
 
-    fun testOpenRouterConnection() {
-        _uiState.update { it.copy(openRouterTestState = ConnectionTestState.TESTING) }
+    fun testOpenRouterConnection(currentKeyInField: String) {
+        _uiState.update { it.copy(openRouterTestState = ConnectionTestState.TESTING, openRouterTestError = null) }
         viewModelScope.launch {
-            val settings = getSettingsUseCase().first()
-            var success = false
-            runCatching {
-                llmService.streamResponse(
-                    messages = listOf(ChatMessage.User("Odpowiedz jednym slowem: OK")),
-                    systemPrompt = "",
-                    tools = emptyList()
-                ).collect { event ->
-                    if (event is LlmEvent.TextChunk) success = true
-                }
-            }
+            if (currentKeyInField.isNotBlank()) settingsRepository.updateOpenRouterApiKey(currentKeyInField)
+            val result = llmService.testConnection()
             _uiState.update {
                 it.copy(
-                    openRouterTestState = if (success) ConnectionTestState.SUCCESS else ConnectionTestState.FAILURE
+                    openRouterTestState = if (result.isSuccess) ConnectionTestState.SUCCESS else ConnectionTestState.FAILURE,
+                    openRouterTestError = result.exceptionOrNull()?.message
                 )
             }
         }
     }
 
-    fun testTavilyConnection() {
-        _uiState.update { it.copy(tavilyTestState = ConnectionTestState.TESTING) }
+    fun testTavilyConnection(currentKeyInField: String) {
+        _uiState.update { it.copy(tavilyTestState = ConnectionTestState.TESTING, tavilyTestError = null) }
         viewModelScope.launch {
+            if (currentKeyInField.isNotBlank()) settingsRepository.updateTavilyApiKey(currentKeyInField)
             val result = webSearchService.search("test")
             _uiState.update {
                 it.copy(
-                    tavilyTestState = if (result.isSuccess) ConnectionTestState.SUCCESS else ConnectionTestState.FAILURE
+                    tavilyTestState = if (result.isSuccess) ConnectionTestState.SUCCESS else ConnectionTestState.FAILURE,
+                    tavilyTestError = result.exceptionOrNull()?.message ?: if (result.isFailure) "Nieznany blad Tavily" else null
                 )
             }
         }
+    }
+
+    fun clearOpenRouterTestError() {
+        _uiState.update { it.copy(openRouterTestError = null, openRouterTestState = ConnectionTestState.IDLE) }
+    }
+
+    fun clearTavilyTestError() {
+        _uiState.update { it.copy(tavilyTestError = null, tavilyTestState = ConnectionTestState.IDLE) }
     }
 }

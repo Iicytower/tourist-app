@@ -11,10 +11,12 @@ import com.iicytower.wanderlist.domain.model.ToolDefinition
 import com.iicytower.wanderlist.domain.repository.LlmService
 import com.iicytower.wanderlist.domain.repository.SettingsRepository
 import io.ktor.client.HttpClient
+import io.ktor.client.plugins.timeout
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsChannel
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.contentType
@@ -24,6 +26,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.json.Json
+import timber.log.Timber
 
 class OpenRouterLlmService(
     private val httpClient: HttpClient,
@@ -59,6 +62,7 @@ class OpenRouterLlmService(
                 header(HttpHeaders.Authorization, "Bearer $apiKey")
                 header("HTTP-Referer", "https://wanderlist.app")
                 setBody(requestBody)
+                timeout { requestTimeoutMillis = Long.MAX_VALUE }
             }
 
             if (!response.status.isSuccess()) {
@@ -84,11 +88,46 @@ class OpenRouterLlmService(
                 runCatching {
                     val chunk = json.decodeFromString<OpenRouterStreamChunk>(data)
                     chunk.toLlmEvent()
+                }.onFailure { e ->
+                    Timber.tag("OpenRouter").w(e, "SSE parse failed: %s", data)
                 }.getOrNull()?.let { emit(it) }
             }
             emit(LlmEvent.Done)
         }.onFailure { e ->
             emit(LlmEvent.Error(e.message ?: "Unknown error"))
         }
+    }
+
+    override suspend fun testConnection(): Result<String> = runCatching {
+        val settings = settingsRepository.getSettings().first()
+        val apiKey = settings.openRouterApiKey
+        if (apiKey.isBlank()) return Result.failure(IllegalStateException("Brak klucza API OpenRouter. Wejdz w Ustawienia i zapisz klucz."))
+
+        val requestBody = OpenRouterRequest(
+            model = settings.aiModel,
+            messages = listOf(
+                com.iicytower.wanderlist.data.remote.openrouter.dto.OpenRouterMessage(role = "user", content = "Reply with one word: OK")
+            ),
+            stream = false
+        )
+
+        val response = httpClient.post(baseUrl) {
+            contentType(ContentType.Application.Json)
+            header(HttpHeaders.Authorization, "Bearer $apiKey")
+            header("HTTP-Referer", "https://wanderlist.app")
+            setBody(requestBody)
+        }
+
+        val body = response.bodyAsText()
+        if (!response.status.isSuccess()) {
+            val detail = when (response.status.value) {
+                401 -> "Nieprawidlowy klucz API (401)"
+                402 -> "Brak srodkow na koncie OpenRouter (402)"
+                429 -> "Przekroczono limit zapytan (429)"
+                else -> "HTTP ${response.status.value}: $body"
+            }
+            error(detail)
+        }
+        body
     }
 }

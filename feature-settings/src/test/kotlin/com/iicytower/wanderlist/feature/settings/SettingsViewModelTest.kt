@@ -3,8 +3,6 @@ package com.iicytower.wanderlist.feature.settings
 import com.iicytower.wanderlist.core.constant.DefaultSettings
 import com.iicytower.wanderlist.core.model.AttractionCategory
 import com.iicytower.wanderlist.domain.model.AppSettings
-import com.iicytower.wanderlist.domain.model.ChatMessage
-import com.iicytower.wanderlist.domain.model.LlmEvent
 import com.iicytower.wanderlist.domain.model.ToolDefinition
 import com.iicytower.wanderlist.domain.repository.LlmService
 import com.iicytower.wanderlist.domain.repository.SettingsRepository
@@ -70,24 +68,18 @@ class SettingsViewModelTest {
 
     @Test
     fun testOpenRouterConnection_success_setsSuccessState() = runTest {
-        every { llmService.streamResponse(any(), any(), any()) } returns flowOf(
-            LlmEvent.TextChunk("OK"),
-            LlmEvent.Done
-        )
+        coEvery { llmService.testConnection() } returns Result.success("OK")
         testDispatcher.scheduler.advanceUntilIdle()
-        viewModel.testOpenRouterConnection()
+        viewModel.testOpenRouterConnection("test-key")
         testDispatcher.scheduler.advanceUntilIdle()
         assertEquals(ConnectionTestState.SUCCESS, viewModel.uiState.value.openRouterTestState)
     }
 
     @Test
     fun testOpenRouterConnection_failure_setsFailureState() = runTest {
-        every { llmService.streamResponse(any(), any(), any()) } returns flowOf(
-            LlmEvent.Error("error"),
-            LlmEvent.Done
-        )
+        coEvery { llmService.testConnection() } returns Result.failure(Exception("error"))
         testDispatcher.scheduler.advanceUntilIdle()
-        viewModel.testOpenRouterConnection()
+        viewModel.testOpenRouterConnection("test-key")
         testDispatcher.scheduler.advanceUntilIdle()
         assertEquals(ConnectionTestState.FAILURE, viewModel.uiState.value.openRouterTestState)
     }
@@ -95,7 +87,7 @@ class SettingsViewModelTest {
     @Test
     fun testTavilyConnection_success_setsSuccessState() = runTest {
         coEvery { webSearchService.search(any()) } returns Result.success("results")
-        viewModel.testTavilyConnection()
+        viewModel.testTavilyConnection("test-key")
         testDispatcher.scheduler.advanceUntilIdle()
         assertEquals(ConnectionTestState.SUCCESS, viewModel.uiState.value.tavilyTestState)
     }
@@ -103,7 +95,7 @@ class SettingsViewModelTest {
     @Test
     fun testTavilyConnection_failure_setsFailureState() = runTest {
         coEvery { webSearchService.search(any()) } returns Result.failure(Exception("fail"))
-        viewModel.testTavilyConnection()
+        viewModel.testTavilyConnection("test-key")
         testDispatcher.scheduler.advanceUntilIdle()
         assertEquals(ConnectionTestState.FAILURE, viewModel.uiState.value.tavilyTestState)
     }
