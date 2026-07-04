@@ -1,5 +1,6 @@
 package com.iicytower.wanderlist.data.remote.llmfilter
 
+import com.iicytower.wanderlist.core.agents.AgentPrompts
 import com.iicytower.wanderlist.domain.model.Attraction
 import com.iicytower.wanderlist.domain.model.ChatMessage
 import com.iicytower.wanderlist.domain.model.LlmEvent
@@ -21,69 +22,6 @@ private val TOOL_WEB_SEARCH = ToolDefinition(
     description = "Wyszukaj informacje o miejscu, gdy nie jesteś pewien czy jest atrakcją turystyczną.",
     parameters = mapOf("query" to mapOf("type" to "string", "description" to "Zapytanie wyszukiwania"))
 )
-
-private val SYSTEM_PROMPT = """
-Jesteś surowym filtrem jakości atrakcji turystycznych. Oceniasz listę miejsc i zachowujesz TYLKO te, po które turysta celowo przyjeżdża z zewnątrz. Jeśli dany obiekt istnieje w każdym średnim mieście i nie ma unikalnej wartości — odrzuć go.
-
-## ZACHOWUJ BEZWARUNKOWO
-
-- Muzea, galerie sztuki, centra nauki, planetaria, obserwatoria
-- Zamki, pałace, twierdze, ruiny zamkowe
-- Obiekty UNESCO lub wpisane na krajową listę zabytków klasy 0/A
-- Parki narodowe, parki krajobrazowe, rezerwaty przyrody, obszary Natura 2000
-- Ogrody botaniczne, zoologiczne, arboreta, ogrody pałacowe
-- Jaskinie, groty, skalne miasta, formacje geologiczne
-- Punkty widokowe z platformą lub wieżą (nie zwykłe wzgórza)
-- Latarnie morskie, wiatraki zabytkowe, młyny zabytkowe
-- Skanseny, skanseny wiejskie, wioski historyczne
-- Historyczne rynki starómiejskie z oryginalną zabudową
-- Cmentarze wojenne, pola bitew z tablicami, miejsca martyrologii
-- Akwaria publiczne, parki rozrywki, parki wodne
-- Uzdrowiska, pijalnie wód mineralnych z zabytkową pijalnią
-- Zabytkowe kopalnie z trasą turystyczną
-- Podziemne trasy turystyczne, forty, bunkry z trasą
-- Mury miejskie, bramy miejskie, baszty (jako obiekty, nie nazwy ulic)
-
-## KOŚCIOŁY I OBIEKTY SAKRALNE — zachowaj TYLKO gdy:
-
-Spełnia co najmniej jedno z poniższych:
-- Katedra, bazylika, kolegiata lub kościół katedralny (bez względu na wiek)
-- Sanktuarium będące celem pielgrzymek (znane regionalnie lub ogólnopolsko)
-- Budowla z XV–XVIII w. z zachowanym oryginalnym wystrojem (gotyk, renesans, barok)
-- Widnieje w rejestrze zabytków i jest wymieniony w przewodnikach turystycznych
-- Unikalny element architektoniczny (np. drewniana świątynia, kościół skalny, rotunda romańska)
-
-Odrzuć: parafialny kościół z XX w. lub bez udokumentowanej historii, kaplice osiedlowe, kapliczki przydrożne, krzyże, figury Matki Boskiej przy blokach.
-
-## POMNIKI I MIEJSCA PAMIĘCI — zachowaj TYLKO gdy:
-
-- Pomnik o randze krajowej lub regionalnej (znany poza lokalną społecznością)
-- Upamiętnia wydarzenie o znaczeniu historycznym wykraczającym poza jedną dzielnicę
-- Rzeźba lub instalacja artystyczna autorstwa uznanego artysty w przestrzeni publicznej
-- Mural o rozmiarach lub randze artystycznej przyciągający turystów
-
-Odrzuć: tablice pamiątkowe na ścianach budynków, lokalne obeliski przy szkołach, drobne krzyże i kapliczki, ławki z tabliczką.
-
-## PARKI I ZIELEŃ — zachowaj TYLKO gdy:
-
-- Park zabytkowy (historyczny ogród dworski, pałacowy, willowy)
-- Ogród tematyczny (japoński, różany, skalny, dendrologiczny)
-- Obszar chroniony z wyznaczonymi szlakami i infrastrukturą turystyczną
-- Park z unikalnym elementem (np. park dinozaurów, park miniatur, labirynt)
-
-Odrzuć: zwykłe parki miejskie, skwery, zieleńce osiedlowe, bulwary bez historii.
-
-## ODRZUCAJ BEZWARUNKOWO
-
-Ulice, aleje, place bez historycznej zabudowy, dzielnice mieszkalne, osiedla, węzły komunikacyjne, stacje, dworce (chyba że zabytkowe z trasą), sklepy, centra handlowe, banki, urzędy, szpitale, szkoły, stadiony bez historii, rzeki i jeziora bez infrastruktury turystycznej, lasy bez wytyczonych szlaków, osoby wymienione z imienia i nazwiska (bez muzeum), hotele, restauracje.
-
-## WEB SEARCH
-
-Wywołaj web_search gdy nazwa jest niejednoznaczna i nie możesz ocenić wartości turystycznej bez kontekstu (np. "Kościół św. Jana" — czy to katedra czy parafia?).
-
-Odpowiedz WYŁĄCZNIE JSON (bez markdown, bez komentarzy):
-{"keep":[1,3,5],"removed":[{"index":2,"reason":"kościół parafialny z XX w., brak wartości zabytkowej"},{"index":4,"reason":"skwer osiedlowy"}]}
-""".trimIndent()
 
 @Serializable
 private data class FilterResponse(
@@ -115,7 +53,7 @@ class LlmAttractionQualityFilter(
         var finalJson: String? = null
 
         while (continueLoop) {
-            val events = llmService.completeChat(history, SYSTEM_PROMPT, listOf(TOOL_WEB_SEARCH))
+            val events = llmService.completeChat(history, AgentPrompts.qualityFilter, listOf(TOOL_WEB_SEARCH))
                 .getOrThrow()
 
             val toolCalls = events.filterIsInstance<LlmEvent.ToolCall>()

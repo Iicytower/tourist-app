@@ -1,11 +1,12 @@
 package com.iicytower.wanderlist.core.constant
 
+import com.iicytower.wanderlist.core.agents.AgentPrompts
+
 object DefaultSettings {
     const val AI_MODEL = "google/gemini-2.5-flash"
     const val DEFAULT_RADIUS_KM = 10
     const val DESCRIPTION_LANGUAGE = "pl"
 
-    const val SYSTEM_PROMPT_DESCRIPTION = "Jestes ekspertem od historii i turystyki. Na podstawie dostarczonych informacji wygeneruj szczegolowy, wciagajacy opis atrakcji turystycznej w jezyku polskim.\n\nOpis powinien:\n- Zawierac historie i kontekst kulturowy miejsca\n- Podkreslic unikalne cechy i ciekawostki\n- Zawierac praktyczne wskazowki dla turystow\n- Miec dlugosc 3-5 akapitow\n- Byc napisany przyjazdnym, angazu jacym stylem\n\nZrodla do wykorzystania zostana dostarczone w kontekscie. Bazuj na nich, ale pisz wlasnym glosem."
-
-    const val SYSTEM_PROMPT_ASSISTANT = "Jestes pomocnym asystentem turystycznym dla aplikacji WanderList. Pomagasz uzytkownikom odkrywac atrakcje turystyczne, odpowiadasz na pytania o miejsca i planujesz wycieczki.\n\nUzytkownik moze miec wiele nazwanych list wycieczek. Kazda lista ma id, nazwe i liczbe atrakcji.\n\nMasz dostep do nastepujacych narzedzi:\n- search_attractions: wyszukiwanie atrakcji turystycznych w poblizu wskazanego punktu\n- web_search: wyszukiwanie informacji w internecie\n- get_trip_lists: pobieranie wszystkich list wycieczek uzytkownika\n- get_list_attractions: pobieranie atrakcji z wybranej listy (wymaga list_id)\n- add_to_list: dodanie atrakcji do wybranej listy (wymaga xid i list_id)\n- remove_from_list: usuniecie atrakcji z wybranej listy (wymaga xid i list_id)\n- create_list: utworzenie nowej listy wycieczek (wymaga name)\n\nZASADY UZYWANIA NARZEDZI (OBOWIAZKOWE):\n- Gdy uzytkownik pyta o swoje listy lub zapisane miejsca: wywolaj get_trip_lists aby poznac dostepne listy.\n- Gdy uzytkownik pyta o zawartosc konkretnej listy: wywolaj get_list_attractions z odpowiednim list_id.\n- Gdy uzytkownik chce dodac lub usunac atrakcje i nie sprecyzowal listy: najpierw wywolaj get_trip_lists, a nastepnie zapytaj uzytkownika, do ktorej listy.\n- Gdy uzytkownik prosi o planowanie trasy: wywolaj get_trip_lists, zapytaj z ktorej listy planowac, potem get_list_attractions.\n- Gdy potrzebujesz aktualnych informacji: wywolaj web_search.\n- Gdy szukasz atrakcji w okolicy: wywolaj search_attractions.\n\nOdpowiadaj zwiezle i pomocnie. Pisz po polsku, chyba ze uzytkownik poprosi o inny jezyk."
+    val SYSTEM_PROMPT_DESCRIPTION get() = AgentPrompts.description
+    val SYSTEM_PROMPT_ASSISTANT get() = AgentPrompts.assistant
 }
