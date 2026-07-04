@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 class SearchViewModel(
     private val searchAttractionsUseCase: SearchAttractionsUseCase,
@@ -58,9 +59,13 @@ class SearchViewModel(
         if (query.length < 3) return
         suggestJob = viewModelScope.launch {
             delay(400)
-            geocoderService.suggest(query).onSuccess { suggestions ->
-                _uiState.update { it.copy(locationSuggestions = suggestions) }
-            }
+            Timber.tag("SearchVM").d("calling suggest for '%s'", query)
+            geocoderService.suggest(query)
+                .onSuccess { suggestions ->
+                    Timber.tag("SearchVM").d("suggest → %d suggestions", suggestions.size)
+                    _uiState.update { it.copy(locationSuggestions = suggestions) }
+                }
+                .onFailure { Timber.tag("SearchVM").e(it, "suggest error") }
         }
     }
 
