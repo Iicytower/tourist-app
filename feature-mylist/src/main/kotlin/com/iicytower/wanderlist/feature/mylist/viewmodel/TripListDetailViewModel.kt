@@ -56,13 +56,11 @@ class TripListDetailViewModel(
     fun onPlanButtonClick() {
         val hasPlan = _uiState.value.tripList?.hasTripPlan ?: false
         if (hasPlan) {
-            _uiState.update { it.copy(showPlanExistsDialog = true) }
+            _uiState.update { it.copy(navigateToPlan = true) }
         } else {
             generatePlan()
         }
     }
-
-    fun dismissPlanExistsDialog() = _uiState.update { it.copy(showPlanExistsDialog = false) }
 
     private fun generatePlan() {
         val listId = _uiState.value.tripList?.id ?: return

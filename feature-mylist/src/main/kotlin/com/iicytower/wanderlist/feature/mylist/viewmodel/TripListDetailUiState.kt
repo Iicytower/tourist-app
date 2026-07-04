@@ -9,6 +9,5 @@ data class TripListDetailUiState(
     val error: String? = null,
     val confirmRemoveXid: String? = null,
     val isGeneratingPlan: Boolean = false,
-    val showPlanExistsDialog: Boolean = false,
     val navigateToPlan: Boolean = false
 )

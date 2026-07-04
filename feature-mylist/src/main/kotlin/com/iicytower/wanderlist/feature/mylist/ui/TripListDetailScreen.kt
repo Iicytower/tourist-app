@@ -49,7 +49,6 @@ fun TripListDetailScreen(
     onBack: () -> Unit = {},
     onAttractionClick: (String) -> Unit = {},
     onShowPlan: (Long, String) -> Unit = { _, _ -> },
-    onGoToAssistant: (Long) -> Unit = {},
     viewModel: TripListDetailViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -81,27 +80,6 @@ fun TripListDetailScreen(
             text = { Text("Usunąć \"$name\" z tej listy?") },
             confirmButton = { TextButton(onClick = { viewModel.confirmRemove() }) { Text("Usuń") } },
             dismissButton = { TextButton(onClick = { viewModel.cancelRemove() }) { Text("Anuluj") } }
-        )
-    }
-
-    if (uiState.showPlanExistsDialog) {
-        AlertDialog(
-            onDismissRequest = { viewModel.dismissPlanExistsDialog() },
-            title = { Text("Ta lista ma już plan") },
-            text = { Text("Chcesz zobaczyć istniejący plan czy omówić go z asystentem?") },
-            confirmButton = {
-                TextButton(onClick = {
-                    viewModel.dismissPlanExistsDialog()
-                    val list = uiState.tripList ?: return@TextButton
-                    onShowPlan(list.id, list.name)
-                }) { Text("Pokaż plan") }
-            },
-            dismissButton = {
-                TextButton(onClick = {
-                    viewModel.dismissPlanExistsDialog()
-                    uiState.tripList?.id?.let { onGoToAssistant(it) }
-                }) { Text("Asystent") }
-            }
         )
     }
 

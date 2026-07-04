@@ -135,13 +135,6 @@ fun WanderListNavGraph(navController: NavHostController = rememberNavController(
                     },
                     onShowPlan = { id, name ->
                         navController.navigate(Screen.TripPlan.createRoute(id, name))
-                    },
-                    onGoToAssistant = { id ->
-                        navController.navigate(Screen.Assistant.createRoute(id)) {
-                            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                            launchSingleTop = true
-                            restoreState = false
-                        }
                     }
                 )
             }
