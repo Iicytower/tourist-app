@@ -3,6 +3,7 @@ package com.iicytower.wanderlist.feature.search.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.iicytower.wanderlist.core.model.AttractionCategory
+import com.iicytower.wanderlist.domain.model.GeocodeSuggestion
 import com.iicytower.wanderlist.domain.model.Location
 import com.iicytower.wanderlist.domain.model.SearchParams
 import com.iicytower.wanderlist.domain.repository.AttractionRepository
@@ -10,6 +11,8 @@ import com.iicytower.wanderlist.domain.repository.GeocoderService
 import com.iicytower.wanderlist.domain.repository.LocationService
 import com.iicytower.wanderlist.domain.usecase.FilterAttractionsByQualityUseCase
 import com.iicytower.wanderlist.domain.usecase.SearchAttractionsUseCase
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -26,6 +29,8 @@ class SearchViewModel(
 
     private val _uiState = MutableStateFlow(SearchUiState())
     val uiState: StateFlow<SearchUiState> = _uiState.asStateFlow()
+
+    private var suggestJob: Job? = null
 
     fun setLocationFromGps() {
         viewModelScope.launch {
@@ -48,7 +53,52 @@ class SearchViewModel(
     }
 
     fun updateLocationQuery(query: String) {
-        _uiState.update { it.copy(locationQuery = query) }
+        _uiState.update { it.copy(locationQuery = query, locationSuggestions = if (query.length < 3) emptyList() else it.locationSuggestions) }
+        suggestJob?.cancel()
+        if (query.length < 3) return
+        suggestJob = viewModelScope.launch {
+            delay(400)
+            geocoderService.suggest(query).onSuccess { suggestions ->
+                _uiState.update { it.copy(locationSuggestions = suggestions) }
+            }
+        }
+    }
+
+    fun selectSuggestion(suggestion: GeocodeSuggestion) {
+        _uiState.update {
+            it.copy(
+                searchLocation = Location(suggestion.lat, suggestion.lon),
+                searchLocationLabel = suggestion.displayName,
+                locationQuery = suggestion.displayName,
+                locationSuggestions = emptyList()
+            )
+        }
+    }
+
+    fun dismissSuggestions() {
+        _uiState.update { it.copy(locationSuggestions = emptyList()) }
+    }
+
+    fun openLocationPicker() {
+        _uiState.update { it.copy(showLocationPicker = true) }
+    }
+
+    fun dismissLocationPicker() {
+        _uiState.update { it.copy(showLocationPicker = false) }
+    }
+
+    fun onLocationPicked(lat: Double, lon: Double) {
+        _uiState.update { it.copy(showLocationPicker = false) }
+        viewModelScope.launch {
+            val label = geocoderService.reverseGeocode(lat, lon)
+                .getOrDefault("%.4f, %.4f".format(lat, lon))
+            _uiState.update {
+                it.copy(
+                    searchLocation = Location(lat, lon),
+                    searchLocationLabel = label
+                )
+            }
+        }
     }
 
     fun searchLocationByName(query: String) {
