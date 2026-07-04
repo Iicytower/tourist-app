@@ -41,6 +41,7 @@ dependencies {
     implementation(libs.coroutines.android)
     implementation(libs.maplibre)
     implementation(libs.compose.material.icons.extended)
+    implementation(libs.timber)
 
     debugImplementation(libs.compose.ui.tooling)
 

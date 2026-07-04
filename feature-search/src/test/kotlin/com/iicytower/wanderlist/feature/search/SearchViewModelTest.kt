@@ -7,6 +7,7 @@ import com.iicytower.wanderlist.domain.model.SearchParams
 import com.iicytower.wanderlist.domain.repository.AttractionRepository
 import com.iicytower.wanderlist.domain.repository.GeocoderService
 import com.iicytower.wanderlist.domain.repository.LocationService
+import com.iicytower.wanderlist.domain.usecase.FilterAttractionsByQualityUseCase
 import com.iicytower.wanderlist.domain.usecase.SearchAttractionsUseCase
 import com.iicytower.wanderlist.feature.search.viewmodel.SearchViewModel
 import com.iicytower.wanderlist.feature.search.viewmodel.SortOrder
@@ -28,6 +29,7 @@ class SearchViewModelTest {
 
     private val testDispatcher = StandardTestDispatcher()
     private val searchUseCase = mockk<SearchAttractionsUseCase>()
+    private val filterUseCase = mockk<FilterAttractionsByQualityUseCase>()
     private val locationService = mockk<LocationService>()
     private val geocoderService = mockk<GeocoderService>()
     private val attractionRepository = mockk<AttractionRepository>(relaxed = true)
@@ -36,7 +38,7 @@ class SearchViewModelTest {
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
-        viewModel = SearchViewModel(searchUseCase, locationService, geocoderService, attractionRepository)
+        viewModel = SearchViewModel(searchUseCase, filterUseCase, locationService, geocoderService, attractionRepository)
     }
 
     @After

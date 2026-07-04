@@ -6,12 +6,19 @@ import com.iicytower.wanderlist.core.model.AttractionCategory
 import com.iicytower.wanderlist.domain.model.Attraction
 import com.iicytower.wanderlist.domain.model.ChatMessage
 import com.iicytower.wanderlist.domain.model.LlmEvent
-import com.iicytower.wanderlist.domain.model.ToolCallRef
 import com.iicytower.wanderlist.domain.model.SearchParams
+import com.iicytower.wanderlist.domain.model.ToolCallRef
+import com.iicytower.wanderlist.domain.model.TripList
 import com.iicytower.wanderlist.domain.repository.LlmService
 import com.iicytower.wanderlist.domain.repository.SettingsRepository
 import com.iicytower.wanderlist.domain.repository.WebSearchService
-import com.iicytower.wanderlist.domain.usecase.GetMyListUseCase
+import com.iicytower.wanderlist.domain.usecase.AddToTripListUseCase
+import com.iicytower.wanderlist.domain.usecase.CreateTripListUseCase
+import com.iicytower.wanderlist.domain.usecase.GenerateTripPlanUseCase
+import com.iicytower.wanderlist.domain.usecase.GetAttractionsForListUseCase
+import com.iicytower.wanderlist.domain.usecase.GetTripListsUseCase
+import com.iicytower.wanderlist.domain.usecase.GetTripPlanUseCase
+import com.iicytower.wanderlist.domain.usecase.RemoveFromTripListUseCase
 import com.iicytower.wanderlist.domain.usecase.SearchAttractionsUseCase
 import com.iicytower.wanderlist.feature.assistant.AssistantToolDefs
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,15 +32,27 @@ import kotlinx.coroutines.launch
 class AssistantViewModel(
     private val llmService: LlmService,
     private val searchAttractionsUseCase: SearchAttractionsUseCase,
-    private val getMyListUseCase: GetMyListUseCase,
+    private val getTripListsUseCase: GetTripListsUseCase,
+    private val getAttractionsForListUseCase: GetAttractionsForListUseCase,
+    private val addToTripListUseCase: AddToTripListUseCase,
+    private val removeFromTripListUseCase: RemoveFromTripListUseCase,
+    private val createTripListUseCase: CreateTripListUseCase,
     private val webSearchService: WebSearchService,
-    private val settingsRepository: SettingsRepository
+    private val settingsRepository: SettingsRepository,
+    private val getTripPlanUseCase: GetTripPlanUseCase,
+    private val generateTripPlanUseCase: GenerateTripPlanUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AssistantUiState())
     val uiState: StateFlow<AssistantUiState> = _uiState.asStateFlow()
 
     private val conversationHistory = mutableListOf<ChatMessage>()
+
+    fun setContextList(listId: Long) {
+        // no-op if already set — prevents re-trigger on recomposition
+        if (_uiState.value.contextListId == listId) return
+        _uiState.update { it.copy(contextListId = listId) }
+    }
 
     fun updateInput(text: String) {
         _uiState.update { it.copy(currentInput = text) }
@@ -153,10 +172,64 @@ class AssistantViewModel(
                 val query = args["query"] as? String ?: return "Brak zapytania"
                 webSearchService.search(query).getOrElse { "Blad wyszukiwania: ${it.message}" }
             }
-            "get_my_list" -> {
-                val result = getMyListUseCase().first().toToolResultString()
-                Timber.tag("Assistant").d("get_my_list result: %s", result.take(300))
+            "get_trip_lists" -> {
+                val result = getTripListsUseCase().first().toTripListsString()
+                Timber.tag("Assistant").d("get_trip_lists result: %s", result.take(300))
                 result
+            }
+            "get_list_attractions" -> {
+                val listId = (args["list_id"] as? Number)?.toLong() ?: return "Brak list_id"
+                val result = getAttractionsForListUseCase(listId).first().toToolResultString()
+                Timber.tag("Assistant").d("get_list_attractions(id=%d) result: %s", listId, result.take(300))
+                result
+            }
+            "add_to_list" -> {
+                val xid = args["xid"] as? String ?: return "Brak xid"
+                val listId = (args["list_id"] as? Number)?.toLong() ?: return "Brak list_id"
+                addToTripListUseCase(xid, listId).fold(
+                    onSuccess = { "Dodano atrakcje $xid do listy $listId." },
+                    onFailure = { "Blad dodawania: ${it.message}" }
+                )
+            }
+            "remove_from_list" -> {
+                val xid = args["xid"] as? String ?: return "Brak xid"
+                val listId = (args["list_id"] as? Number)?.toLong() ?: return "Brak list_id"
+                removeFromTripListUseCase(xid, listId).fold(
+                    onSuccess = { "Usunieto atrakcje $xid z listy $listId." },
+                    onFailure = { "Blad usuwania: ${it.message}" }
+                )
+            }
+            "create_list" -> {
+                val name = args["name"] as? String ?: return "Brak nazwy listy"
+                createTripListUseCase(name).fold(
+                    onSuccess = { newId -> "Utworzono liste \"$name\" (id=$newId)." },
+                    onFailure = { "Blad tworzenia listy: ${it.message}" }
+                )
+            }
+            "get_trip_plan" -> {
+                val listId = (args["list_id"] as? Number)?.toLong() ?: return "Brak list_id"
+                val (plan, notes) = getTripPlanUseCase(listId)
+                if (plan == null) return "Brak planu wycieczki dla listy $listId."
+                buildString {
+                    appendLine("Plan wycieczki dla listy $listId:")
+                    plan.days.forEach { day ->
+                        appendLine(day.label)
+                        day.points.forEach { point ->
+                            append("  - ${point.name}")
+                            if (!point.note.isNullOrBlank()) append(" (${point.note})")
+                            appendLine()
+                        }
+                    }
+                    if (!notes.isNullOrBlank()) appendLine("Notatki użytkownika: $notes")
+                }
+            }
+            "update_trip_plan" -> {
+                val listId = (args["list_id"] as? Number)?.toLong() ?: return "Brak list_id"
+                val planJson = args["plan_json"] as? String ?: return "Brak plan_json"
+                generateTripPlanUseCase.updateFromJson(listId, planJson).fold(
+                    onSuccess = { "Plan wycieczki dla listy $listId zaktualizowany." },
+                    onFailure = { "Blad aktualizacji planu: ${it.message}" }
+                )
             }
             else -> "Nieznane narzedzie: $name"
         }
@@ -167,5 +240,12 @@ class AssistantViewModel(
         return joinToString("\n") { a ->
             "Nazwa: ${a.name} | Kategoria: ${a.category.displayName} | Lat: ${a.latitude} | Lon: ${a.longitude}"
         }
+    }
+
+    private fun List<TripList>.toTripListsString(): String {
+        if (isEmpty()) return "Brak list wycieczek."
+        return mapIndexed { i, list ->
+            "Lista ${i + 1} (id=${list.id}): ${list.name} — ${list.attractionCount} atrakcji"
+        }.joinToString("\n")
     }
 }

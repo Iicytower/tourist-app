@@ -49,6 +49,21 @@ feature-settings
 
 **Reguła zależności:** `feature-*` → `domain` → `core`. `data` implementuje interfejsy z `domain`. `feature-*` NIE importuje z `data`.
 
+## Prompty agentów LLM
+
+Wszystkie prompty systemowe i konfiguracje agentów LLM są w jednym miejscu:
+
+```
+app/src/main/assets/agents/
+  quality-filter.txt   ← filtr jakości atrakcji (LlmAttractionQualityFilter)
+  description.txt      ← generowanie opisów atrakcji (GenerateDescriptionUseCase)
+  assistant.txt        ← asystent turystyczny (AssistantViewModel)
+```
+
+Edytuj pliki `.txt` i przebuduj aplikację (`./gradlew installDebug`). Nie ma potrzeby szukania promptów w kodzie Kotlin.
+
+Singleton `AgentPrompts` (w `core/agents/`) ładuje pliki przy starcie aplikacji (`WanderListApp.onCreate()`) przed inicjalizacją Koin.
+
 ## Konwencje nazewnictwa
 
 - Klasy: `PascalCase` · Funkcje/zmienne: `camelCase` · Stałe: `SCREAMING_SNAKE_CASE`
@@ -95,9 +110,18 @@ emulator -avd <NAME> -no-audio -no-boot-anim
 
 ## Zarządzanie taskami
 
-- Taski do zrobienia: `docs/tasks/todo/` (TASK-01 … TASK-17, wykonuj w kolejności)
-- Po ukończeniu taska: przenieś plik z `todo/` do `done/`
+- Taski do zrobienia: `docs/tasks/todo/`
+- Taski ukończone: `docs/tasks/done/`
 - Każdy task realizuj na osobnym feature branchu zgodnie z Git Flow
+
+### Flow ukończenia taska
+
+Po tym jak użytkownik zatwierdzi wykonanie taska, wykonaj **w tej kolejności**:
+
+1. Przenieś plik taska z `docs/tasks/todo/` do `docs/tasks/done/`
+2. Zmerguj feature branch do `develop` przez `--no-ff`
+3. Wypchnij `develop` na remote (`git push origin develop`)
+4. Usuń lokalny feature branch (`git branch -d <nazwa>`)
 
 ## Autonomia w tym projekcie
 

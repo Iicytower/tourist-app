@@ -27,6 +27,7 @@ import com.iicytower.wanderlist.feature.map.viewmodel.MapViewModel
 import org.koin.androidx.compose.koinViewModel
 import org.maplibre.android.MapLibre
 import org.maplibre.android.camera.CameraPosition
+import org.maplibre.android.camera.CameraUpdateFactory
 import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.maps.MapView
@@ -40,6 +41,9 @@ import timber.log.Timber
 @Composable
 fun MapScreen(
     onAttractionClick: (String) -> Unit = {},
+    targetLat: Double? = null,
+    targetLon: Double? = null,
+    targetXid: String? = null,
     viewModel: MapViewModel = koinViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -56,7 +60,16 @@ fun MapScreen(
 
     LaunchedEffect(Unit) { viewModel.onMapReady() }
 
+    LaunchedEffect(targetLat, targetLon, mapRef.value) {
+        if (targetLat != null && targetLon != null) {
+            val map = mapRef.value ?: return@LaunchedEffect
+            map.animateCamera(CameraUpdateFactory.newLatLngZoom(LatLng(targetLat, targetLon), 15.0))
+            targetXid?.let { viewModel.pinTargetAttraction(it) }
+        }
+    }
+
     LaunchedEffect(state.initialCameraPosition, mapRef.value) {
+        if (targetLat != null) return@LaunchedEffect
         val pos = state.initialCameraPosition ?: return@LaunchedEffect
         val map = mapRef.value ?: return@LaunchedEffect
         map.cameraPosition = CameraPosition.Builder()
@@ -94,6 +107,15 @@ fun MapScreen(
                                 PropertyFactory.circleStrokeColor(android.graphics.Color.WHITE)
                             )
                         })
+                        style.addSource(GeoJsonSource("pinned-source", """{"type":"FeatureCollection","features":[]}"""))
+                        style.addLayer(CircleLayer("pinned-layer", "pinned-source").apply {
+                            setProperties(
+                                PropertyFactory.circleRadius(14f),
+                                PropertyFactory.circleColor(android.graphics.Color.parseColor("#1565C0")),
+                                PropertyFactory.circleStrokeWidth(3f),
+                                PropertyFactory.circleStrokeColor(android.graphics.Color.WHITE)
+                            )
+                        })
                         styleRef.value = style
                     }
                     map.addOnMapClickListener { latLng ->
@@ -110,23 +132,21 @@ fun MapScreen(
                 }
             }},
             update = { _ ->
-                Timber.tag("MAP").d("update: style=%b showMyList=%b search=%d my=%d",
-                    currentStyle != null, state.showMyListOnly, state.searchResults.size, state.myList.size)
                 val style = currentStyle ?: return@AndroidView
                 val attractions = if (state.showMyListOnly) state.myList else emptyList()
-                val source = style.getSource("attractions-source") as? GeoJsonSource ?: run {
-                    Timber.tag("MAP").w("attractions-source not found in style")
-                    return@AndroidView
-                }
-                val featuresJson = attractions.joinToString(",") { a ->
+                fun attractionFeature(a: com.iicytower.wanderlist.domain.model.Attraction): String {
                     val name = a.name.replace("\\", "\\\\").replace("\"", "\\\"")
-                    """{"type":"Feature","geometry":{"type":"Point","coordinates":[${a.longitude},${a.latitude}]},"properties":{"xid":"${a.xid}","name":"$name"}}"""
+                    return """{"type":"Feature","geometry":{"type":"Point","coordinates":[${a.longitude},${a.latitude}]},"properties":{"xid":"${a.xid}","name":"$name"}}"""
                 }
-                Timber.tag("MAP").d("setGeoJson with %d features", attractions.size)
-                val geoJson = """{"type":"FeatureCollection","features":[$featuresJson]}"""
-                runCatching {
-                    source.setGeoJson(geoJson)
-                }.onFailure { Timber.tag("MAP").e(it, "setGeoJson failed") }
+                (style.getSource("attractions-source") as? GeoJsonSource)?.let { src ->
+                    val json = """{"type":"FeatureCollection","features":[${attractions.joinToString(",") { attractionFeature(it) }}]}"""
+                    runCatching { src.setGeoJson(json) }.onFailure { Timber.tag("MAP").e(it, "setGeoJson failed") }
+                }
+                (style.getSource("pinned-source") as? GeoJsonSource)?.let { src ->
+                    val pinnedFeature = state.pinnedAttraction?.let { attractionFeature(it) } ?: ""
+                    val json = """{"type":"FeatureCollection","features":[$pinnedFeature]}"""
+                    runCatching { src.setGeoJson(json) }.onFailure { Timber.tag("MAP").e(it, "pinned setGeoJson failed") }
+                }
             },
             modifier = Modifier.fillMaxSize()
         )

@@ -13,16 +13,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Sort
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -39,22 +39,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.iicytower.wanderlist.core.constant.AppConstants
-import com.iicytower.wanderlist.core.util.formatDistance
-import com.iicytower.wanderlist.domain.model.Attraction
-import com.iicytower.wanderlist.feature.mylist.viewmodel.MyListSortOrder
-import com.iicytower.wanderlist.feature.mylist.viewmodel.MyListViewModel
+import com.iicytower.wanderlist.domain.model.TripList
+import com.iicytower.wanderlist.feature.mylist.viewmodel.TripListsViewModel
 import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MyListScreen(
-    onAttractionClick: (String) -> Unit = {},
-    viewModel: MyListViewModel = koinViewModel()
+    onListClick: (Long) -> Unit = {},
+    viewModel: TripListsViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
-    var sortMenuExpanded by remember { mutableStateOf(false) }
 
     LaunchedEffect(uiState.error) {
         uiState.error?.let {
@@ -63,134 +59,119 @@ fun MyListScreen(
         }
     }
 
-    if (uiState.confirmDeleteXid != null) {
-        val xid = uiState.confirmDeleteXid!!
-        val name = uiState.attractions.find { it.xid == xid }?.name ?: xid
+    if (uiState.showCreateDialog) {
+        CreateListDialog(
+            onConfirm = { viewModel.createList(it) },
+            onDismiss = { viewModel.dismissCreateDialog() }
+        )
+    }
+
+    if (uiState.confirmDeleteId != null) {
+        val id = uiState.confirmDeleteId!!
+        val name = uiState.lists.find { it.id == id }?.name ?: ""
         AlertDialog(
             onDismissRequest = { viewModel.cancelDelete() },
-            title = { Text("Usun atrakcje") },
-            text = { Text("Czy na pewno chcesz usunac \"$name\" z listy?") },
-            confirmButton = {
-                TextButton(onClick = { viewModel.confirmDelete() }) { Text("Usun") }
-            },
-            dismissButton = {
-                TextButton(onClick = { viewModel.cancelDelete() }) { Text("Anuluj") }
-            }
+            title = { Text("Usuń listę") },
+            text = { Text("Czy na pewno chcesz usunąć listę \"$name\"? Atrakcje nie zostaną usunięte z bazy.") },
+            confirmButton = { TextButton(onClick = { viewModel.confirmDelete() }) { Text("Usuń") } },
+            dismissButton = { TextButton(onClick = { viewModel.cancelDelete() }) { Text("Anuluj") } }
         )
     }
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
-            TopAppBar(
-                title = {
-                    Text("Moja Lista (${uiState.attractions.size}/${AppConstants.MY_LIST_MAX_SIZE})")
-                },
-                actions = {
-                    Box {
-                        IconButton(onClick = { sortMenuExpanded = true }) {
-                            Icon(Icons.Default.Sort, contentDescription = "Sortuj")
-                        }
-                        DropdownMenu(
-                            expanded = sortMenuExpanded,
-                            onDismissRequest = { sortMenuExpanded = false }
-                        ) {
-                            MyListSortOrder.values().forEach { order ->
-                                DropdownMenuItem(
-                                    text = { Text(sortOrderLabel(order)) },
-                                    onClick = {
-                                        viewModel.setSortOrder(order)
-                                        sortMenuExpanded = false
-                                    }
-                                )
-                            }
-                        }
-                    }
-                }
-            )
+            TopAppBar(title = { Text("Moje Listy") })
+        },
+        floatingActionButton = {
+            FloatingActionButton(onClick = { viewModel.showCreateDialog() }) {
+                Icon(Icons.Default.Add, contentDescription = "Nowa lista")
+            }
         }
     ) { padding ->
-        if (uiState.attractions.isEmpty()) {
+        if (uiState.lists.isEmpty()) {
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
+                modifier = Modifier.fillMaxSize().padding(padding),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    "Twoja lista jest pusta.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        "Nie masz jeszcze żadnych list.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        "Naciśnij + aby utworzyć pierwszą.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
         } else {
             LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .padding(horizontal = 16.dp),
+                modifier = Modifier.fillMaxSize().padding(padding).padding(horizontal = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 item { Spacer(Modifier.height(8.dp)) }
-                items(uiState.attractions, key = { it.xid }) { attraction ->
-                    MyListItem(
-                        attraction = attraction,
-                        onClick = { onAttractionClick(attraction.xid) },
-                        onDelete = { viewModel.requestDelete(attraction.xid) }
+                items(uiState.lists, key = { it.id }) { tripList ->
+                    TripListItem(
+                        tripList = tripList,
+                        onClick = { onListClick(tripList.id) },
+                        onDelete = { viewModel.requestDelete(tripList.id) }
                     )
                 }
-                item { Spacer(Modifier.height(8.dp)) }
+                item { Spacer(Modifier.height(80.dp)) }
             }
         }
     }
 }
 
 @Composable
-private fun MyListItem(
-    attraction: Attraction,
+private fun TripListItem(
+    tripList: TripList,
     onClick: () -> Unit,
     onDelete: () -> Unit
 ) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-    ) {
+    Card(modifier = Modifier.fillMaxWidth().clickable(onClick = onClick)) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
+            modifier = Modifier.fillMaxWidth().padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(attraction.name, style = MaterialTheme.typography.titleSmall)
+                Text(tripList.name, style = MaterialTheme.typography.titleSmall)
                 Text(
-                    attraction.category.displayName,
+                    "${tripList.attractionCount} atrakcji",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                if (attraction.distanceKm != null) {
-                    Text(
-                        formatDistance(attraction.distanceKm ?: 0.0),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
             }
             IconButton(onClick = onDelete) {
-                Icon(
-                    Icons.Default.Delete,
-                    contentDescription = "Usun",
-                    tint = MaterialTheme.colorScheme.error
-                )
+                Icon(Icons.Default.Delete, contentDescription = "Usuń listę", tint = MaterialTheme.colorScheme.error)
             }
         }
     }
 }
 
-private fun sortOrderLabel(order: MyListSortOrder) = when (order) {
-    MyListSortOrder.DATE_ADDED -> "Data dodania"
-    MyListSortOrder.DISTANCE -> "Odleglosc"
-    MyListSortOrder.NAME -> "Nazwa"
-    MyListSortOrder.CATEGORY -> "Kategoria"
+@Composable
+private fun CreateListDialog(onConfirm: (String) -> Unit, onDismiss: () -> Unit) {
+    var name by remember { mutableStateOf("") }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Nowa lista") },
+        text = {
+            OutlinedTextField(
+                value = name,
+                onValueChange = { name = it },
+                label = { Text("Nazwa listy") },
+                singleLine = true
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = { onConfirm(name) }, enabled = name.isNotBlank()) {
+                Text("Utwórz")
+            }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Anuluj") } }
+    )
 }
