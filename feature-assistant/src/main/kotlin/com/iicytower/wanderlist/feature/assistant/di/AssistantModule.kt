@@ -3,7 +3,11 @@ package com.iicytower.wanderlist.feature.assistant.di
 import com.iicytower.wanderlist.domain.repository.LlmService
 import com.iicytower.wanderlist.domain.repository.SettingsRepository
 import com.iicytower.wanderlist.domain.repository.WebSearchService
-import com.iicytower.wanderlist.domain.usecase.GetMyListUseCase
+import com.iicytower.wanderlist.domain.usecase.AddToTripListUseCase
+import com.iicytower.wanderlist.domain.usecase.CreateTripListUseCase
+import com.iicytower.wanderlist.domain.usecase.GetAttractionsForListUseCase
+import com.iicytower.wanderlist.domain.usecase.GetTripListsUseCase
+import com.iicytower.wanderlist.domain.usecase.RemoveFromTripListUseCase
 import com.iicytower.wanderlist.domain.usecase.SearchAttractionsUseCase
 import com.iicytower.wanderlist.feature.assistant.viewmodel.AssistantViewModel
 import org.koin.androidx.viewmodel.dsl.viewModel
@@ -14,7 +18,11 @@ val assistantModule = module {
         AssistantViewModel(
             llmService = get<LlmService>(),
             searchAttractionsUseCase = get<SearchAttractionsUseCase>(),
-            getMyListUseCase = get<GetMyListUseCase>(),
+            getTripListsUseCase = get<GetTripListsUseCase>(),
+            getAttractionsForListUseCase = get<GetAttractionsForListUseCase>(),
+            addToTripListUseCase = get<AddToTripListUseCase>(),
+            removeFromTripListUseCase = get<RemoveFromTripListUseCase>(),
+            createTripListUseCase = get<CreateTripListUseCase>(),
             webSearchService = get<WebSearchService>(),
             settingsRepository = get<SettingsRepository>()
         )

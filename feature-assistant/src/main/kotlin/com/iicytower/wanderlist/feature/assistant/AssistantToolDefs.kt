@@ -20,11 +20,45 @@ internal object AssistantToolDefs {
         parameters = mapOf("query" to mapOf("type" to "string", "description" to "Zapytanie wyszukiwania"))
     )
 
-    val GET_MY_LIST = ToolDefinition(
-        name = "get_my_list",
-        description = "Zwraca miejsca zapisane przez uzytkownika na Mojej Liscie.",
+    val GET_TRIP_LISTS = ToolDefinition(
+        name = "get_trip_lists",
+        description = "Zwraca wszystkie listy wycieczek uzytkownika z liczba atrakcji na kazdej.",
         parameters = emptyMap()
     )
 
-    val ALL = listOf(SEARCH_ATTRACTIONS, WEB_SEARCH, GET_MY_LIST)
+    val GET_LIST_ATTRACTIONS = ToolDefinition(
+        name = "get_list_attractions",
+        description = "Zwraca atrakcje zapisane na wybranej liscie wycieczek.",
+        parameters = mapOf(
+            "list_id" to mapOf("type" to "integer", "description" to "ID listy wycieczek")
+        )
+    )
+
+    val ADD_TO_LIST = ToolDefinition(
+        name = "add_to_list",
+        description = "Dodaje atrakcje do wybranej listy wycieczek.",
+        parameters = mapOf(
+            "xid" to mapOf("type" to "string", "description" to "Identyfikator atrakcji"),
+            "list_id" to mapOf("type" to "integer", "description" to "ID listy wycieczek")
+        )
+    )
+
+    val REMOVE_FROM_LIST = ToolDefinition(
+        name = "remove_from_list",
+        description = "Usuwa atrakcje z wybranej listy wycieczek.",
+        parameters = mapOf(
+            "xid" to mapOf("type" to "string", "description" to "Identyfikator atrakcji"),
+            "list_id" to mapOf("type" to "integer", "description" to "ID listy wycieczek")
+        )
+    )
+
+    val CREATE_LIST = ToolDefinition(
+        name = "create_list",
+        description = "Tworzy nowa liste wycieczek o podanej nazwie.",
+        parameters = mapOf(
+            "name" to mapOf("type" to "string", "description" to "Nazwa nowej listy")
+        )
+    )
+
+    val ALL = listOf(SEARCH_ATTRACTIONS, WEB_SEARCH, GET_TRIP_LISTS, GET_LIST_ATTRACTIONS, ADD_TO_LIST, REMOVE_FROM_LIST, CREATE_LIST)
 }
