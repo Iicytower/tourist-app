@@ -41,6 +41,7 @@ class NominatimGeocoderService(private val httpClient: HttpClient) : GeocoderSer
             parameter("limit", "5")
             parameter("addressdetails", "0")
             header("User-Agent", "WanderList/1.0 (tourist app)")
+            header("Accept-Language", "*")
         }.body<List<NominatimResult>>().map {
             GeocodeSuggestion(it.displayName, it.lat.toDouble(), it.lon.toDouble())
         }
@@ -53,6 +54,7 @@ class NominatimGeocoderService(private val httpClient: HttpClient) : GeocoderSer
             parameter("format", "json")
             parameter("zoom", "14")
             header("User-Agent", "WanderList/1.0 (tourist app)")
+            header("Accept-Language", "*")
         }.body<NominatimResult>().displayName
     }
 }

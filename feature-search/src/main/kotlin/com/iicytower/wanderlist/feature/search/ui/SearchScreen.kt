@@ -23,10 +23,10 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Sort
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -78,45 +78,56 @@ fun SearchScreen(
             Text("Wyszukaj atrakcje", style = MaterialTheme.typography.headlineSmall)
             Spacer(Modifier.height(8.dp))
 
-            // Pole lokalizacji z dropdownem sugestii
-            Box {
-                OutlinedTextField(
-                    value = state.locationQuery,
-                    onValueChange = { viewModel.updateLocationQuery(it) },
-                    label = { Text("Szukaj miejsca (miasto, adres...)") },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    trailingIcon = {
-                        Row {
-                            IconButton(
-                                onClick = { viewModel.searchLocationByName(state.locationQuery) },
-                                enabled = state.locationQuery.isNotBlank() && !state.isLoading
-                            ) {
-                                Icon(Icons.Default.Search, contentDescription = "Szukaj miejsca")
-                            }
-                            IconButton(onClick = { viewModel.openLocationPicker() }) {
-                                Icon(Icons.Default.Map, contentDescription = "Wybierz na mapie")
-                            }
+            // Pole lokalizacji
+            OutlinedTextField(
+                value = state.locationQuery,
+                onValueChange = { viewModel.updateLocationQuery(it) },
+                label = { Text("Szukaj miejsca (miasto, adres...)") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                trailingIcon = {
+                    Row {
+                        IconButton(
+                            onClick = { viewModel.searchLocationByName(state.locationQuery) },
+                            enabled = state.locationQuery.isNotBlank() && !state.isLoading
+                        ) {
+                            Icon(Icons.Default.Search, contentDescription = "Szukaj miejsca")
                         }
-                    },
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                    keyboardActions = KeyboardActions(
-                        onSearch = {
-                            viewModel.dismissSuggestions()
-                            viewModel.searchLocationByName(state.locationQuery)
+                        IconButton(onClick = { viewModel.openLocationPicker() }) {
+                            Icon(Icons.Default.Map, contentDescription = "Wybierz na mapie")
                         }
-                    )
+                    }
+                },
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                keyboardActions = KeyboardActions(
+                    onSearch = {
+                        viewModel.dismissSuggestions()
+                        viewModel.searchLocationByName(state.locationQuery)
+                    }
                 )
+            )
 
-                DropdownMenu(
-                    expanded = state.locationSuggestions.isNotEmpty(),
-                    onDismissRequest = { viewModel.dismissSuggestions() }
+            // Sugestie inline (nie Popup — klawiatura zostaje otwarta)
+            if (state.locationSuggestions.isNotEmpty()) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
                 ) {
-                    state.locationSuggestions.forEach { suggestion ->
-                        DropdownMenuItem(
-                            text = { Text(suggestion.displayName, style = MaterialTheme.typography.bodySmall) },
-                            onClick = { viewModel.selectSuggestion(suggestion) }
-                        )
+                    Column {
+                        state.locationSuggestions.forEachIndexed { index, suggestion ->
+                            Text(
+                                text = suggestion.displayName,
+                                style = MaterialTheme.typography.bodySmall,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { viewModel.selectSuggestion(suggestion) }
+                                    .padding(horizontal = 12.dp, vertical = 10.dp)
+                            )
+                            if (index < state.locationSuggestions.lastIndex) {
+                                HorizontalDivider()
+                            }
+                        }
                     }
                 }
             }
