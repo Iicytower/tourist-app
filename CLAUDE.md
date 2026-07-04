@@ -49,6 +49,21 @@ feature-settings
 
 **Reguła zależności:** `feature-*` → `domain` → `core`. `data` implementuje interfejsy z `domain`. `feature-*` NIE importuje z `data`.
 
+## Prompty agentów LLM
+
+Wszystkie prompty systemowe i konfiguracje agentów LLM są w jednym miejscu:
+
+```
+app/src/main/assets/agents/
+  quality-filter.txt   ← filtr jakości atrakcji (LlmAttractionQualityFilter)
+  description.txt      ← generowanie opisów atrakcji (GenerateDescriptionUseCase)
+  assistant.txt        ← asystent turystyczny (AssistantViewModel)
+```
+
+Edytuj pliki `.txt` i przebuduj aplikację (`./gradlew installDebug`). Nie ma potrzeby szukania promptów w kodzie Kotlin.
+
+Singleton `AgentPrompts` (w `core/agents/`) ładuje pliki przy starcie aplikacji (`WanderListApp.onCreate()`) przed inicjalizacją Koin.
+
 ## Konwencje nazewnictwa
 
 - Klasy: `PascalCase` · Funkcje/zmienne: `camelCase` · Stałe: `SCREAMING_SNAKE_CASE`

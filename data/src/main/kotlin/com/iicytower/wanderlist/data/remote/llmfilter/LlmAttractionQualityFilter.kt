@@ -1,5 +1,6 @@
 package com.iicytower.wanderlist.data.remote.llmfilter
 
+import com.iicytower.wanderlist.core.agents.AgentPrompts
 import com.iicytower.wanderlist.domain.model.Attraction
 import com.iicytower.wanderlist.domain.model.ChatMessage
 import com.iicytower.wanderlist.domain.model.LlmEvent
@@ -21,20 +22,6 @@ private val TOOL_WEB_SEARCH = ToolDefinition(
     description = "Wyszukaj informacje o miejscu, gdy nie jesteś pewien czy jest atrakcją turystyczną.",
     parameters = mapOf("query" to mapOf("type" to "string", "description" to "Zapytanie wyszukiwania"))
 )
-
-private val SYSTEM_PROMPT = """
-Jesteś filtrem jakości atrakcji turystycznych. Twoje zadanie: z podanej listy miejsc zachować TYLKO te, które są realnymi atrakcjami turystycznymi.
-
-Zachowuj miejsca należące do kategorii:
-Muzea, Galerie sztuki, Parki przyrody, Rezerwaty przyrody, Zabytki, Architektura historyczna, Zamki, Pałace, Parki rozrywki, Aquaparki, Plaże, Jeziora, Szlaki górskie, Punkty widokowe, Ogrody zoologiczne, Ogrody botaniczne, Winnice, Festiwale, Imprezy kulturalne, Jaskinie, Groty turystyczne, Skanseny, Wioski tematyczne, Stare kopalnie, Wieże obserwacyjne, Bazary i targi, Browary z turystyką, Dzielnice sztuki ulicznej, Murale, Miejsca kultu religijnego (kościoły, katedry, sanktuaria, meczety, synagogi), Latarnie morskie, Ścieżki w koronach drzew, Planetaria, Obserwatoria astronomiczne, Wraki statków, Miejsca nurkowania, Bulwary i deptaki, Tunele turystyczne, Podziemne trasy, Skalne miasta, Labirynty skalne, Domy i muzea biograficzne, Ogrody japońskie/tematyczne, Uzdrowiska, Pijalnie wód mineralnych, Parki krajobrazowe, Pomniki i monumenty, Cmentarze historyczne, Miejsca bitew.
-
-ODRZUCAJ: ulice, dzielnice mieszkalne, stacje, sklepy, banki, urzędy, osiedla, rzeki bez specjalnej atrakcji, lasy bez wytyczonych tras, osoby (biografie bez muzeum), zwykłe budynki bez znaczenia historycznego.
-
-Możesz wywołać web_search dla niepewnych przypadków — szczególnie gdy nazwa jest niejednoznaczna.
-
-Odpowiedz WYŁĄCZNIE JSON (bez markdown, bez komentarzy):
-{"keep":[1,3,5],"removed":[{"index":2,"reason":"ulica, nie atrakcja"},{"index":4,"reason":"dzielnica mieszkalna"}]}
-""".trimIndent()
 
 @Serializable
 private data class FilterResponse(
@@ -66,7 +53,7 @@ class LlmAttractionQualityFilter(
         var finalJson: String? = null
 
         while (continueLoop) {
-            val events = llmService.completeChat(history, SYSTEM_PROMPT, listOf(TOOL_WEB_SEARCH))
+            val events = llmService.completeChat(history, AgentPrompts.qualityFilter, listOf(TOOL_WEB_SEARCH))
                 .getOrThrow()
 
             val toolCalls = events.filterIsInstance<LlmEvent.ToolCall>()

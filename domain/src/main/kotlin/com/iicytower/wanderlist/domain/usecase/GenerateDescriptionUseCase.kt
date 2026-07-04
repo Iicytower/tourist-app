@@ -1,5 +1,6 @@
 package com.iicytower.wanderlist.domain.usecase
 
+import com.iicytower.wanderlist.core.agents.AgentPrompts
 import com.iicytower.wanderlist.domain.model.ChatMessage
 import com.iicytower.wanderlist.domain.model.DescriptionSource
 import com.iicytower.wanderlist.domain.repository.AttractionRepository
@@ -63,10 +64,8 @@ class GenerateDescriptionUseCase(
         Timber.tag("GenerateDesc").d("calling LLM (complete), context parts: %d", contextParts.size)
         val userPrompt = contextParts.joinToString("\n\n")
         val systemPrompt = buildString {
-            append("Jesteś przewodnikiem turystycznym. ")
-            append("Na podstawie podanych informacji napisz opis atrakcji w maksymalnie jednym akapicie (3-5 zdań). ")
-            append("Odpowiedź powinna zawierać WYŁĄCZNIE opis — bez nagłówków, bez formatowania markdown, bez komentarzy wstępnych ani końcowych. ")
-            append("Język odpowiedzi: ${settings.descriptionLanguage}.")
+            append(AgentPrompts.description)
+            append("\nJęzyk odpowiedzi: ${settings.descriptionLanguage}.")
             if (settings.userInterests.isNotEmpty()) {
                 append(" Uwzględnij zainteresowania: ${settings.userInterests.joinToString(", ") { it.displayName }}.")
             }
