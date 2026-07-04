@@ -64,10 +64,11 @@ fun TripListDetailScreen(
         }
     }
 
-    LaunchedEffect(uiState.tripList?.hasTripPlan, uiState.isGeneratingPlan) {
-        val list = uiState.tripList ?: return@LaunchedEffect
-        if (!uiState.isGeneratingPlan && list.hasTripPlan) {
-            // plan just generated — navigate to plan screen
+    LaunchedEffect(uiState.navigateToPlan) {
+        if (uiState.navigateToPlan) {
+            val list = uiState.tripList ?: return@LaunchedEffect
+            viewModel.onPlanNavigated()
+            onShowPlan(list.id, list.name)
         }
     }
 

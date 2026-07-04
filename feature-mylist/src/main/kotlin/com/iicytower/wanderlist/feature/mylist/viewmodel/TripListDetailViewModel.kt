@@ -71,8 +71,10 @@ class TripListDetailViewModel(
             generateTripPlanUseCase(listId).onFailure { e ->
                 _uiState.update { it.copy(error = e.message, isGeneratingPlan = false) }
             }.onSuccess {
-                _uiState.update { it.copy(isGeneratingPlan = false) }
+                _uiState.update { it.copy(isGeneratingPlan = false, navigateToPlan = true) }
             }
         }
     }
+
+    fun onPlanNavigated() = _uiState.update { it.copy(navigateToPlan = false) }
 }
