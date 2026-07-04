@@ -1,15 +1,21 @@
 package com.iicytower.wanderlist.feature.assistant
 
-import com.iicytower.wanderlist.core.model.AttractionCategory
 import com.iicytower.wanderlist.domain.model.AppSettings
 import com.iicytower.wanderlist.domain.model.ChatMessage
 import com.iicytower.wanderlist.domain.model.LlmEvent
-import com.iicytower.wanderlist.domain.model.ToolDefinition
+import com.iicytower.wanderlist.domain.model.TripList
+import com.iicytower.wanderlist.domain.model.TripPlan
+import com.iicytower.wanderlist.domain.repository.LlmService
 import com.iicytower.wanderlist.domain.repository.SettingsRepository
 import com.iicytower.wanderlist.domain.repository.WebSearchService
-import com.iicytower.wanderlist.domain.usecase.GetMyListUseCase
+import com.iicytower.wanderlist.domain.usecase.AddToTripListUseCase
+import com.iicytower.wanderlist.domain.usecase.CreateTripListUseCase
+import com.iicytower.wanderlist.domain.usecase.GenerateTripPlanUseCase
+import com.iicytower.wanderlist.domain.usecase.GetAttractionsForListUseCase
+import com.iicytower.wanderlist.domain.usecase.GetTripListsUseCase
+import com.iicytower.wanderlist.domain.usecase.GetTripPlanUseCase
+import com.iicytower.wanderlist.domain.usecase.RemoveFromTripListUseCase
 import com.iicytower.wanderlist.domain.usecase.SearchAttractionsUseCase
-import com.iicytower.wanderlist.domain.usecase.SendChatMessageUseCase
 import com.iicytower.wanderlist.feature.assistant.viewmodel.AssistantViewModel
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -31,11 +37,17 @@ import org.junit.Test
 class AssistantViewModelTest {
 
     private val testDispatcher = StandardTestDispatcher()
-    private val sendChatMessageUseCase = mockk<SendChatMessageUseCase>()
+    private val llmService = mockk<LlmService>()
     private val searchAttractionsUseCase = mockk<SearchAttractionsUseCase>()
-    private val getMyListUseCase = mockk<GetMyListUseCase>()
+    private val getTripListsUseCase = mockk<GetTripListsUseCase>()
+    private val getAttractionsForListUseCase = mockk<GetAttractionsForListUseCase>()
+    private val addToTripListUseCase = mockk<AddToTripListUseCase>()
+    private val removeFromTripListUseCase = mockk<RemoveFromTripListUseCase>()
+    private val createTripListUseCase = mockk<CreateTripListUseCase>()
     private val webSearchService = mockk<WebSearchService>()
     private val settingsRepository = mockk<SettingsRepository>()
+    private val getTripPlanUseCase = mockk<GetTripPlanUseCase>()
+    private val generateTripPlanUseCase = mockk<GenerateTripPlanUseCase>()
     private lateinit var viewModel: AssistantViewModel
 
     private val fakeSettings = AppSettings(
@@ -55,26 +67,32 @@ class AssistantViewModelTest {
     fun setup() {
         Dispatchers.setMain(testDispatcher)
         every { settingsRepository.getSettings() } returns flowOf(fakeSettings)
-        every { getMyListUseCase() } returns flowOf(emptyList())
+        every { getTripListsUseCase() } returns flowOf(emptyList())
         viewModel = AssistantViewModel(
-            sendChatMessageUseCase,
-            searchAttractionsUseCase,
-            getMyListUseCase,
-            webSearchService,
-            settingsRepository
+            llmService = llmService,
+            searchAttractionsUseCase = searchAttractionsUseCase,
+            getTripListsUseCase = getTripListsUseCase,
+            getAttractionsForListUseCase = getAttractionsForListUseCase,
+            addToTripListUseCase = addToTripListUseCase,
+            removeFromTripListUseCase = removeFromTripListUseCase,
+            createTripListUseCase = createTripListUseCase,
+            webSearchService = webSearchService,
+            settingsRepository = settingsRepository,
+            getTripPlanUseCase = getTripPlanUseCase,
+            generateTripPlanUseCase = generateTripPlanUseCase
         )
     }
 
     @After
     fun tearDown() { Dispatchers.resetMain() }
 
-    private fun mockLlmFlow(vararg events: LlmEvent) {
-        every { sendChatMessageUseCase(any(), any(), any()) } returns flowOf(*events)
+    private fun mockLlmSuccess(vararg events: LlmEvent) {
+        coEvery { llmService.completeChat(any(), any(), any()) } returns Result.success(listOf(*events))
     }
 
     @Test
     fun sendMessage_addsUserMessageToList() = runTest {
-        mockLlmFlow(LlmEvent.Done)
+        mockLlmSuccess(LlmEvent.Done)
         viewModel.updateInput("Hello")
         viewModel.sendMessage()
         val messages = viewModel.uiState.value.messages
@@ -83,15 +101,15 @@ class AssistantViewModelTest {
 
     @Test
     fun sendMessage_clearsInputAfterSend() = runTest {
-        mockLlmFlow(LlmEvent.Done)
+        mockLlmSuccess(LlmEvent.Done)
         viewModel.updateInput("Hello")
         viewModel.sendMessage()
         assertEquals("", viewModel.uiState.value.currentInput)
     }
 
     @Test
-    fun sendMessage_isProcessingTrueWhileRunning_thenFalse() = runTest {
-        mockLlmFlow(LlmEvent.TextChunk("Hi"), LlmEvent.Done)
+    fun sendMessage_isProcessingFalseAfterCompletion() = runTest {
+        mockLlmSuccess(LlmEvent.TextChunk("Hi"), LlmEvent.Done)
         viewModel.updateInput("Hello")
         viewModel.sendMessage()
         testDispatcher.scheduler.advanceUntilIdle()
@@ -99,8 +117,8 @@ class AssistantViewModelTest {
     }
 
     @Test
-    fun textChunks_accumulateInStreamingText_thenMoveToMessages() = runTest {
-        mockLlmFlow(
+    fun textChunks_accumulateIntoAssistantMessage() = runTest {
+        mockLlmSuccess(
             LlmEvent.TextChunk("Hello"),
             LlmEvent.TextChunk(" world"),
             LlmEvent.Done
@@ -111,12 +129,11 @@ class AssistantViewModelTest {
         val assistantMsgs = viewModel.uiState.value.messages.filterIsInstance<ChatMessage.Assistant>()
         assertEquals(1, assistantMsgs.size)
         assertEquals("Hello world", assistantMsgs.first().text)
-        assertEquals("", viewModel.uiState.value.streamingText)
     }
 
     @Test
     fun llmError_addsErrorMessage() = runTest {
-        mockLlmFlow(LlmEvent.Error("connection failed"))
+        mockLlmSuccess(LlmEvent.Error("connection failed"))
         viewModel.updateInput("Hello")
         viewModel.sendMessage()
         testDispatcher.scheduler.advanceUntilIdle()
@@ -128,12 +145,12 @@ class AssistantViewModelTest {
     @Test
     fun toolCall_webSearch_callsWebSearchService() = runTest {
         coEvery { webSearchService.search(any()) } returns Result.success("results")
-        every { sendChatMessageUseCase(any(), any(), any()) } returnsMany listOf(
-            flowOf(
+        coEvery { llmService.completeChat(any(), any(), any()) } returnsMany listOf(
+            Result.success(listOf(
                 LlmEvent.ToolCall("id1", "web_search", mapOf("query" to "Krakow")),
                 LlmEvent.Done
-            ),
-            flowOf(LlmEvent.TextChunk("Found it"), LlmEvent.Done)
+            )),
+            Result.success(listOf(LlmEvent.TextChunk("Found it"), LlmEvent.Done))
         )
         viewModel.updateInput("Search Krakow")
         viewModel.sendMessage()
@@ -142,23 +159,23 @@ class AssistantViewModelTest {
     }
 
     @Test
-    fun toolCall_getMyList_callsGetMyListUseCase() = runTest {
-        every { sendChatMessageUseCase(any(), any(), any()) } returnsMany listOf(
-            flowOf(
-                LlmEvent.ToolCall("id1", "get_my_list", emptyMap()),
+    fun toolCall_getTripLists_callsGetTripListsUseCase() = runTest {
+        coEvery { llmService.completeChat(any(), any(), any()) } returnsMany listOf(
+            Result.success(listOf(
+                LlmEvent.ToolCall("id1", "get_trip_lists", emptyMap()),
                 LlmEvent.Done
-            ),
-            flowOf(LlmEvent.TextChunk("List retrieved"), LlmEvent.Done)
+            )),
+            Result.success(listOf(LlmEvent.TextChunk("Lists retrieved"), LlmEvent.Done))
         )
-        viewModel.updateInput("Show my list")
+        viewModel.updateInput("Show my lists")
         viewModel.sendMessage()
         testDispatcher.scheduler.advanceUntilIdle()
-        coVerify(atLeast = 1) { getMyListUseCase() }
+        coVerify(atLeast = 1) { getTripListsUseCase() }
     }
 
     @Test
     fun clearChat_emptiesMessages() = runTest {
-        mockLlmFlow(LlmEvent.TextChunk("Hi"), LlmEvent.Done)
+        mockLlmSuccess(LlmEvent.TextChunk("Hi"), LlmEvent.Done)
         viewModel.updateInput("Hello")
         viewModel.sendMessage()
         testDispatcher.scheduler.advanceUntilIdle()

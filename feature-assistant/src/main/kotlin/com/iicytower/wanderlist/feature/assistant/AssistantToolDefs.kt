@@ -60,5 +60,22 @@ internal object AssistantToolDefs {
         )
     )
 
-    val ALL = listOf(SEARCH_ATTRACTIONS, WEB_SEARCH, GET_TRIP_LISTS, GET_LIST_ATTRACTIONS, ADD_TO_LIST, REMOVE_FROM_LIST, CREATE_LIST)
+    val GET_TRIP_PLAN = ToolDefinition(
+        name = "get_trip_plan",
+        description = "Zwraca istniejący plan wycieczki dla wybranej listy.",
+        parameters = mapOf(
+            "list_id" to mapOf("type" to "integer", "description" to "ID listy wycieczek")
+        )
+    )
+
+    val UPDATE_TRIP_PLAN = ToolDefinition(
+        name = "update_trip_plan",
+        description = "Aktualizuje plan wycieczki dla wybranej listy. Podaj pełny nowy plan w formacie JSON.",
+        parameters = mapOf(
+            "list_id" to mapOf("type" to "integer", "description" to "ID listy wycieczek"),
+            "plan_json" to mapOf("type" to "string", "description" to "Pełny plan w formacie JSON zgodnym ze schematem TripPlan")
+        )
+    )
+
+    val ALL = listOf(SEARCH_ATTRACTIONS, WEB_SEARCH, GET_TRIP_LISTS, GET_LIST_ATTRACTIONS, ADD_TO_LIST, REMOVE_FROM_LIST, CREATE_LIST, GET_TRIP_PLAN, UPDATE_TRIP_PLAN)
 }

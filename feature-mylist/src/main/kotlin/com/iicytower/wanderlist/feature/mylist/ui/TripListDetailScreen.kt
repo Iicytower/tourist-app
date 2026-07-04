@@ -14,9 +14,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -46,6 +48,8 @@ fun TripListDetailScreen(
     listId: Long,
     onBack: () -> Unit = {},
     onAttractionClick: (String) -> Unit = {},
+    onShowPlan: (Long, String) -> Unit = { _, _ -> },
+    onGoToAssistant: (Long) -> Unit = {},
     viewModel: TripListDetailViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -57,6 +61,13 @@ fun TripListDetailScreen(
         uiState.error?.let {
             snackbarHostState.showSnackbar(it)
             viewModel.clearError()
+        }
+    }
+
+    LaunchedEffect(uiState.tripList?.hasTripPlan, uiState.isGeneratingPlan) {
+        val list = uiState.tripList ?: return@LaunchedEffect
+        if (!uiState.isGeneratingPlan && list.hasTripPlan) {
+            // plan just generated — navigate to plan screen
         }
     }
 
@@ -72,6 +83,27 @@ fun TripListDetailScreen(
         )
     }
 
+    if (uiState.showPlanExistsDialog) {
+        AlertDialog(
+            onDismissRequest = { viewModel.dismissPlanExistsDialog() },
+            title = { Text("Ta lista ma już plan") },
+            text = { Text("Chcesz zobaczyć istniejący plan czy omówić go z asystentem?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.dismissPlanExistsDialog()
+                    val list = uiState.tripList ?: return@TextButton
+                    onShowPlan(list.id, list.name)
+                }) { Text("Pokaż plan") }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    viewModel.dismissPlanExistsDialog()
+                    uiState.tripList?.id?.let { onGoToAssistant(it) }
+                }) { Text("Asystent") }
+            }
+        )
+    }
+
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
@@ -83,6 +115,18 @@ fun TripListDetailScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, "Wróć") }
+                },
+                actions = {
+                    if (uiState.isGeneratingPlan) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.padding(end = 12.dp),
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        IconButton(onClick = { viewModel.onPlanButtonClick() }) {
+                            Icon(Icons.Default.DateRange, contentDescription = "Zaplanuj wycieczkę")
+                        }
+                    }
                 }
             )
         }

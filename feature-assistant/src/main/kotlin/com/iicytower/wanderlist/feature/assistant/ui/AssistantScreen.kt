@@ -48,10 +48,15 @@ import org.koin.androidx.compose.koinViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AssistantScreen(
+    contextListId: Long? = null,
     viewModel: AssistantViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val listState = rememberLazyListState()
+
+    LaunchedEffect(contextListId) {
+        if (contextListId != null) viewModel.setContextList(contextListId)
+    }
 
     LaunchedEffect(uiState.messages.size, uiState.streamingText) {
         val itemCount = uiState.messages.size + if (uiState.isProcessing) 1 else 0
