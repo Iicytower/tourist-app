@@ -7,5 +7,6 @@ data class AssistantUiState(
     val currentInput: String = "",
     val isProcessing: Boolean = false,
     val streamingText: String = "",
-    val showClearConfirmation: Boolean = false
+    val showClearConfirmation: Boolean = false,
+    val contextListId: Long? = null
 )

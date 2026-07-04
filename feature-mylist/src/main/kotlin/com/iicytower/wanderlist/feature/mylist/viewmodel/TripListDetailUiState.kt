@@ -7,5 +7,7 @@ data class TripListDetailUiState(
     val tripList: TripList? = null,
     val attractions: List<Attraction> = emptyList(),
     val error: String? = null,
-    val confirmRemoveXid: String? = null
+    val confirmRemoveXid: String? = null,
+    val isGeneratingPlan: Boolean = false,
+    val showPlanExistsDialog: Boolean = false
 )

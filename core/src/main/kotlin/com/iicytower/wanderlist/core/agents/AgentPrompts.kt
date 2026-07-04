@@ -7,10 +7,13 @@ object AgentPrompts {
         private set
     var assistant: String = ""
         private set
+    var tripPlan: String = ""
+        private set
 
     fun init(loader: (String) -> String) {
         qualityFilter = loader("quality-filter")
         description = loader("description")
         assistant = loader("assistant")
+        tripPlan = loader("trip-plan")
     }
 }

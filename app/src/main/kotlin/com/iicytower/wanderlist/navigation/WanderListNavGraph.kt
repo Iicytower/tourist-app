@@ -29,6 +29,7 @@ import com.iicytower.wanderlist.feature.detail.ui.AttractionDetailScreen
 import com.iicytower.wanderlist.feature.map.ui.MapScreen
 import com.iicytower.wanderlist.feature.mylist.ui.MyListScreen
 import com.iicytower.wanderlist.feature.mylist.ui.TripListDetailScreen
+import com.iicytower.wanderlist.feature.mylist.ui.TripPlanScreen
 import com.iicytower.wanderlist.feature.search.ui.SearchScreen
 import com.iicytower.wanderlist.feature.settings.ui.SettingsScreen
 
@@ -51,7 +52,8 @@ fun WanderListNavGraph(navController: NavHostController = rememberNavController(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
     val showBottomBar = currentDestination?.route?.startsWith("attraction/") != true &&
-        currentDestination?.route?.startsWith("triplist/") != true
+        currentDestination?.route?.startsWith("triplist/") != true &&
+        currentDestination?.route?.startsWith("tripplan/") != true
 
     Scaffold(
         bottomBar = {
@@ -61,9 +63,18 @@ fun WanderListNavGraph(navController: NavHostController = rememberNavController(
                         NavigationBarItem(
                             icon = { Icon(item.icon, contentDescription = item.label) },
                             label = { Text(item.label) },
-                            selected = currentDestination?.hierarchy?.any { it.route == item.screen.route } == true,
+                            selected = currentDestination?.hierarchy?.any { dest ->
+                                when (item.screen) {
+                                    Screen.Assistant -> dest.route?.startsWith(Screen.Assistant.baseRoute) == true
+                                    else -> dest.route == item.screen.route
+                                }
+                            } == true,
                             onClick = {
-                                val route = if (item.screen == Screen.Map) Screen.Map.baseRoute else item.screen.route
+                                val route = when (item.screen) {
+                                    Screen.Map -> Screen.Map.baseRoute
+                                    Screen.Assistant -> Screen.Assistant.baseRoute
+                                    else -> item.screen.route
+                                }
                                 navController.navigate(route) {
                                     popUpTo(navController.graph.findStartDestination().id) { saveState = true }
                                     launchSingleTop = true
@@ -121,11 +132,49 @@ fun WanderListNavGraph(navController: NavHostController = rememberNavController(
                     onBack = { navController.popBackStack() },
                     onAttractionClick = { xid ->
                         navController.navigate(Screen.AttractionDetail.createRoute(xid))
+                    },
+                    onShowPlan = { id, name ->
+                        navController.navigate(Screen.TripPlan.createRoute(id, name))
+                    },
+                    onGoToAssistant = { id ->
+                        navController.navigate(Screen.Assistant.createRoute(id)) {
+                            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = false
+                        }
                     }
                 )
             }
-            composable(Screen.Assistant.route) {
-                AssistantScreen()
+            composable(
+                route = Screen.TripPlan.route,
+                arguments = listOf(
+                    navArgument("listId") { type = NavType.LongType },
+                    navArgument("listName") { type = NavType.StringType; nullable = true; defaultValue = null }
+                )
+            ) { backStackEntry ->
+                val listId = backStackEntry.arguments?.getLong("listId") ?: return@composable
+                val listName = backStackEntry.arguments?.getString("listName") ?: "Lista"
+                TripPlanScreen(
+                    listId = listId,
+                    listName = listName,
+                    onBack = { navController.popBackStack() },
+                    onDiscussWithAssistant = {
+                        navController.navigate(Screen.Assistant.createRoute(listId)) {
+                            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = false
+                        }
+                    }
+                )
+            }
+            composable(
+                route = Screen.Assistant.route,
+                arguments = listOf(
+                    navArgument("listId") { type = NavType.LongType; defaultValue = -1L }
+                )
+            ) { backStackEntry ->
+                val listId = backStackEntry.arguments?.getLong("listId")?.takeIf { it >= 0 }
+                AssistantScreen(contextListId = listId)
             }
             composable(Screen.Settings.route) {
                 SettingsScreen()

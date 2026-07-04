@@ -2,6 +2,7 @@ package com.iicytower.wanderlist.domain.repository
 
 import com.iicytower.wanderlist.domain.model.Attraction
 import com.iicytower.wanderlist.domain.model.TripList
+import com.iicytower.wanderlist.domain.model.TripPlan
 import kotlinx.coroutines.flow.Flow
 
 interface TripListRepository {
@@ -12,4 +13,8 @@ interface TripListRepository {
     suspend fun deleteList(id: Long): Result<Unit>
     suspend fun addToList(xid: String, listId: Long): Result<Unit>
     suspend fun removeFromList(xid: String, listId: Long): Result<Unit>
+    suspend fun saveTripPlan(listId: Long, plan: TripPlan): Result<Unit>
+    suspend fun updateTripPlanNotes(listId: Long, notes: String?): Result<Unit>
+    suspend fun deleteTripPlan(listId: Long): Result<Unit>
+    suspend fun getTripPlan(listId: Long): Pair<TripPlan?, String?>
 }

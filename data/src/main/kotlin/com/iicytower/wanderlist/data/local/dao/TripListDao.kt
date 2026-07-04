@@ -17,6 +17,11 @@ data class TripListWithCount(
     @ColumnInfo(name = "attractionCount") val attractionCount: Int
 )
 
+data class TripPlanData(
+    @ColumnInfo(name = "tripPlanJson") val tripPlanJson: String?,
+    @ColumnInfo(name = "tripPlanNotes") val tripPlanNotes: String?
+)
+
 @Dao
 interface TripListDao {
 
@@ -62,6 +67,15 @@ interface TripListDao {
 
     @Query("SELECT COUNT(*) FROM attraction_list_crossref WHERE attractionXid = :xid")
     suspend fun getListCountForAttraction(xid: String): Int
+
+    @Query("UPDATE trip_lists SET tripPlanJson = :planJson WHERE id = :id")
+    suspend fun updateTripPlan(id: Long, planJson: String?)
+
+    @Query("UPDATE trip_lists SET tripPlanNotes = :notes WHERE id = :id")
+    suspend fun updateTripPlanNotes(id: Long, notes: String?)
+
+    @Query("SELECT tripPlanJson, tripPlanNotes FROM trip_lists WHERE id = :id")
+    suspend fun getTripPlanData(id: Long): TripPlanData?
 
     @Transaction
     suspend fun removeFromListAndSync(xid: String, listId: Long, attractionDao: AttractionDao) {

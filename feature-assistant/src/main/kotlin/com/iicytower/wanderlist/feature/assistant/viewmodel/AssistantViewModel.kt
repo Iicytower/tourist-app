@@ -14,8 +14,10 @@ import com.iicytower.wanderlist.domain.repository.SettingsRepository
 import com.iicytower.wanderlist.domain.repository.WebSearchService
 import com.iicytower.wanderlist.domain.usecase.AddToTripListUseCase
 import com.iicytower.wanderlist.domain.usecase.CreateTripListUseCase
+import com.iicytower.wanderlist.domain.usecase.GenerateTripPlanUseCase
 import com.iicytower.wanderlist.domain.usecase.GetAttractionsForListUseCase
 import com.iicytower.wanderlist.domain.usecase.GetTripListsUseCase
+import com.iicytower.wanderlist.domain.usecase.GetTripPlanUseCase
 import com.iicytower.wanderlist.domain.usecase.RemoveFromTripListUseCase
 import com.iicytower.wanderlist.domain.usecase.SearchAttractionsUseCase
 import com.iicytower.wanderlist.feature.assistant.AssistantToolDefs
@@ -36,13 +38,21 @@ class AssistantViewModel(
     private val removeFromTripListUseCase: RemoveFromTripListUseCase,
     private val createTripListUseCase: CreateTripListUseCase,
     private val webSearchService: WebSearchService,
-    private val settingsRepository: SettingsRepository
+    private val settingsRepository: SettingsRepository,
+    private val getTripPlanUseCase: GetTripPlanUseCase,
+    private val generateTripPlanUseCase: GenerateTripPlanUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AssistantUiState())
     val uiState: StateFlow<AssistantUiState> = _uiState.asStateFlow()
 
     private val conversationHistory = mutableListOf<ChatMessage>()
+
+    fun setContextList(listId: Long) {
+        // no-op if already set — prevents re-trigger on recomposition
+        if (_uiState.value.contextListId == listId) return
+        _uiState.update { it.copy(contextListId = listId) }
+    }
 
     fun updateInput(text: String) {
         _uiState.update { it.copy(currentInput = text) }
@@ -194,6 +204,31 @@ class AssistantViewModel(
                 createTripListUseCase(name).fold(
                     onSuccess = { newId -> "Utworzono liste \"$name\" (id=$newId)." },
                     onFailure = { "Blad tworzenia listy: ${it.message}" }
+                )
+            }
+            "get_trip_plan" -> {
+                val listId = (args["list_id"] as? Number)?.toLong() ?: return "Brak list_id"
+                val (plan, notes) = getTripPlanUseCase(listId)
+                if (plan == null) return "Brak planu wycieczki dla listy $listId."
+                buildString {
+                    appendLine("Plan wycieczki dla listy $listId:")
+                    plan.days.forEach { day ->
+                        appendLine(day.label)
+                        day.points.forEach { point ->
+                            append("  - ${point.name}")
+                            if (!point.note.isNullOrBlank()) append(" (${point.note})")
+                            appendLine()
+                        }
+                    }
+                    if (!notes.isNullOrBlank()) appendLine("Notatki użytkownika: $notes")
+                }
+            }
+            "update_trip_plan" -> {
+                val listId = (args["list_id"] as? Number)?.toLong() ?: return "Brak list_id"
+                val planJson = args["plan_json"] as? String ?: return "Brak plan_json"
+                generateTripPlanUseCase.updateFromJson(listId, planJson).fold(
+                    onSuccess = { "Plan wycieczki dla listy $listId zaktualizowany." },
+                    onFailure = { "Blad aktualizacji planu: ${it.message}" }
                 )
             }
             else -> "Nieznane narzedzie: $name"

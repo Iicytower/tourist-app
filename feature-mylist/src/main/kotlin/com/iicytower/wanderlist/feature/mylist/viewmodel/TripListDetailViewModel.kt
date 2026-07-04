@@ -2,6 +2,7 @@ package com.iicytower.wanderlist.feature.mylist.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.iicytower.wanderlist.domain.usecase.GenerateTripPlanUseCase
 import com.iicytower.wanderlist.domain.usecase.GetAttractionsForListUseCase
 import com.iicytower.wanderlist.domain.usecase.GetTripListsUseCase
 import com.iicytower.wanderlist.domain.usecase.RemoveFromTripListUseCase
@@ -15,7 +16,8 @@ import kotlinx.coroutines.launch
 class TripListDetailViewModel(
     private val getTripListsUseCase: GetTripListsUseCase,
     private val getAttractionsForListUseCase: GetAttractionsForListUseCase,
-    private val removeFromTripListUseCase: RemoveFromTripListUseCase
+    private val removeFromTripListUseCase: RemoveFromTripListUseCase,
+    private val generateTripPlanUseCase: GenerateTripPlanUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(TripListDetailUiState())
@@ -50,4 +52,27 @@ class TripListDetailViewModel(
     }
 
     fun clearError() = _uiState.update { it.copy(error = null) }
+
+    fun onPlanButtonClick() {
+        val hasPlan = _uiState.value.tripList?.hasTripPlan ?: false
+        if (hasPlan) {
+            _uiState.update { it.copy(showPlanExistsDialog = true) }
+        } else {
+            generatePlan()
+        }
+    }
+
+    fun dismissPlanExistsDialog() = _uiState.update { it.copy(showPlanExistsDialog = false) }
+
+    private fun generatePlan() {
+        val listId = _uiState.value.tripList?.id ?: return
+        _uiState.update { it.copy(isGeneratingPlan = true) }
+        viewModelScope.launch {
+            generateTripPlanUseCase(listId).onFailure { e ->
+                _uiState.update { it.copy(error = e.message, isGeneratingPlan = false) }
+            }.onSuccess {
+                _uiState.update { it.copy(isGeneratingPlan = false) }
+            }
+        }
+    }
 }

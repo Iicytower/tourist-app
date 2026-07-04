@@ -7,5 +7,7 @@ import androidx.room.PrimaryKey
 data class TripListEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val name: String,
-    val createdAt: Long
+    val createdAt: Long,
+    val tripPlanJson: String? = null,
+    val tripPlanNotes: String? = null
 )
