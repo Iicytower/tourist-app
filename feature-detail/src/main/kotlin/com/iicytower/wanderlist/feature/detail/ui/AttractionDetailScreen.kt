@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -84,7 +85,10 @@ fun AttractionDetailScreen(
             tripLists = state.tripLists,
             selectedIds = state.attractionListIds,
             sheetState = sheetState,
-            onToggle = { viewModel.toggleList(it) },
+            onToggle = {
+                viewModel.toggleList(it)
+                scope.launch { sheetState.hide() }.invokeOnCompletion { viewModel.closeListSheet() }
+            },
             onCreate = { viewModel.createAndAddToList(it) },
             onDismiss = {
                 scope.launch { sheetState.hide() }.invokeOnCompletion {
@@ -100,18 +104,18 @@ fun AttractionDetailScreen(
                 title = { Text(state.attraction?.name ?: "Szczegóły") },
                 navigationIcon = {
                     IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, "Wróć") }
-                },
-                actions = {
-                    state.attraction?.let {
-                        IconButton(onClick = { viewModel.openListSheet() }) {
-                            Icon(
-                                if (state.attractionListIds.isNotEmpty()) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                                contentDescription = "Listy"
-                            )
-                        }
-                    }
                 }
             )
+        },
+        floatingActionButton = {
+            if (state.attraction != null) {
+                FloatingActionButton(onClick = { viewModel.openListSheet() }) {
+                    Icon(
+                        if (state.attractionListIds.isNotEmpty()) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                        contentDescription = "Dodaj do listy"
+                    )
+                }
+            }
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { innerPadding ->
