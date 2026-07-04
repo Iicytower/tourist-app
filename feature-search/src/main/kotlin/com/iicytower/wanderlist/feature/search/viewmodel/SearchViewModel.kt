@@ -8,6 +8,7 @@ import com.iicytower.wanderlist.domain.model.SearchParams
 import com.iicytower.wanderlist.domain.repository.AttractionRepository
 import com.iicytower.wanderlist.domain.repository.GeocoderService
 import com.iicytower.wanderlist.domain.repository.LocationService
+import com.iicytower.wanderlist.domain.usecase.FilterAttractionsByQualityUseCase
 import com.iicytower.wanderlist.domain.usecase.SearchAttractionsUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -17,6 +18,7 @@ import kotlinx.coroutines.launch
 
 class SearchViewModel(
     private val searchAttractionsUseCase: SearchAttractionsUseCase,
+    private val filterAttractionsByQualityUseCase: FilterAttractionsByQualityUseCase,
     private val locationService: LocationService,
     private val geocoderService: GeocoderService,
     private val attractionRepository: AttractionRepository
@@ -119,6 +121,28 @@ class SearchViewModel(
                 },
                 onFailure = { e ->
                     _uiState.update { it.copy(isLoading = false, error = e.message ?: "Błąd wyszukiwania", hasSearched = true) }
+                }
+            )
+        }
+    }
+
+    fun filterByQuality() {
+        val attractions = _uiState.value.results
+        if (attractions.isEmpty() || _uiState.value.isFiltering) return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isFiltering = true, error = null, filterRemovedCount = null) }
+            filterAttractionsByQualityUseCase(attractions).fold(
+                onSuccess = { result ->
+                    _uiState.update { state ->
+                        state.copy(
+                            results = sortResults(result.kept, state.sortOrder),
+                            isFiltering = false,
+                            filterRemovedCount = result.removed.size
+                        )
+                    }
+                },
+                onFailure = { e ->
+                    _uiState.update { it.copy(isFiltering = false, error = e.message ?: "Błąd filtrowania") }
                 }
             )
         }

@@ -4,6 +4,7 @@ import com.iicytower.wanderlist.domain.usecase.AddToMyListUseCase
 import com.iicytower.wanderlist.domain.usecase.AddToTripListUseCase
 import com.iicytower.wanderlist.domain.usecase.CreateTripListUseCase
 import com.iicytower.wanderlist.domain.usecase.DeleteTripListUseCase
+import com.iicytower.wanderlist.domain.usecase.FilterAttractionsByQualityUseCase
 import com.iicytower.wanderlist.domain.usecase.GenerateDescriptionUseCase
 import com.iicytower.wanderlist.domain.usecase.GetAttractionDetailUseCase
 import com.iicytower.wanderlist.domain.usecase.GetAttractionsForListUseCase
@@ -18,6 +19,7 @@ import org.koin.dsl.module
 
 val useCaseModule = module {
     factory { SearchAttractionsUseCase(get()) }
+    factory { FilterAttractionsByQualityUseCase(get()) }
     factory { GetMyListUseCase(get()) }
     factory { AddToMyListUseCase(get()) }
     factory { RemoveFromMyListUseCase(get()) }

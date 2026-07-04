@@ -18,6 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.GpsFixed
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Sort
+import androidx.compose.material.icons.filled.AutoFixHigh
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
@@ -153,14 +154,36 @@ fun SearchScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("Znaleziono: ${state.results.size}", style = MaterialTheme.typography.bodySmall)
-                    OutlinedButton(onClick = {
-                        viewModel.setSortOrder(
-                            if (state.sortOrder == SortOrder.BY_DISTANCE) SortOrder.BY_CATEGORY else SortOrder.BY_DISTANCE
-                        )
-                    }) {
-                        Icon(Icons.Default.Sort, contentDescription = null, modifier = Modifier.padding(end = 4.dp))
-                        Text(if (state.sortOrder == SortOrder.BY_DISTANCE) "Odległość" else "Kategoria")
+                    Column {
+                        Text("Znaleziono: ${state.results.size}", style = MaterialTheme.typography.bodySmall)
+                        state.filterRemovedCount?.let { count ->
+                            Text(
+                                "Odfiltrowano: $count",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.secondary
+                            )
+                        }
+                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        if (state.isFiltering) {
+                            CircularProgressIndicator(modifier = Modifier.padding(4.dp), strokeWidth = 2.dp)
+                        } else {
+                            OutlinedButton(
+                                onClick = { viewModel.filterByQuality() },
+                                enabled = !state.isLoading
+                            ) {
+                                Icon(Icons.Default.AutoFixHigh, contentDescription = null, modifier = Modifier.padding(end = 4.dp))
+                                Text("Przefiltruj")
+                            }
+                        }
+                        OutlinedButton(onClick = {
+                            viewModel.setSortOrder(
+                                if (state.sortOrder == SortOrder.BY_DISTANCE) SortOrder.BY_CATEGORY else SortOrder.BY_DISTANCE
+                            )
+                        }) {
+                            Icon(Icons.Default.Sort, contentDescription = null, modifier = Modifier.padding(end = 4.dp))
+                            Text(if (state.sortOrder == SortOrder.BY_DISTANCE) "Odległość" else "Kategoria")
+                        }
                     }
                 }
                 LazyColumn {
