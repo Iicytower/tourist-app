@@ -16,7 +16,9 @@ data class SearchUiState(
     val error: String? = null,
     val sortOrder: SortOrder = SortOrder.BY_DISTANCE,
     val hasSearched: Boolean = false,
-    val debugSourceStats: Map<String, Int> = emptyMap()
+    val debugSourceStats: Map<String, Int> = emptyMap(),
+    val isFiltering: Boolean = false,
+    val filterRemovedCount: Int? = null
 )
 
 enum class SortOrder { BY_DISTANCE, BY_CATEGORY }

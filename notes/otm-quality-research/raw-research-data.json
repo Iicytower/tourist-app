@@ -1,0 +1,184 @@
+{
+  "question": "Jakie są najlepsze praktyki filtrowania wyników z OpenTripMap API (OTM), żeby pokazywać tylko wysokiej jakości atrakcje turystyczne? Konkretnie: (1) jak działa parametr `rate` (zakres, semantyka wartości 0-7 vs 0-3), (2) czy `rate` można podać jako parametr zapytania w endpoint /radius, (3) które `kinds` są \"śmieciowe\" (parking, bankomat, ławka), a które wartościowe, (4) czy OTM wspiera sortowanie po rate (`order_by=rate`), (5) jakie są limity API dla planu darmowego. Aplikacja to niekomercyjna polska aplikacja turystyczna Android bez Google Play Services.",
+  "stats": {
+    "angles": 5,
+    "sources": 15,
+    "claims": 29,
+    "verified": 25,
+    "confirmed": 8,
+    "killed": 17,
+    "afterSynthesis": 0,
+    "note": "Synthesis step failed due to session limit — 8 verified claims returned unmerged"
+  },
+  "confirmed": [
+    {
+      "claim": "The rate parameter in OpenTripMap uses a 0-3 scale, not a 0-7 scale; available values are 1, 2, 3, 1h, 2h, 3h, where 'h' denotes cultural heritage objects.",
+      "source": "https://dev.opentripmap.org/tiles",
+      "quote": "Minimum rating of the object popularity, 1 - minimum, 3- maximum, h - object is referred to the cultural heritage. Available values: 1, 2, 3, 1h, 2h, 3h",
+      "vote": "3-0"
+    },
+    {
+      "claim": "The `rate` parameter can be passed as a query parameter to the /radius endpoint to filter attractions by rating.",
+      "source": "https://dev.opentripmap.org/examples",
+      "quote": "radius=1000&limit=${pageLength}&offset=${offset}&lon=${lon}&lat=${lat}&rate=2&format=count",
+      "vote": "3-0"
+    },
+    {
+      "claim": "The example uses `rate=2` as the rating filter for the /radius endpoint, with no explanation of the full value range or semantics in this page.",
+      "source": "https://dev.opentripmap.org/examples",
+      "quote": "radius=1000&limit=${pageLength}&offset=${offset}&lon=${lon}&lat=${lat}&rate=2&format=json",
+      "vote": "3-0"
+    },
+    {
+      "claim": "Place list requests (including radius endpoint) support filtering by rate among other parameters.",
+      "source": "https://dev.opentripmap.org/docs",
+      "quote": "place list requests can filter by 'location, type, rate and other parameters'",
+      "vote": "3-0"
+    },
+    {
+      "claim": "The free plan is limited to 5,000 requests per day.",
+      "source": "https://dev.opentripmap.org/price",
+      "quote": "5 000 requests / day",
+      "vote": "3-0"
+    },
+    {
+      "claim": "The OpenTripMap API free plan allows 5,000 requests per day.",
+      "source": "https://dev.opentripmap.org/product",
+      "quote": "5 000 requests / day",
+      "vote": "3-0"
+    },
+    {
+      "claim": "The OpenTripMap /radius endpoint supports filtering by 'rate' as a query parameter (alongside location and type), but the product page does not specify the value range or semantics of the rate parameter.",
+      "source": "https://dev.opentripmap.org/product",
+      "quote": "Place list - returns a list of places based on a location, type, rate and other parameters",
+      "vote": "3-0"
+    },
+    {
+      "claim": "The /radius endpoint of OpenTripMap API accepts `rate` as a query parameter, allowing filtering by rating at request time.",
+      "source": "https://gist.github.com/srdelarosa/67cc731fe90a64675d8e6c9ff1fdec09",
+      "quote": "https://api.opentripmap.com/0.1/en/places/radius?radius=1000&lon=-77.02824&lat=-12.0431&rate=3&format=json&limit=5",
+      "vote": "3-0"
+    }
+  ],
+  "refuted_or_unverified": [
+    {
+      "claim": "The `rate` parameter accepts integer values; the example uses values 2 and 3, suggesting a small numeric scale (not 0-7).",
+      "source": "https://gist.github.com/srdelarosa/67cc731fe90a64675d8e6c9ff1fdec09",
+      "vote": "0-0",
+      "note": "Failed to verify — session limit hit"
+    },
+    {
+      "claim": "The default value for the rate parameter is 2, which corresponds to 'all named objects'.",
+      "source": "https://dev.opentripmap.org/tiles",
+      "vote": "0-0",
+      "note": "Failed to verify — session limit hit"
+    },
+    {
+      "claim": "The tiles endpoint documentation covers only the vector tiles endpoint and contains no information about a /radius endpoint.",
+      "source": "https://dev.opentripmap.org/tiles",
+      "vote": "0-0",
+      "note": "Failed to verify — session limit hit"
+    },
+    {
+      "claim": "The official example does not use a `kinds` parameter in the radius API calls.",
+      "source": "https://dev.opentripmap.org/examples",
+      "vote": "0-0",
+      "note": "Failed to verify — session limit hit"
+    },
+    {
+      "claim": "The OpenTripMap free plan allows 5,000 requests per day and up to 10 requests per second.",
+      "source": "https://dev.opentripmap.org/docs",
+      "vote": "0-0",
+      "note": "Failed to verify — session limit hit"
+    },
+    {
+      "claim": "The free plan enforces a rate limit of 10 requests per second.",
+      "source": "https://dev.opentripmap.org/price",
+      "vote": "0-0",
+      "note": "Failed to verify — session limit hit"
+    },
+    {
+      "claim": "The free plan is restricted to non-commercial use only.",
+      "source": "https://dev.opentripmap.org/price",
+      "vote": "0-0",
+      "note": "Failed to verify — session limit hit"
+    },
+    {
+      "claim": "The OpenTripMap API free plan has a rate limit of 10 requests per second.",
+      "source": "https://dev.opentripmap.org/product",
+      "vote": "0-0",
+      "note": "Failed to verify — session limit hit"
+    },
+    {
+      "claim": "The OpenTripMap API free plan is restricted to non-commercial use only.",
+      "source": "https://dev.opentripmap.org/product",
+      "vote": "0-0",
+      "note": "Failed to verify — session limit hit"
+    },
+    {
+      "claim": "The rate field in API responses uses a string format suffixed with 'h' (e.g. '3h'), indicating it may encode duration or a hybrid value rather than a plain integer.",
+      "source": "https://gist.github.com/srdelarosa/67cc731fe90a64675d8e6c9ff1fdec09",
+      "vote": "0-0",
+      "note": "Failed to verify — session limit hit"
+    },
+    {
+      "claim": "The tiles documentation provides no information about sorting by rate (order_by=rate) or any sorting functionality.",
+      "source": "https://dev.opentripmap.org/tiles",
+      "vote": "0-0",
+      "note": "Failed to verify — session limit hit"
+    },
+    {
+      "claim": "The service is described as being in experimental mode, with no free plan rate limits documented.",
+      "source": "https://dev.opentripmap.org/tiles",
+      "vote": "0-0",
+      "note": "Failed to verify — session limit hit"
+    },
+    {
+      "claim": "The /radius endpoint supports `format=count` to retrieve a count of results and `format=json` to retrieve the actual data, enabling pagination.",
+      "source": "https://dev.opentripmap.org/examples",
+      "vote": "0-0",
+      "note": "Failed to verify — session limit hit"
+    },
+    {
+      "claim": "The free plan is restricted to non-commercial use only.",
+      "source": "https://dev.opentripmap.org/docs",
+      "vote": "0-0",
+      "note": "Failed to verify — session limit hit"
+    },
+    {
+      "claim": "The OpenTripMap database contains over 10 million tourist attractions and facilities.",
+      "source": "https://dev.opentripmap.org/product",
+      "vote": "0-0",
+      "note": "Failed to verify — session limit hit"
+    },
+    {
+      "claim": "OpenTripMap API offers a free trial plan, with paid plans starting at $19/month.",
+      "source": "https://www.worldindata.com/api/opentripmap-point-of-interest-api/",
+      "vote": "0-0",
+      "note": "Failed to verify — session limit hit"
+    },
+    {
+      "claim": "The OpenTripMap API supports a `kinds` filter parameter for querying points of interest.",
+      "source": "https://www.worldindata.com/api/opentripmap-point-of-interest-api/",
+      "vote": "0-0",
+      "note": "Failed to verify — session limit hit"
+    }
+  ],
+  "sources": [
+    { "url": "https://dev.opentripmap.org/tiles", "quality": "primary", "claimCount": 5 },
+    { "url": "https://dev.opentripmap.org/examples", "quality": "primary", "claimCount": 4 },
+    { "url": "https://github.com/serhiybutz/OpenTripMapAPI", "quality": "unreliable", "claimCount": 0 },
+    { "url": "https://dev.opentripmap.org/docs", "quality": "primary", "claimCount": 3 },
+    { "url": "https://rapidapi.com/opentripmap/api/places1", "quality": "unreliable", "claimCount": 0 },
+    { "url": "https://worldindata.hashnode.dev/how-do-the-json-and-object-and-description-table-of-opentripmap-point-of-interest-api-work", "quality": "unreliable", "claimCount": 0 },
+    { "url": "https://medium.com/@worldindata/opentripmap-point-of-interest-api-bfe3802a5ebd", "quality": "blog", "claimCount": 2 },
+    { "url": "https://github.com/danielphung01/destination-vacation", "quality": "unreliable", "claimCount": 0 },
+    { "url": "https://www.glidefares.com/discover-with-opentripmap-api-the-ultimate-guide.html", "quality": "unreliable", "claimCount": 0 },
+    { "url": "https://gist.github.com/srdelarosa/67cc731fe90a64675d8e6c9ff1fdec09", "quality": "forum", "claimCount": 5 },
+    { "url": "https://dev.opentripmap.org/price", "quality": "primary", "claimCount": 3 },
+    { "url": "https://dev.opentripmap.org/product", "quality": "primary", "claimCount": 5 },
+    { "url": "https://rapidapi.com/opentripmap/api/places1/pricing", "quality": "unreliable", "claimCount": 0 },
+    { "url": "https://www.scribd.com/document/754954245/FreeAPI", "quality": "unreliable", "claimCount": 0 },
+    { "url": "https://www.worldindata.com/api/opentripmap-point-of-interest-api/", "quality": "secondary", "claimCount": 2 }
+  ]
+}

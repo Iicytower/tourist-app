@@ -6,6 +6,7 @@ import com.iicytower.wanderlist.data.local.databaseModule
 import com.iicytower.wanderlist.data.local.tripListRepositoryModule
 import com.iicytower.wanderlist.data.local.settingsModule
 import com.iicytower.wanderlist.data.local.location.locationModule
+import com.iicytower.wanderlist.data.remote.llmfilter.llmFilterModule
 import com.iicytower.wanderlist.data.remote.openrouter.llmModule
 import com.iicytower.wanderlist.data.remote.opentripmap.httpClientModule
 import com.iicytower.wanderlist.data.remote.nominatim.nominatimModule
@@ -40,6 +41,7 @@ class WanderListApp : Application() {
                 webSearchModule,
                 wikipediaModule,
                 llmModule,
+                llmFilterModule,
                 locationModule,
                 useCaseModule,
                 searchModule,
