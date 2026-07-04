@@ -1,11 +1,17 @@
 package com.iicytower.wanderlist.di
 
 import com.iicytower.wanderlist.domain.usecase.AddToMyListUseCase
+import com.iicytower.wanderlist.domain.usecase.AddToTripListUseCase
+import com.iicytower.wanderlist.domain.usecase.CreateTripListUseCase
+import com.iicytower.wanderlist.domain.usecase.DeleteTripListUseCase
 import com.iicytower.wanderlist.domain.usecase.GenerateDescriptionUseCase
 import com.iicytower.wanderlist.domain.usecase.GetAttractionDetailUseCase
+import com.iicytower.wanderlist.domain.usecase.GetAttractionsForListUseCase
 import com.iicytower.wanderlist.domain.usecase.GetMyListUseCase
 import com.iicytower.wanderlist.domain.usecase.GetSettingsUseCase
+import com.iicytower.wanderlist.domain.usecase.GetTripListsUseCase
 import com.iicytower.wanderlist.domain.usecase.RemoveFromMyListUseCase
+import com.iicytower.wanderlist.domain.usecase.RemoveFromTripListUseCase
 import com.iicytower.wanderlist.domain.usecase.SearchAttractionsUseCase
 import com.iicytower.wanderlist.domain.usecase.SendChatMessageUseCase
 import org.koin.dsl.module
@@ -19,4 +25,10 @@ val useCaseModule = module {
     factory { GetSettingsUseCase(get()) }
     factory { GetAttractionDetailUseCase(get()) }
     factory { SendChatMessageUseCase(get()) }
+    factory { GetTripListsUseCase(get()) }
+    factory { GetAttractionsForListUseCase(get()) }
+    factory { AddToTripListUseCase(get()) }
+    factory { RemoveFromTripListUseCase(get()) }
+    factory { CreateTripListUseCase(get()) }
+    factory { DeleteTripListUseCase(get()) }
 }
