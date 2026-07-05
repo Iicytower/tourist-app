@@ -43,30 +43,31 @@ internal object OverpassQueryBuilder {
         )
     )
 
-    fun build(params: SearchParams): String {
+    /**
+     * Jedno zapytanie łączące wszystkie kategorie potrafi przekroczyć limit czasu publicznego
+     * Overpass API (zaobserwowano server-side timeout >30s przy promieniu 15km i wszystkich
+     * kategoriach naraz). Dlatego generujemy osobne zapytanie na kategorię — każde tańsze
+     * i wykonywane z ograniczoną współbieżnością po stronie klienta (patrz OverpassApiClient).
+     */
+    fun buildQueriesPerCategory(params: SearchParams): List<Pair<AttractionCategory, String>> {
         val radiusMeters = params.radiusKm * 1000
         val lat = params.latitude
         val lon = params.longitude
         val categories = params.categories.ifEmpty { AttractionCategory.entries.toSet() }
 
-        val tagFilters = categories
-            .flatMap { CATEGORY_TAG_FILTERS[it] ?: emptyList() }
-            .distinct()
-
-        val nodeLines = tagFilters.joinToString("\n  ") { (tag, valueRegex) ->
-            """node["$tag"~"$valueRegex"](around:$radiusMeters,$lat,$lon);"""
-        }
-        val wayLines = tagFilters.joinToString("\n  ") { (tag, valueRegex) ->
-            """way["$tag"~"$valueRegex"](around:$radiusMeters,$lat,$lon);"""
-        }
-
-        return """
-[out:json][timeout:30];
+        return categories.mapNotNull { category ->
+            val tagFilters = CATEGORY_TAG_FILTERS[category] ?: return@mapNotNull null
+            val lines = tagFilters.joinToString("\n  ") { (tag, valueRegex) ->
+                """nwr["$tag"~"$valueRegex"](around:$radiusMeters,$lat,$lon);"""
+            }
+            val query = """
+[out:json][timeout:25];
 (
-  $nodeLines
-  $wayLines
+  $lines
 );
 out center 200;
 """.trimIndent()
+            category to query
+        }
     }
 }

@@ -104,10 +104,13 @@ class OverpassApiClientTest {
     }
 
     @Test
-    fun searchAttractions_returnsFailure_onHttpError() = runTest {
+    fun searchAttractions_returnsEmptySuccess_whenAllPerCategoryQueriesFail() = runTest {
+        // Błędy pojedynczych zapytań (jedno na kategorię) są łapane i logowane wewnątrz klienta,
+        // żeby awaria/timeout jednej kategorii nie unieważniał całego wyszukiwania (patrz BUG-06).
         val client = OverpassApiClient(buildClient("", HttpStatusCode.TooManyRequests))
         val result = client.searchAttractions(params)
-        assertTrue(result.isFailure)
+        assertTrue(result.isSuccess)
+        assertTrue(result.getOrThrow().isEmpty())
     }
 
     @Test

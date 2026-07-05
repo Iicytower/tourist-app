@@ -53,6 +53,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.iicytower.wanderlist.core.constant.AppConstants
+import com.iicytower.wanderlist.feature.search.BuildConfig
 import com.iicytower.wanderlist.core.util.formatDistance
 import com.iicytower.wanderlist.domain.model.Attraction
 import com.iicytower.wanderlist.feature.search.viewmodel.SearchViewModel
@@ -185,12 +186,10 @@ fun SearchScreen(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             } else if (state.results.isNotEmpty()) {
-                if (state.debugSourceStats.isNotEmpty()) {
-                    androidx.compose.material3.Card(
+                if (BuildConfig.DEBUG && state.debugSourceStats.isNotEmpty()) {
+                    Card(
                         modifier = Modifier.fillMaxWidth(),
-                        colors = androidx.compose.material3.CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant
-                        )
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
                     ) {
                         Column(modifier = Modifier.padding(8.dp)) {
                             Text("[DEBUG] Wyniki per zrodlo:", style = MaterialTheme.typography.labelSmall)
