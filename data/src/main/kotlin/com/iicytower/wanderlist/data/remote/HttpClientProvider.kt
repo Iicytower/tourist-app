@@ -31,5 +31,11 @@ fun createHttpClient(): HttpClient = HttpClient(OkHttp) {
         // (np. OverpassApiClient odpytujący po kategorii) — połączenia do innych źródeł
         // (Wikipedia, Wikidata) traciły slot i padały z ECONNABORTED w emulatorze (BUG-06).
         connectTimeoutMillis = 20_000
+        // Bez jawnego socketTimeoutMillis silnik OkHttp używał swojego domyślnego (krótkiego)
+        // read timeoutu, co ucinało oczekiwanie na odpowiedź OpenRoutera przy większych promptach
+        // (np. filtrowanie jakości dużej listy atrakcji) — SocketTimeoutException mimo że
+        // requestTimeoutMillis=30s jeszcze nie minęło. Zapytania LLM (completeChat) same
+        // nadpisują to per-request dłuższym limitem — patrz OpenRouterLlmService.
+        socketTimeoutMillis = 30_000
     }
 }
