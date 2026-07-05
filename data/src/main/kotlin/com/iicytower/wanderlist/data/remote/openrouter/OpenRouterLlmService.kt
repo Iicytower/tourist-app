@@ -32,6 +32,11 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonObject
 import timber.log.Timber
 
+// Duże prompty (np. filtrowanie jakości długiej listy atrakcji) potrafią zajmować modelowi
+// dłużej niż globalny domyślny timeout klienta — patrz BUG-06 (SocketTimeoutException
+// przy 38kB promptcie mimo że generowanie mieściło się w rozsądnym czasie).
+private const val LLM_REQUEST_TIMEOUT_MILLIS = 90_000L
+
 class OpenRouterLlmService(
     private val httpClient: HttpClient,
     private val settingsRepository: SettingsRepository
@@ -125,6 +130,7 @@ class OpenRouterLlmService(
             header(HttpHeaders.Authorization, "Bearer $apiKey")
             header("HTTP-Referer", "https://wanderlist.app")
             setBody(requestBody)
+            timeout { requestTimeoutMillis = LLM_REQUEST_TIMEOUT_MILLIS; socketTimeoutMillis = LLM_REQUEST_TIMEOUT_MILLIS }
         }
 
         if (!response.status.isSuccess()) {
@@ -157,6 +163,7 @@ class OpenRouterLlmService(
             header(HttpHeaders.Authorization, "Bearer $apiKey")
             header("HTTP-Referer", "https://wanderlist.app")
             setBody(requestBody)
+            timeout { requestTimeoutMillis = LLM_REQUEST_TIMEOUT_MILLIS; socketTimeoutMillis = LLM_REQUEST_TIMEOUT_MILLIS }
         }
 
         if (!response.status.isSuccess()) {
