@@ -165,6 +165,7 @@ class SearchViewModel(
             searchAttractionsUseCase(params).fold(
                 onSuccess = { results ->
                     val stats = attractionRepository.getLastSearchStats()
+                    Timber.tag("SearchVM").d("Wyniki per źródło: %s", stats)
                     _uiState.update { state ->
                         state.copy(
                             results = sortResults(results, state.sortOrder),

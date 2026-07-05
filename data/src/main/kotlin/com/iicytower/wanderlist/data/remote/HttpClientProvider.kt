@@ -3,6 +3,7 @@ package com.iicytower.wanderlist.data.remote
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.HttpTimeout
+import io.ktor.client.plugins.UserAgent
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logger
@@ -12,6 +13,9 @@ import kotlinx.serialization.json.Json
 import timber.log.Timber
 
 fun createHttpClient(): HttpClient = HttpClient(OkHttp) {
+    install(UserAgent) {
+        agent = "WanderList-Android/1.0"
+    }
     install(ContentNegotiation) {
         json(Json { ignoreUnknownKeys = true })
     }
@@ -23,6 +27,9 @@ fun createHttpClient(): HttpClient = HttpClient(OkHttp) {
     }
     install(HttpTimeout) {
         requestTimeoutMillis = 30_000
-        connectTimeoutMillis = 10_000
+        // 10s bywało za mało pod współbieżnym obciążeniem wielu równoległych zapytań
+        // (np. OverpassApiClient odpytujący po kategorii) — połączenia do innych źródeł
+        // (Wikipedia, Wikidata) traciły slot i padały z ECONNABORTED w emulatorze (BUG-06).
+        connectTimeoutMillis = 20_000
     }
 }
