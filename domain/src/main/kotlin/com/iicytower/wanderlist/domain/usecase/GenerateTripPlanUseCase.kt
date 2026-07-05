@@ -1,6 +1,7 @@
 package com.iicytower.wanderlist.domain.usecase
 
 import com.iicytower.wanderlist.core.agents.AgentPrompts
+import com.iicytower.wanderlist.core.constant.AppConstants
 import com.iicytower.wanderlist.domain.model.ChatMessage
 import com.iicytower.wanderlist.domain.model.LlmEvent
 import com.iicytower.wanderlist.domain.model.ToolCallRef
@@ -41,8 +42,14 @@ class GenerateTripPlanUseCase(
 
         var continueLoop = true
         var finalJson: String? = null
+        var iterations = 0
 
         while (continueLoop) {
+            iterations++
+            if (iterations > AppConstants.MAX_TOOL_CALL_ITERATIONS) {
+                error("Nie udało się wygenerować pełnego planu — spróbuj ponownie")
+            }
+
             val events = llmService.completeChat(history, AgentPrompts.tripPlan, listOf(TOOL_WEB_SEARCH))
                 .getOrThrow()
 

@@ -1,6 +1,7 @@
 package com.iicytower.wanderlist.data.remote.llmfilter
 
 import com.iicytower.wanderlist.core.agents.AgentPrompts
+import com.iicytower.wanderlist.core.constant.AppConstants
 import com.iicytower.wanderlist.domain.model.Attraction
 import com.iicytower.wanderlist.domain.model.ChatMessage
 import com.iicytower.wanderlist.domain.model.LlmEvent
@@ -51,8 +52,17 @@ class LlmAttractionQualityFilter(
 
         var continueLoop = true
         var finalJson: String? = null
+        var iterations = 0
+        var iterationLimitExceeded = false
 
         while (continueLoop) {
+            iterations++
+            if (iterations > AppConstants.MAX_TOOL_CALL_ITERATIONS) {
+                iterationLimitExceeded = true
+                continueLoop = false
+                break
+            }
+
             val events = llmService.completeChat(history, AgentPrompts.qualityFilter, listOf(TOOL_WEB_SEARCH))
                 .getOrThrow()
 
@@ -72,6 +82,11 @@ class LlmAttractionQualityFilter(
                 finalJson = text
                 continueLoop = false
             }
+        }
+
+        if (iterationLimitExceeded) {
+            Timber.w("LlmAttractionQualityFilter: iteration limit exceeded — fail open")
+            return@runCatching FilterResult(attractions, emptyList())
         }
 
         parse(finalJson, attractions)

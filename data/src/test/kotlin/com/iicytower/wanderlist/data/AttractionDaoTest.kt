@@ -94,6 +94,23 @@ class AttractionDaoTest {
     }
 
     @Test
+    fun upsertAll_preservesLocalFieldsForExistingAttraction() = runTest {
+        dao.upsert(entity("xid1", inMyList = true, description = "moj opis"))
+        val refreshed = AttractionEntity(
+            xid = "xid1", name = "Nowa nazwa", latitude = 51.0, longitude = 21.0,
+            category = "MUSEUMS_AND_GALLERIES", isInMyList = false, dateAddedToList = null,
+            description = null, descriptionSources = null, isFromLastSearch = true
+        )
+        dao.upsertAll(listOf(refreshed))
+        val result = dao.getByXid("xid1")!!
+        assertTrue(result.isInMyList)
+        assertEquals("moj opis", result.description)
+        assertEquals("Nowa nazwa", result.name)
+        assertEquals("MUSEUMS_AND_GALLERIES", result.category)
+        assertTrue(result.isFromLastSearch)
+    }
+
+    @Test
     fun addToMyList_setsFlag() = runTest {
         dao.upsert(entity("xid1"))
         dao.addToMyList("xid1", 12345L)

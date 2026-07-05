@@ -6,6 +6,7 @@ import com.iicytower.wanderlist.domain.model.SearchParams
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlin.math.roundToInt
+import timber.log.Timber
 
 class CompositeAttractionSource(
     private val sources: List<RemoteAttractionSource>,
@@ -18,7 +19,14 @@ class CompositeAttractionSource(
 
     override suspend fun searchAttractions(params: SearchParams): Result<List<Attraction>> = runCatching {
         coroutineScope {
-            val jobs = sources.map { source -> async { source.searchAttractions(params).getOrElse { emptyList() } } }
+            val jobs = sources.mapIndexed { index, source ->
+                async {
+                    source.searchAttractions(params).getOrElse { e ->
+                        Timber.tag("CompositeSource").w(e, "Źródło '%s' zwróciło błąd", sourceNames.getOrElse(index) { "?" })
+                        emptyList()
+                    }
+                }
+            }
             val results = jobs.map { it.await() }
 
             lastStats = sourceNames.zip(results).associate { (name, list) -> name to list.size }
