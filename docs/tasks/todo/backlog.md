@@ -46,4 +46,4 @@ Znaleziska z pełnego przeglądu kodu (`notes/code-review-2026-07-05/findings.md
 
 ## Już przekształcone w taski (dla porządku, nie duplikować)
 
-2 → BUG-08, 3 → BUG-09, 4 → BUG-10, 6 → FEAT-14, 7 → BUG-11, 8 → BUG-12, 9 → BUG-13, 11 → BUG-14, 12 → BUG-15, 14 → BUG-16, 16 → BUG-17.
+2 → BUG-08, 3 → BUG-09, 4 → BUG-10, 6 → FEAT-14, 7 → BUG-11, 8 → BUG-12, 9 → BUG-13, 11 → BUG-14, 12 → BUG-15, 14 → BUG-16, 16 → BUG-17, 41 → BUG-18, 42 → BUG-18.
