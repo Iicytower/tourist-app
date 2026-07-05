@@ -5,4 +5,5 @@ object AppConstants {
     const val MIN_SEARCH_RADIUS_KM = 1
     const val MAX_SEARCH_RADIUS_KM = 50
     const val DEFAULT_SEARCH_RADIUS_KM = 10
+    const val MAX_TOOL_CALL_ITERATIONS = 8
 }
