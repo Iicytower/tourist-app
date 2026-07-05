@@ -7,6 +7,7 @@ Osobista aplikacja turystyczna Android. Wyszukiwanie atrakcji, generowanie opis�
 - Spec funkcjonalna: `docs/functionalities_specs.md`
 - Spec techniczna: `docs/technical_specs.md`
 - Taski implementacji: `docs/tasks/todo/` (następny do zrobienia), `docs/tasks/done/` (ukończone)
+- Kolejność realizacji tasków: `docs/tasks/order.md` (ustalona kolejność z czasem/trudnością/ważnością — nowe taski dopisywać tutaj we właściwym miejscu kolejki)
 
 ## Stack techniczny (skrót)
 
@@ -112,6 +113,7 @@ emulator -avd <NAME> -no-audio -no-boot-anim
 
 - Taski do zrobienia: `docs/tasks/todo/`
 - Taski ukończone: `docs/tasks/done/`
+- Kolejność realizacji: `docs/tasks/order.md` — kolejny task do zrobienia to zawsze pierwszy nieukończony z tej listy, chyba że użytkownik poprosi inaczej
 - Każdy task realizuj na osobnym feature branchu zgodnie z Git Flow
 
 ### Flow ukończenia taska
