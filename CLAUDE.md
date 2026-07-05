@@ -7,7 +7,6 @@ Osobista aplikacja turystyczna Android. Wyszukiwanie atrakcji, generowanie opis�
 - Spec funkcjonalna: `docs/functionalities_specs.md`
 - Spec techniczna: `docs/technical_specs.md`
 - Taski implementacji: `docs/tasks/todo/` (następny do zrobienia), `docs/tasks/done/` (ukończone)
-- Kolejność realizacji tasków: `docs/tasks/order.md` (ustalona kolejność z czasem/trudnością/ważnością — nowe taski dopisywać tutaj we właściwym miejscu kolejki)
 
 ## Stack techniczny (skrót)
 
@@ -195,8 +194,6 @@ Kompiluje aplikację (debug) i kopiuje APK do root projektu jako `wanderlist-deb
 
 ## Linki do API
 
-- OpenTripMap docs: https://dev.opentripmap.org/docs
-- OpenTripMap kinds (kategorie): https://dev.opentripmap.org/catalog
 - OpenRouter API (OpenAI-compatible): https://openrouter.ai/docs
 - OpenRouter modele: https://openrouter.ai/models
 - Tavily API: https://docs.tavily.com
