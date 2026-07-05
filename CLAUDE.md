@@ -112,6 +112,7 @@ emulator -avd <NAME> -no-audio -no-boot-anim
 
 - Taski do zrobienia: `docs/tasks/todo/`
 - Taski ukończone: `docs/tasks/done/`
+- Kolejność realizacji: `docs/tasks/order.md` — kolejny task do zrobienia to zawsze pierwszy nieukończony z tej listy, chyba że użytkownik poprosi inaczej
 - Każdy task realizuj na osobnym feature branchu zgodnie z Git Flow
 
 ### Flow ukończenia taska
@@ -193,8 +194,6 @@ Kompiluje aplikację (debug) i kopiuje APK do root projektu jako `wanderlist-deb
 
 ## Linki do API
 
-- OpenTripMap docs: https://dev.opentripmap.org/docs
-- OpenTripMap kinds (kategorie): https://dev.opentripmap.org/catalog
 - OpenRouter API (OpenAI-compatible): https://openrouter.ai/docs
 - OpenRouter modele: https://openrouter.ai/models
 - Tavily API: https://docs.tavily.com
