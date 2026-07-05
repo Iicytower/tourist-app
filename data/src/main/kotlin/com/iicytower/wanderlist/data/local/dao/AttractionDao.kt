@@ -23,8 +23,29 @@ interface AttractionDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(attraction: AttractionEntity)
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun upsertAll(attractions: List<AttractionEntity>)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertIgnoringConflicts(attractions: List<AttractionEntity>)
+
+    @Query(
+        "UPDATE attractions SET name = :name, latitude = :latitude, longitude = :longitude, " +
+            "category = :category, isFromLastSearch = :isFromLastSearch WHERE xid = :xid"
+    )
+    suspend fun updateRemoteFields(
+        xid: String,
+        name: String,
+        latitude: Double,
+        longitude: Double,
+        category: String,
+        isFromLastSearch: Boolean
+    )
+
+    @Transaction
+    suspend fun upsertAll(attractions: List<AttractionEntity>) {
+        insertIgnoringConflicts(attractions)
+        attractions.forEach {
+            updateRemoteFields(it.xid, it.name, it.latitude, it.longitude, it.category, it.isFromLastSearch)
+        }
+    }
 
     @Query("UPDATE attractions SET isFromLastSearch = 0 WHERE isFromLastSearch = 1")
     suspend fun clearLastSearchFlag()
