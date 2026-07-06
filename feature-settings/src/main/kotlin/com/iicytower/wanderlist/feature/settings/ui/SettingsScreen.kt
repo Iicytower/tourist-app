@@ -216,7 +216,7 @@ fun SettingsScreen(
             item { SectionHeader("Zainteresowania") }
 
             item {
-                val currentInterests = settings?.userInterests ?: emptySet()
+                val currentInterests = uiState.interests ?: settings?.userInterests ?: emptySet()
                 Column {
                     AttractionCategory.values().forEach { category ->
                         Row(
@@ -226,12 +226,7 @@ fun SettingsScreen(
                             Checkbox(
                                 checked = category in currentInterests,
                                 onCheckedChange = { checked ->
-                                    val newSet = if (checked) {
-                                        currentInterests + category
-                                    } else {
-                                        currentInterests - category
-                                    }
-                                    viewModel.updateInterests(newSet)
+                                    viewModel.toggleInterest(category, checked)
                                 }
                             )
                             Text(category.displayName, style = MaterialTheme.typography.bodyMedium)

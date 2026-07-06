@@ -13,6 +13,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 class SettingsViewModel(
     private val getSettingsUseCase: GetSettingsUseCase,
@@ -24,11 +26,19 @@ class SettingsViewModel(
     private val _uiState = MutableStateFlow(SettingsUiState())
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
 
+    private val interestsMutex = Mutex()
+
     init {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             getSettingsUseCase().collect { settings ->
-                _uiState.update { it.copy(settings = settings, isLoading = false) }
+                _uiState.update {
+                    it.copy(
+                        settings = settings,
+                        isLoading = false,
+                        interests = it.interests ?: settings.userInterests
+                    )
+                }
             }
         }
     }
@@ -53,8 +63,15 @@ class SettingsViewModel(
         viewModelScope.launch { settingsRepository.updateDescriptionLanguage(language) }
     }
 
-    fun updateInterests(interests: Set<AttractionCategory>) {
-        viewModelScope.launch { settingsRepository.updateUserInterests(interests) }
+    fun toggleInterest(category: AttractionCategory, checked: Boolean) {
+        val current = _uiState.value.interests ?: _uiState.value.settings?.userInterests ?: emptySet()
+        val newSet = if (checked) current + category else current - category
+        _uiState.update { it.copy(interests = newSet) }
+        viewModelScope.launch {
+            interestsMutex.withLock {
+                settingsRepository.updateUserInterests(newSet)
+            }
+        }
     }
 
     fun updateSystemPromptDescription(prompt: String) {
