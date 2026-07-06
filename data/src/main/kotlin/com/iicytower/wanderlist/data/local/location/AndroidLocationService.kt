@@ -42,7 +42,7 @@ class AndroidLocationService(
         return providers.mapNotNull { provider ->
             runCatching { locationManager.getLastKnownLocation(provider) }.getOrNull()
         }.filter { loc -> now - loc.time < 60_000L }
-            .maxByOrNull { it.accuracy }
+            .minByOrNull { it.accuracy }
             ?.let { Location(it.latitude, it.longitude) }
     }
 
