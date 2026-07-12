@@ -8,7 +8,7 @@ import com.iicytower.wanderlist.data.local.settingsModule
 import com.iicytower.wanderlist.data.local.location.locationModule
 import com.iicytower.wanderlist.data.remote.llmfilter.llmFilterModule
 import com.iicytower.wanderlist.data.remote.openrouter.llmModule
-import com.iicytower.wanderlist.data.remote.opentripmap.httpClientModule
+import com.iicytower.wanderlist.data.remote.httpClientModule
 import com.iicytower.wanderlist.data.remote.nominatim.nominatimModule
 import com.iicytower.wanderlist.data.remote.composite.attractionSourceModule
 import com.iicytower.wanderlist.data.remote.tavily.webSearchModule
