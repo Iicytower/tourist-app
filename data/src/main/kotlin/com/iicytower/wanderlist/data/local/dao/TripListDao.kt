@@ -61,6 +61,18 @@ interface TripListDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun addToList(crossRef: AttractionListCrossRefEntity)
 
+    @Transaction
+    suspend fun addToListIfUnderLimit(
+        crossRef: AttractionListCrossRefEntity,
+        maxSize: Int,
+        attractionDao: AttractionDao
+    ): Boolean {
+        if (getCountForList(crossRef.listId) >= maxSize) return false
+        addToList(crossRef)
+        attractionDao.addToMyList(crossRef.attractionXid, crossRef.addedAt)
+        return true
+    }
+
     @Query("DELETE FROM attraction_list_crossref WHERE attractionXid = :xid AND listId = :listId")
     suspend fun removeFromList(xid: String, listId: Long)
 
