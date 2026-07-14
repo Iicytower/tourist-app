@@ -74,6 +74,10 @@ class SettingsViewModel(
         }
     }
 
+    fun updateAutoQualityFilter(enabled: Boolean) {
+        viewModelScope.launch { settingsRepository.updateAutoQualityFilter(enabled) }
+    }
+
     fun updateSystemPromptDescription(prompt: String) {
         viewModelScope.launch { settingsRepository.updateSystemPromptDescription(prompt) }
     }

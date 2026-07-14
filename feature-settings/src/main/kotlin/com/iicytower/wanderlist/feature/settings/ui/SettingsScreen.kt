@@ -30,6 +30,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -216,6 +217,14 @@ fun SettingsScreen(
             item { SectionHeader("Zainteresowania") }
 
             item {
+                Text(
+                    "Zaznaczone kategorie są domyślnie wybrane przy wyszukiwaniu i podpowiadają AI Twoje preferencje.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            item {
                 val currentInterests = uiState.interests ?: settings?.userInterests ?: emptySet()
                 Column {
                     AttractionCategory.values().forEach { category ->
@@ -272,6 +281,26 @@ fun SettingsScreen(
                             )
                         }
                     }
+                }
+            }
+
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(Modifier.weight(1f)) {
+                        Text("Automatyczny filtr jakości", style = MaterialTheme.typography.bodyMedium)
+                        Text(
+                            "Po każdym wyszukiwaniu AI odfiltruje mało interesujące obiekty",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Switch(
+                        checked = settings?.autoQualityFilter ?: false,
+                        onCheckedChange = { viewModel.updateAutoQualityFilter(it) }
+                    )
                 }
             }
 

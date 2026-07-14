@@ -9,6 +9,7 @@ import com.iicytower.wanderlist.domain.model.SearchParams
 import com.iicytower.wanderlist.domain.repository.AttractionRepository
 import com.iicytower.wanderlist.domain.repository.GeocoderService
 import com.iicytower.wanderlist.domain.repository.LocationService
+import com.iicytower.wanderlist.domain.repository.SettingsRepository
 import com.iicytower.wanderlist.domain.usecase.FilterAttractionsByQualityUseCase
 import com.iicytower.wanderlist.domain.usecase.SearchAttractionsUseCase
 import kotlinx.coroutines.Job
@@ -17,6 +18,7 @@ import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -26,7 +28,8 @@ class SearchViewModel(
     private val filterAttractionsByQualityUseCase: FilterAttractionsByQualityUseCase,
     private val locationService: LocationService,
     private val geocoderService: GeocoderService,
-    private val attractionRepository: AttractionRepository
+    private val attractionRepository: AttractionRepository,
+    private val settingsRepository: SettingsRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SearchUiState())
@@ -35,6 +38,21 @@ class SearchViewModel(
     private var suggestJob: Job? = null
     private var searchJob: Job? = null
     private var filterJob: Job? = null
+
+    init {
+        // Zainteresowania z Ustawień pre-zaznaczają kategorie, a domyślny promień
+        // zasila suwak — tylko dopóki użytkownik niczego sam nie zmienił.
+        viewModelScope.launch {
+            val settings = settingsRepository.getSettings().first()
+            _uiState.update { state ->
+                if (state.hasSearched) return@update state
+                state.copy(
+                    selectedCategories = state.selectedCategories.ifEmpty { settings.userInterests },
+                    radiusKm = settings.defaultRadiusKm
+                )
+            }
+        }
+    }
 
     fun setLocationFromGps() {
         viewModelScope.launch {
@@ -182,6 +200,9 @@ class SearchViewModel(
                             hasSearched = true,
                             debugSourceStats = stats
                         )
+                    }
+                    if (settingsRepository.getSettings().first().autoQualityFilter) {
+                        filterByQuality()
                     }
                 },
                 onFailure = { e ->

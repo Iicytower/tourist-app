@@ -12,5 +12,6 @@ data class AppSettings(
     val systemPromptDescription: String,
     val systemPromptAssistant: String,
     val tavilyUsageCount: Int,
-    val tavilyUsageMonth: String
+    val tavilyUsageMonth: String,
+    val autoQualityFilter: Boolean = false
 )

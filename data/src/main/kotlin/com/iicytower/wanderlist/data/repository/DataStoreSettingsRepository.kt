@@ -36,7 +36,8 @@ class DataStoreSettingsRepository(
             systemPromptDescription = prefs[PreferencesKeys.SYSTEM_PROMPT_DESCRIPTION] ?: DefaultSettings.SYSTEM_PROMPT_DESCRIPTION,
             systemPromptAssistant = prefs[PreferencesKeys.SYSTEM_PROMPT_ASSISTANT] ?: DefaultSettings.SYSTEM_PROMPT_ASSISTANT,
             tavilyUsageCount = prefs[PreferencesKeys.TAVILY_USAGE_COUNT] ?: 0,
-            tavilyUsageMonth = prefs[PreferencesKeys.TAVILY_USAGE_MONTH] ?: currentMonth()
+            tavilyUsageMonth = prefs[PreferencesKeys.TAVILY_USAGE_MONTH] ?: currentMonth(),
+            autoQualityFilter = prefs[PreferencesKeys.AUTO_QUALITY_FILTER] ?: false
         )
     }
 
@@ -64,6 +65,10 @@ class DataStoreSettingsRepository(
 
     override suspend fun updateUserInterests(interests: Set<AttractionCategory>) {
         dataStore.edit { it[PreferencesKeys.USER_INTERESTS] = interests.map { c -> c.name }.toSet() }
+    }
+
+    override suspend fun updateAutoQualityFilter(enabled: Boolean) {
+        dataStore.edit { it[PreferencesKeys.AUTO_QUALITY_FILTER] = enabled }
     }
 
     override suspend fun updateSystemPromptDescription(prompt: String) {

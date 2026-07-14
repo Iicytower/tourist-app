@@ -168,7 +168,7 @@ Każdy agent w aplikacji ma osobny system prompt z możliwością personalizacji
 - **Asystent** – system prompt używany w ekranie czatu (ekran 3.5)
 
 **Zainteresowania** – lista checkboxów wpływająca na:
-1. Filtrowanie wyników wyszukiwania (jakie kategorie atrakcji są pokazywane)
+1. Wyszukiwanie: zaznaczone kategorie są **domyślnie pre-zaznaczone** na ekranie Szukaj (użytkownik może je zmienić per wyszukiwanie — zainteresowania nie ograniczają twardo wyników)
 2. Zachowanie AI (asystent i opisy uwzględniają preferencje użytkownika)
 
 > **Uwaga architektoniczna:** Kategorie zainteresowań to pojęcia z warstwy biznesowej (to, co widzi i rozumie użytkownik) i **nie mapują się 1:1 na kategorie OpenTripMap**. Szczegółowe mapowanie jest regułą warstwy infrastrukturalnej/technicznej – niewidoczną dla użytkownika. Zostanie zdefiniowane w specyfikacji technicznej.
@@ -188,6 +188,9 @@ Propozycja kategorii:
 
 **Język opisów**
 - Dropdown: Polski | English | Deutsch | Français | Español | *(inne do dodania)*
+
+**Automatyczny filtr jakości**
+- Przełącznik (domyślnie wyłączony): po każdym wyszukiwaniu filtr jakości AI (FEAT-04/FEAT-11) uruchamia się automatycznie; przy wyłączonym pozostaje ręczny przycisk „Przefiltruj" na ekranie wyników
 
 **Promień domyślny**
 - Suwak 1–50 km (wartość wstępna przy otwieraniu ekranu Szukaj)

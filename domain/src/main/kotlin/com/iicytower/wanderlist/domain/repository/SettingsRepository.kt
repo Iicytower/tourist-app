@@ -12,6 +12,7 @@ interface SettingsRepository {
     suspend fun updateDefaultRadius(radiusKm: Int)
     suspend fun updateDescriptionLanguage(language: String)
     suspend fun updateUserInterests(interests: Set<AttractionCategory>)
+    suspend fun updateAutoQualityFilter(enabled: Boolean)
     suspend fun updateSystemPromptDescription(prompt: String)
     suspend fun updateSystemPromptAssistant(prompt: String)
     suspend fun incrementTavilyUsage()
