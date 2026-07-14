@@ -65,7 +65,7 @@ class GenerateDescriptionUseCase(
         val userPrompt = contextParts.joinToString("\n\n")
         val systemPrompt = buildString {
             append(AgentPrompts.description)
-            append("\nJęzyk odpowiedzi: ${settings.descriptionLanguage}.")
+            append("\nJęzyk odpowiedzi: ${settings.appLanguage}.")
             if (settings.userInterests.isNotEmpty()) {
                 append(" Uwzględnij zainteresowania: ${settings.userInterests.joinToString(", ") { it.displayName }}.")
             }

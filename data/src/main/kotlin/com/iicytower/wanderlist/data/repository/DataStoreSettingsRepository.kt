@@ -28,7 +28,7 @@ class DataStoreSettingsRepository(
             tavilyApiKey = secureKeyStorage.getKey(KEY_TAVILY),
             aiModel = prefs[PreferencesKeys.AI_MODEL] ?: DefaultSettings.AI_MODEL,
             defaultRadiusKm = prefs[PreferencesKeys.DEFAULT_RADIUS_KM] ?: DefaultSettings.DEFAULT_RADIUS_KM,
-            descriptionLanguage = prefs[PreferencesKeys.DESCRIPTION_LANGUAGE] ?: DefaultSettings.DESCRIPTION_LANGUAGE,
+            appLanguage = prefs[PreferencesKeys.APP_LANGUAGE] ?: DefaultSettings.APP_LANGUAGE,
             userInterests = prefs[PreferencesKeys.USER_INTERESTS]
                 ?.mapNotNull { runCatching { AttractionCategory.valueOf(it) }.getOrNull() }
                 ?.toSet()
@@ -59,8 +59,8 @@ class DataStoreSettingsRepository(
         dataStore.edit { it[PreferencesKeys.DEFAULT_RADIUS_KM] = radiusKm }
     }
 
-    override suspend fun updateDescriptionLanguage(language: String) {
-        dataStore.edit { it[PreferencesKeys.DESCRIPTION_LANGUAGE] = language }
+    override suspend fun updateAppLanguage(language: String) {
+        dataStore.edit { it[PreferencesKeys.APP_LANGUAGE] = language }
     }
 
     override suspend fun updateUserInterests(interests: Set<AttractionCategory>) {

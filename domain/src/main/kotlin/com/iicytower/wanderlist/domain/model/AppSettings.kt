@@ -7,7 +7,7 @@ data class AppSettings(
     val tavilyApiKey: String,
     val aiModel: String,
     val defaultRadiusKm: Int,
-    val descriptionLanguage: String,
+    val appLanguage: String,
     val userInterests: Set<AttractionCategory>,
     val systemPromptDescription: String,
     val systemPromptAssistant: String,

@@ -49,7 +49,7 @@ class SearchViewModelTest {
         tavilyApiKey = "tkey",
         aiModel = "model",
         defaultRadiusKm = 10,
-        descriptionLanguage = "pl",
+        appLanguage = "pl",
         userInterests = emptySet(),
         systemPromptDescription = "desc prompt",
         systemPromptAssistant = "assistant prompt",

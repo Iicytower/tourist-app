@@ -252,7 +252,7 @@ fun SettingsScreen(
             item {
                 val languages = listOf("pl" to "Polski", "en" to "English", "de" to "Deutsch", "fr" to "Francais", "es" to "Espanol")
                 var expanded by remember { mutableStateOf(false) }
-                val selectedLabel = languages.find { it.first == settings?.descriptionLanguage }?.second ?: "Polski"
+                val selectedLabel = languages.find { it.first == settings?.appLanguage }?.second ?: "Polski"
                 ExposedDropdownMenuBox(
                     expanded = expanded,
                     onExpandedChange = { expanded = it }
@@ -261,7 +261,7 @@ fun SettingsScreen(
                         value = selectedLabel,
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text("Jezyk opisow") },
+                        label = { Text("Język aplikacji") },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -275,13 +275,19 @@ fun SettingsScreen(
                             DropdownMenuItem(
                                 text = { Text(name) },
                                 onClick = {
-                                    viewModel.updateDescriptionLanguage(code)
+                                    viewModel.updateAppLanguage(code)
                                     expanded = false
                                 }
                             )
                         }
                     }
                 }
+                Text(
+                    "Dotyczy opisów atrakcji, podpowiedzi lokalizacji i odpowiedzi asystenta.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 4.dp)
+                )
             }
 
             item {

@@ -10,7 +10,7 @@ interface SettingsRepository {
     suspend fun updateTavilyApiKey(key: String)
     suspend fun updateAiModel(model: String)
     suspend fun updateDefaultRadius(radiusKm: Int)
-    suspend fun updateDescriptionLanguage(language: String)
+    suspend fun updateAppLanguage(language: String)
     suspend fun updateUserInterests(interests: Set<AttractionCategory>)
     suspend fun updateAutoQualityFilter(enabled: Boolean)
     suspend fun updateSystemPromptDescription(prompt: String)

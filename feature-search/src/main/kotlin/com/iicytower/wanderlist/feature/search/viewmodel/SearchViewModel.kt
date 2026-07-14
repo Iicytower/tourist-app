@@ -39,6 +39,8 @@ class SearchViewModel(
     private var searchJob: Job? = null
     private var filterJob: Job? = null
 
+    private var appLanguage: String = "pl"
+
     init {
         // Zainteresowania z Ustawień pre-zaznaczają kategorie, a domyślny promień
         // zasila suwak — tylko dopóki użytkownik niczego sam nie zmienił.
@@ -51,6 +53,9 @@ class SearchViewModel(
                     radiusKm = settings.defaultRadiusKm
                 )
             }
+        }
+        viewModelScope.launch {
+            settingsRepository.getSettings().collect { appLanguage = it.appLanguage }
         }
     }
 
@@ -81,7 +86,7 @@ class SearchViewModel(
         suggestJob = viewModelScope.launch {
             delay(400)
             Timber.tag("SearchVM").d("calling suggest for '%s'", query)
-            geocoderService.suggest(query)
+            geocoderService.suggest(query, appLanguage)
                 .onSuccess { suggestions ->
                     Timber.tag("SearchVM").d("suggest → %d suggestions", suggestions.size)
                     _uiState.update { it.copy(locationSuggestions = suggestions) }
@@ -116,7 +121,7 @@ class SearchViewModel(
     fun onLocationPicked(lat: Double, lon: Double) {
         _uiState.update { it.copy(showLocationPicker = false) }
         viewModelScope.launch {
-            val label = geocoderService.reverseGeocode(lat, lon)
+            val label = geocoderService.reverseGeocode(lat, lon, appLanguage)
                 .getOrDefault("%.4f, %.4f".format(lat, lon))
             _uiState.update {
                 it.copy(
@@ -131,7 +136,7 @@ class SearchViewModel(
         if (query.isBlank()) return
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
-            geocoderService.geocode(query).fold(
+            geocoderService.geocode(query, appLanguage).fold(
                 onSuccess = { (location, displayName) ->
                     _uiState.update {
                         it.copy(

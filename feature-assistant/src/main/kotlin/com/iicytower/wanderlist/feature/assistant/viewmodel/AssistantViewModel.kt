@@ -124,7 +124,7 @@ class AssistantViewModel(
 
             llmService.completeChat(
                 conversationHistory.toList(),
-                settings.systemPromptAssistant,
+                settings.systemPromptAssistant + "\nJęzyk odpowiedzi: ${settings.appLanguage}.",
                 AssistantToolDefs.ALL
             ).fold(
                 onSuccess = { events ->
