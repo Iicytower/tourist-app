@@ -35,7 +35,9 @@ interface TripListDao {
     fun getListsWithCount(): Flow<List<TripListWithCount>>
 
     @Query("""
-        SELECT t.*, 0 as attractionCount
+        SELECT t.*, (
+            SELECT COUNT(*) FROM attraction_list_crossref cc WHERE cc.listId = t.id
+        ) as attractionCount
         FROM trip_lists t
         INNER JOIN attraction_list_crossref c ON t.id = c.listId
         WHERE c.attractionXid = :xid
