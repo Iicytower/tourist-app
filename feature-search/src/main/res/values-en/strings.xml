@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="search_title">Search attractions</string>
+    <string name="search_place_label">Search place (city, address…)</string>
+    <string name="cd_search_place">Search place</string>
+    <string name="cd_pick_on_map">Pick on map</string>
+    <string name="choose_search_point">Choose a search point</string>
+    <string name="cd_my_location">My location (GPS)</string>
+    <string name="radius_label">Radius: %1$d km</string>
+    <string name="search_button">Search</string>
+    <string name="no_results_in_radius">No attractions within %1$d km. Try increasing the radius.</string>
+    <string name="found_count">Found: %1$d</string>
+    <string name="filtered_out_count">Filtered out: %1$d</string>
+    <string name="filter_button">Filter</string>
+    <string name="sort_by_distance">Distance</string>
+    <string name="sort_by_category">Category</string>
+    <string name="ok">OK</string>
+    <string name="location_picker_title">Pick a location</string>
+    <string name="location_picker_hint">Long-press the map to pick a point</string>
+    <string name="cancel">Cancel</string>
+    <string name="pick_this_location">Use this location</string>
+    <string name="description_available">• Description available</string>
+</resources>

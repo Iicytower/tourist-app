@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="search_title">Wyszukaj atrakcje</string>
+    <string name="search_place_label">Szukaj miejsca (miasto, adres…)</string>
+    <string name="cd_search_place">Szukaj miejsca</string>
+    <string name="cd_pick_on_map">Wybierz na mapie</string>
+    <string name="choose_search_point">Wybierz punkt wyszukiwania</string>
+    <string name="cd_my_location">Moja lokalizacja (GPS)</string>
+    <string name="radius_label">Promień: %1$d km</string>
+    <string name="search_button">Szukaj</string>
+    <string name="no_results_in_radius">Brak atrakcji w promieniu %1$d km. Spróbuj zwiększyć promień.</string>
+    <string name="found_count">Znaleziono: %1$d</string>
+    <string name="filtered_out_count">Odfiltrowano: %1$d</string>
+    <string name="filter_button">Przefiltruj</string>
+    <string name="sort_by_distance">Odległość</string>
+    <string name="sort_by_category">Kategoria</string>
+    <string name="ok">OK</string>
+    <string name="location_picker_title">Wybierz lokalizację</string>
+    <string name="location_picker_hint">Przytrzymaj palec na mapie, aby wybrać punkt</string>
+    <string name="cancel">Anuluj</string>
+    <string name="pick_this_location">Wybierz tę lokalizację</string>
+    <string name="description_available">• Opis dostępny</string>
+</resources>

@@ -20,9 +20,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.iicytower.wanderlist.core.model.displayNameRes
+import com.iicytower.wanderlist.feature.map.R
 import com.iicytower.wanderlist.feature.map.viewmodel.MapViewModel
 import org.koin.androidx.compose.koinViewModel
 import org.maplibre.android.MapLibre
@@ -156,7 +159,7 @@ fun MapScreen(
                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Moja Lista", style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(end = 8.dp))
+                Text(stringResource(R.string.my_list_switch), style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(end = 8.dp))
                 Switch(checked = state.showMyListOnly, onCheckedChange = { viewModel.toggleMyListMode() })
             }
         }
@@ -170,12 +173,12 @@ fun MapScreen(
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(attraction.name, style = MaterialTheme.typography.titleMedium)
-                    Text(attraction.category.displayName, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
+                    Text(stringResource(attraction.category.displayNameRes), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
                     Button(
                         onClick = { onAttractionClick(attraction.xid) },
                         modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
                     ) {
-                        Text("Więcej →")
+                        Text(stringResource(R.string.more_button))
                     }
                 }
             }

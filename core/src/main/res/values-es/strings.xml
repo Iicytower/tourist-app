@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="category_castles_and_fortifications">Castillos y fortificaciones</string>
+    <string name="category_churches_and_sacred">Iglesias y lugares sagrados</string>
+    <string name="category_museums_and_galleries">Museos y galerías</string>
+    <string name="category_ruins_and_archaeological">Ruinas y sitios arqueológicos</string>
+    <string name="category_nature_and_parks">Naturaleza y parques nacionales</string>
+    <string name="category_viewpoints">Miradores</string>
+    <string name="category_military">Sitios militares</string>
+    <string name="category_mills_and_tech">Molinos y patrimonio técnico</string>
+    <string name="category_memorials_and_cemeteries">Monumentos conmemorativos y cementerios</string>
+    <string name="category_caves_and_geology">Cuevas y formaciones geológicas</string>
+</resources>

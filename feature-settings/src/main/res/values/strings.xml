@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">Ustawienia</string>
+    <string name="section_api_keys">Klucze API</string>
+    <string name="openrouter_error_title">Błąd połączenia OpenRouter</string>
+    <string name="tavily_error_title">Błąd połączenia Tavily</string>
+    <string name="ok">OK</string>
+    <string name="tavily_usage">Wykorzystano %1$d / 1000 zapytań w tym miesiącu</string>
+    <string name="section_ai_model">Model AI</string>
+    <string name="ai_model_label">Model AI</string>
+    <string name="ai_model_hint">Modele dostępne na openrouter.ai/models</string>
+    <string name="save_model">Zapisz model</string>
+    <string name="section_prompts">System Prompty</string>
+    <string name="desc_agent_label">Agent opisów</string>
+    <string name="assistant_label">Asystent</string>
+    <string name="save">Zapisz</string>
+    <string name="restore_default">Przywróć domyślny</string>
+    <string name="section_interests">Zainteresowania</string>
+    <string name="interests_hint">Zaznaczone kategorie są domyślnie wybrane przy wyszukiwaniu i podpowiadają AI Twoje preferencje.</string>
+    <string name="section_preferences">Preferencje</string>
+    <string name="app_language_label">Język aplikacji</string>
+    <string name="app_language_hint">Dotyczy interfejsu, opisów atrakcji, podpowiedzi lokalizacji i odpowiedzi asystenta. Nazwy atrakcji pozostają w oryginalnym języku źródła danych.</string>
+    <string name="auto_filter_title">Automatyczny filtr jakości</string>
+    <string name="auto_filter_hint">Po każdym wyszukiwaniu AI odfiltruje mało interesujące obiekty</string>
+    <string name="default_radius">Domyślny promień: %1$d km</string>
+    <string name="cd_connection_ok">Połączenie OK</string>
+    <string name="cd_connection_error">Błąd połączenia</string>
+    <string name="test_button">Przetestuj</string>
+</resources>

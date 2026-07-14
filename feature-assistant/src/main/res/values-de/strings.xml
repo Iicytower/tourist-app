@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="assistant_title">Assistent</string>
+    <string name="cd_clear_chat">Chat leeren</string>
+    <string name="clear_chat_title">Chat leeren</string>
+    <string name="clear_chat_message">Gesprächsverlauf wirklich löschen?</string>
+    <string name="clear">Leeren</string>
+    <string name="cancel">Abbrechen</string>
+    <string name="message_placeholder">Nachricht schreiben…</string>
+    <string name="cd_send">Senden</string>
+    <string name="error_prefix">Fehler: %1$s</string>
+    <string name="confirm_action_title">Assistenten-Aktion bestätigen</string>
+    <string name="confirm_remove_from_list">Der Assistent möchte „%1$s“ von der Liste „%2$s“ entfernen. Bestätigen?</string>
+    <string name="confirm_update_plan">Der Assistent möchte den Reiseplan der Liste „%1$s“ überschreiben. Bestätigen?</string>
+    <string name="yes">Ja</string>
+    <string name="no">Nein</string>
+</resources>

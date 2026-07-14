@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="my_lists_title">Meine Listen</string>
+    <string name="delete_list_title">Liste löschen</string>
+    <string name="delete_list_message">Liste \"%1$s\" löschen? Die Attraktionen werden nicht aus der Datenbank entfernt.</string>
+    <string name="delete">Löschen</string>
+    <string name="cancel">Abbrechen</string>
+    <string name="empty_lists_title">Du hast noch keine Listen.</string>
+    <string name="empty_lists_hint">Tippe auf +, um die erste zu erstellen.</string>
+    <string name="attractions_count">%1$d Attraktionen</string>
+    <string name="new_list_title">Neue Liste</string>
+    <string name="list_name_label">Listenname</string>
+    <string name="create">Erstellen</string>
+    <string name="remove_attraction_title">Attraktion entfernen</string>
+    <string name="remove_attraction_message">\"%1$s\" von dieser Liste entfernen?</string>
+    <string name="cd_back">Zurück</string>
+    <string name="cd_plan_trip">Ausflug planen</string>
+    <string name="list_fallback">Liste</string>
+    <string name="empty_list">Diese Liste ist leer.</string>
+    <string name="plan_title">Plan: %1$s</string>
+    <string name="delete_plan_title">Plan löschen</string>
+    <string name="delete_plan_message">Reiseplan löschen? Die Attraktionsliste bleibt erhalten.</string>
+    <string name="no_plan">Kein Plan.</string>
+    <string name="notes_label">Notizen</string>
+    <string name="save_notes">Notizen speichern</string>
+    <string name="revert_plan">Planänderung rückgängig machen</string>
+    <string name="discuss_with_assistant">Mit dem Assistenten besprechen</string>
+</resources>

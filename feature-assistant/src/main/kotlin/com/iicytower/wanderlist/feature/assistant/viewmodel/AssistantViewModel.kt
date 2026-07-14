@@ -104,10 +104,10 @@ class AssistantViewModel(
     }
 
     /** Wstrzymuje pętlę czatu do decyzji użytkownika w dialogu potwierdzenia. */
-    private suspend fun awaitUserConfirmation(description: String): Boolean {
+    private suspend fun awaitUserConfirmation(confirmation: PendingToolConfirmation): Boolean {
         val decision = CompletableDeferred<Boolean>()
         pendingDecision = decision
-        _uiState.update { it.copy(pendingConfirmation = PendingToolConfirmation(description)) }
+        _uiState.update { it.copy(pendingConfirmation = confirmation) }
         val approved = decision.await()
         pendingDecision = null
         _uiState.update { it.copy(pendingConfirmation = null) }
@@ -226,7 +226,7 @@ class AssistantViewModel(
                     getTripListsUseCase().first().find { it.id == listId }?.name
                 }.getOrNull() ?: "id=$listId"
                 val approved = awaitUserConfirmation(
-                    "Asystent chce usunąć „$attractionName” z listy „$listName”. Potwierdzić?"
+                    PendingToolConfirmation.RemoveFromList(attractionName, listName)
                 )
                 if (!approved) return "Użytkownik odmówił usunięcia atrakcji $xid z listy $listId. Nie ponawiaj tej operacji bez wyraźnej prośby użytkownika."
                 removeFromTripListUseCase(xid, listId).fold(
@@ -265,7 +265,7 @@ class AssistantViewModel(
                     getTripListsUseCase().first().find { it.id == listId }?.name
                 }.getOrNull() ?: "id=$listId"
                 val approved = awaitUserConfirmation(
-                    "Asystent chce nadpisać plan wycieczki dla listy „$listName”. Potwierdzić?"
+                    PendingToolConfirmation.UpdateTripPlan(listName)
                 )
                 if (!approved) return "Użytkownik odmówił nadpisania planu wycieczki listy $listId. Nie ponawiaj tej operacji bez wyraźnej prośby użytkownika."
                 val previousPlan = runCatching { getTripPlanUseCase(listId).first }.getOrNull()

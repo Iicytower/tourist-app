@@ -2,9 +2,11 @@ package com.iicytower.wanderlist.feature.assistant.viewmodel
 
 import com.iicytower.wanderlist.domain.model.ChatMessage
 
-data class PendingToolConfirmation(
-    val description: String
-)
+/** Dane akcji do potwierdzenia — tekst dialogu buduje UI z zasobów (lokalizacja). */
+sealed interface PendingToolConfirmation {
+    data class RemoveFromList(val attractionName: String, val listName: String) : PendingToolConfirmation
+    data class UpdateTripPlan(val listName: String) : PendingToolConfirmation
+}
 
 data class AssistantUiState(
     val messages: List<ChatMessage> = emptyList(),

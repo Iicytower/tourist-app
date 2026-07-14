@@ -47,10 +47,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import com.iicytower.wanderlist.core.model.displayNameRes
 import com.iicytower.wanderlist.core.util.formatDistance
+import com.iicytower.wanderlist.feature.detail.R
 import com.iicytower.wanderlist.domain.model.TripList
 import com.iicytower.wanderlist.feature.detail.viewmodel.AttractionDetailViewModel
 import kotlinx.coroutines.launch
@@ -101,9 +104,9 @@ fun AttractionDetailScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(state.attraction?.name ?: "Szczegóły") },
+                title = { Text(state.attraction?.name ?: stringResource(R.string.detail_fallback_title)) },
                 navigationIcon = {
-                    IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, "Wróć") }
+                    IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, stringResource(R.string.cd_back)) }
                 }
             )
         },
@@ -112,7 +115,7 @@ fun AttractionDetailScreen(
                 FloatingActionButton(onClick = { viewModel.openListSheet() }) {
                     Icon(
                         if (state.attractionListIds.isNotEmpty()) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                        contentDescription = "Dodaj do listy"
+                        contentDescription = stringResource(R.string.cd_add_to_list)
                     )
                 }
             }
@@ -127,11 +130,11 @@ fun AttractionDetailScreen(
                     item {
                         Text(attraction.name, style = MaterialTheme.typography.headlineMedium)
                         Spacer(Modifier.height(4.dp))
-                        Text(attraction.category.displayName, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
+                        Text(stringResource(attraction.category.displayNameRes), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
 
                         if (state.showDistanceFromSearch) {
                             attraction.distanceKm?.let { dist ->
-                                Text("Odległość: ${formatDistance(dist)}", style = MaterialTheme.typography.bodySmall)
+                                Text(stringResource(R.string.distance_label, formatDistance(dist)), style = MaterialTheme.typography.bodySmall)
                             }
                         }
 
@@ -139,12 +142,12 @@ fun AttractionDetailScreen(
 
                         when {
                             attraction.description != null -> {
-                                Text("Opis", style = MaterialTheme.typography.titleMedium)
+                                Text(stringResource(R.string.description_section), style = MaterialTheme.typography.titleMedium)
                                 Spacer(Modifier.height(8.dp))
                                 Text(attraction.description ?: "", style = MaterialTheme.typography.bodyMedium)
                                 if (attraction.descriptionSources.isNotEmpty()) {
                                     Spacer(Modifier.height(8.dp))
-                                    Text("Źródła:", style = MaterialTheme.typography.labelMedium)
+                                    Text(stringResource(R.string.sources_label), style = MaterialTheme.typography.labelMedium)
                                     attraction.descriptionSources.forEach { source ->
                                         TextButton(onClick = {
                                             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(source.url))
@@ -158,22 +161,22 @@ fun AttractionDetailScreen(
                                     OutlinedButton(
                                         onClick = { viewModel.loadDescription(force = true) },
                                         modifier = Modifier.fillMaxWidth()
-                                    ) { Text("Przeładuj opis") }
+                                    ) { Text(stringResource(R.string.reload_description)) }
                                 }
                             }
                             state.isDescriptionLoading -> {
                                 Row {
                                     CircularProgressIndicator(modifier = Modifier.padding(end = 8.dp))
-                                    Text("Generuję opis...", style = MaterialTheme.typography.bodyMedium)
+                                    Text(stringResource(R.string.generating_description), style = MaterialTheme.typography.bodyMedium)
                                 }
                             }
                             state.descriptionError != null -> {
                                 Text(state.descriptionError!!, color = MaterialTheme.colorScheme.error)
-                                OutlinedButton(onClick = { viewModel.loadDescription() }) { Text("Spróbuj ponownie") }
+                                OutlinedButton(onClick = { viewModel.loadDescription() }) { Text(stringResource(R.string.try_again)) }
                             }
                             else -> {
                                 Button(onClick = { viewModel.loadDescription() }, modifier = Modifier.fillMaxWidth()) {
-                                    Text("Załaduj opis")
+                                    Text(stringResource(R.string.load_description))
                                 }
                             }
                         }
@@ -195,7 +198,7 @@ fun AttractionDetailScreen(
                             },
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text("Nawiguj do")
+                            Text(stringResource(R.string.navigate_to))
                         }
 
                         OutlinedButton(
@@ -203,12 +206,12 @@ fun AttractionDetailScreen(
                                 val coords = "${attraction.latitude},${attraction.longitude}"
                                 clipboardManager.setText(AnnotatedString(coords))
                                 scope.launch {
-                                    snackbarHostState.showSnackbar("Skopiowano: $coords")
+                                    snackbarHostState.showSnackbar(context.getString(R.string.copied, coords))
                                 }
                             },
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text("Kopiuj lokalizację")
+                            Text(stringResource(R.string.copy_location))
                         }
 
                         onShowOnMap?.let { callback ->
@@ -216,7 +219,7 @@ fun AttractionDetailScreen(
                                 onClick = { callback(attraction.latitude, attraction.longitude, attraction.xid) },
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                Text("Pokaż na mapie")
+                                Text(stringResource(R.string.show_on_map))
                             }
                         }
                     }
@@ -245,7 +248,7 @@ private fun ListSelectionSheet(
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
         Column(modifier = Modifier.padding(bottom = 32.dp)) {
             Text(
-                "Dodaj do listy",
+                stringResource(R.string.add_to_list_title),
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
             )
@@ -253,7 +256,7 @@ private fun ListSelectionSheet(
 
             if (tripLists.isEmpty()) {
                 Text(
-                    "Nie masz jeszcze żadnych list.",
+                    stringResource(R.string.no_lists_yet),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(16.dp)
@@ -263,7 +266,7 @@ private fun ListSelectionSheet(
                     val isSelected = list.id in selectedIds
                     ListItem(
                         headlineContent = { Text(list.name) },
-                        supportingContent = { Text("${list.attractionCount} atrakcji") },
+                        supportingContent = { Text(stringResource(R.string.attractions_count, list.attractionCount)) },
                         leadingContent = {
                             Icon(
                                 if (isSelected) Icons.Default.CheckBox else Icons.Default.CheckBoxOutlineBlank,
@@ -282,13 +285,13 @@ private fun ListSelectionSheet(
                     OutlinedTextField(
                         value = newListName,
                         onValueChange = { newListName = it },
-                        label = { Text("Nazwa nowej listy") },
+                        label = { Text(stringResource(R.string.new_list_name_label)) },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )
                     Spacer(Modifier.height(8.dp))
                     Row {
-                        TextButton(onClick = { showCreateField = false; newListName = "" }) { Text("Anuluj") }
+                        TextButton(onClick = { showCreateField = false; newListName = "" }) { Text(stringResource(R.string.cancel)) }
                         Spacer(Modifier.weight(1f))
                         Button(
                             onClick = {
@@ -297,12 +300,12 @@ private fun ListSelectionSheet(
                                 newListName = ""
                             },
                             enabled = newListName.isNotBlank()
-                        ) { Text("Utwórz i dodaj") }
+                        ) { Text(stringResource(R.string.create_and_add)) }
                     }
                 }
             } else {
                 ListItem(
-                    headlineContent = { Text("Utwórz nową listę") },
+                    headlineContent = { Text(stringResource(R.string.create_new_list)) },
                     leadingContent = { Icon(Icons.Default.Add, contentDescription = null) },
                     modifier = Modifier.clickable { showCreateField = true }
                 )
