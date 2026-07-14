@@ -24,4 +24,8 @@
     <string name="opening_hours_section">Opening hours</string>
     <string name="open_now">Open now</string>
     <string name="closed_now">Closed</string>
+    <string name="ask_section_title">Ask about this place</string>
+    <string name="ask_placeholder">e.g. how much is a ticket?</string>
+    <string name="cd_ask_send">Ask a question</string>
+    <string name="ask_loading">The agent is looking for an answer…</string>
 </resources>

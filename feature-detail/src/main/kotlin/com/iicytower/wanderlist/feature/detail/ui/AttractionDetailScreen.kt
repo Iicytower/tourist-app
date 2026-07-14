@@ -10,11 +10,13 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckBox
 import androidx.compose.material.icons.filled.CheckBoxOutlineBlank
@@ -66,6 +68,7 @@ import java.time.DayOfWeek
 import java.time.format.TextStyle
 import java.util.Locale
 import com.iicytower.wanderlist.feature.detail.viewmodel.AttractionDetailViewModel
+import com.iicytower.wanderlist.feature.detail.viewmodel.QaMessage
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
@@ -247,11 +250,74 @@ fun AttractionDetailScreen(
                                 Text(stringResource(R.string.show_on_map))
                             }
                         }
+
+                        Spacer(Modifier.height(24.dp))
+                        AskAboutSection(
+                            messages = state.qaMessages,
+                            input = state.qaInput,
+                            isLoading = state.isQaLoading,
+                            onInputChange = { viewModel.updateQaInput(it) },
+                            onAsk = { viewModel.askQuestion() }
+                        )
                     }
                 }
             }
             state.error != null -> {
                 Text(state.error!!, modifier = Modifier.padding(innerPadding).padding(16.dp), color = MaterialTheme.colorScheme.error)
+            }
+        }
+    }
+}
+
+@Composable
+private fun AskAboutSection(
+    messages: List<QaMessage>,
+    input: String,
+    isLoading: Boolean,
+    onInputChange: (String) -> Unit,
+    onAsk: () -> Unit
+) {
+    Column {
+        Text(stringResource(R.string.ask_section_title), style = MaterialTheme.typography.titleMedium)
+        Spacer(Modifier.height(8.dp))
+
+        messages.forEach { message ->
+            val (container, content) = if (message.isUser) {
+                MaterialTheme.colorScheme.primaryContainer to MaterialTheme.colorScheme.onPrimaryContainer
+            } else {
+                MaterialTheme.colorScheme.surfaceVariant to MaterialTheme.colorScheme.onSurfaceVariant
+            }
+            Text(
+                message.text,
+                style = MaterialTheme.typography.bodyMedium,
+                color = content,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp)
+                    .background(container, RoundedCornerShape(12.dp))
+                    .padding(12.dp)
+            )
+        }
+
+        if (isLoading) {
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 8.dp)) {
+                CircularProgressIndicator(modifier = Modifier.size(20.dp))
+                Spacer(Modifier.width(8.dp))
+                Text(stringResource(R.string.ask_loading), style = MaterialTheme.typography.bodySmall)
+            }
+        }
+
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            OutlinedTextField(
+                value = input,
+                onValueChange = onInputChange,
+                placeholder = { Text(stringResource(R.string.ask_placeholder)) },
+                enabled = !isLoading,
+                modifier = Modifier.weight(1f),
+                maxLines = 3
+            )
+            IconButton(onClick = onAsk, enabled = input.isNotBlank() && !isLoading) {
+                Icon(Icons.Default.Send, contentDescription = stringResource(R.string.cd_ask_send))
             }
         }
     }

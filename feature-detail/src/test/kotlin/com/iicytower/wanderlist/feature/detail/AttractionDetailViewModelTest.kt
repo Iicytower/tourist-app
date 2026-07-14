@@ -5,6 +5,7 @@ import com.iicytower.wanderlist.domain.model.Attraction
 import com.iicytower.wanderlist.domain.model.TripList
 import com.iicytower.wanderlist.domain.repository.TripListRepository
 import com.iicytower.wanderlist.domain.usecase.AddToTripListUseCase
+import com.iicytower.wanderlist.domain.usecase.AskAboutAttractionUseCase
 import com.iicytower.wanderlist.domain.usecase.CreateTripListUseCase
 import com.iicytower.wanderlist.domain.usecase.GenerateDescriptionUseCase
 import com.iicytower.wanderlist.domain.usecase.GetAttractionDetailUseCase
@@ -40,6 +41,7 @@ class AttractionDetailViewModelTest {
     private val removeFromTripListUseCase = mockk<RemoveFromTripListUseCase>()
     private val createTripListUseCase = mockk<CreateTripListUseCase>()
     private val tripListRepository = mockk<TripListRepository>()
+    private val askAboutAttractionUseCase = mockk<AskAboutAttractionUseCase>()
     private lateinit var viewModel: AttractionDetailViewModel
 
     @Before
@@ -50,7 +52,7 @@ class AttractionDetailViewModelTest {
         viewModel = AttractionDetailViewModel(
             getAttractionDetailUseCase, generateDescriptionUseCase,
             getTripListsUseCase, addToTripListUseCase, removeFromTripListUseCase,
-            createTripListUseCase, tripListRepository
+            createTripListUseCase, tripListRepository, askAboutAttractionUseCase
         )
     }
 
