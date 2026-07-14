@@ -7,7 +7,6 @@ Przy dodawaniu nowego taska do `docs/tasks/todo/` dopisz go tutaj we właściwym
 | # | Task | Opis | Czas | Trudność | Ważność |
 |---|---|---|---|---|---|
 | 3 | FEAT-14 | Asystent musi potwierdzać destrukcyjne zmiany (dialog Tak/Nie) + cofnięcie planu | 3-4 h | Średnia/Wysoka | Wysoka (bezpieczeństwo) |
-| 4 | BUG-07 | Przeprojektowanie pickera lokalizacji na mapie (long-press zamiast pan-under-pin) | 3-4 h | Średnia/Wysoka | Średnia |
 | 5 | FEAT-13 | Dogonienie ekranu Ustawień + weryfikacja wpływu zainteresowań na wyszukiwanie | 4-6 h | Średnia | Wysoka (fundament) |
 | 6 | FEAT-11 | Jedno ustawienie „Język aplikacji” (wyszukiwanie, podpowiedzi lokalizacji, asystent) | 3-4 h | Średnia | Średnia/Wysoka |
 | 7 | FEAT-10 | Wyszukiwanie informacji o atrakcji w lokalnym języku kraju | 3-4 h | Średnia | Niska/Średnia |

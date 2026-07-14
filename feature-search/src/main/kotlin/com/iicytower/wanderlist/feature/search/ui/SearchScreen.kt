@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardActions
@@ -63,6 +62,9 @@ import org.maplibre.android.camera.CameraPosition
 import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.maps.MapView
 import org.maplibre.android.maps.Style
+import org.maplibre.android.style.layers.CircleLayer
+import org.maplibre.android.style.layers.PropertyFactory
+import org.maplibre.android.style.sources.GeoJsonSource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -287,10 +289,13 @@ private fun LocationPickerContent(
 
     remember(context) { MapLibre.getInstance(context) }
 
+    fun pickedPointJson(lat: Double, lon: Double) =
+        """{"type":"Feature","geometry":{"type":"Point","coordinates":[$lon,$lat]},"properties":{}}"""
+
     Column(modifier = Modifier.padding(16.dp)) {
         Text("Wybierz lokalizację", style = MaterialTheme.typography.titleMedium)
         Spacer(Modifier.height(4.dp))
-        Text("Przesuń mapę, aby wybrać punkt", style = MaterialTheme.typography.bodySmall,
+        Text("Przytrzymaj palec na mapie, aby wybrać punkt", style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(Modifier.height(8.dp))
 
@@ -316,24 +321,28 @@ private fun LocationPickerContent(
                                 .target(LatLng(initialLat, initialLon))
                                 .zoom(12.0)
                                 .build()
-                            map.setStyle(Style.Builder().fromUri("https://tiles.openfreemap.org/styles/liberty"))
-                            map.addOnCameraIdleListener {
-                                val target = map.cameraPosition.target ?: return@addOnCameraIdleListener
-                                pickedLat.value = target.latitude
-                                pickedLon.value = target.longitude
+                            map.setStyle(Style.Builder().fromUri("https://tiles.openfreemap.org/styles/liberty")) { style ->
+                                style.addSource(GeoJsonSource("picked-source", pickedPointJson(pickedLat.value, pickedLon.value)))
+                                style.addLayer(CircleLayer("picked-layer", "picked-source").apply {
+                                    setProperties(
+                                        PropertyFactory.circleRadius(12f),
+                                        PropertyFactory.circleColor(android.graphics.Color.parseColor("#1565C0")),
+                                        PropertyFactory.circleStrokeWidth(3f),
+                                        PropertyFactory.circleStrokeColor(android.graphics.Color.WHITE)
+                                    )
+                                })
+                            }
+                            map.addOnMapLongClickListener { latLng ->
+                                pickedLat.value = latLng.latitude
+                                pickedLon.value = latLng.longitude
+                                (map.style?.getSource("picked-source") as? GeoJsonSource)
+                                    ?.setGeoJson(pickedPointJson(latLng.latitude, latLng.longitude))
+                                true
                             }
                         }
                     }
                 },
                 modifier = Modifier.fillMaxSize()
-            )
-
-            // Pin w centrum
-            Icon(
-                imageVector = Icons.Default.Map,
-                contentDescription = null,
-                modifier = Modifier.align(Alignment.Center).size(32.dp),
-                tint = MaterialTheme.colorScheme.primary
             )
         }
 
