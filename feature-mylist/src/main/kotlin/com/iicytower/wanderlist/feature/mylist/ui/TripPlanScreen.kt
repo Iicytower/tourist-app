@@ -130,6 +130,15 @@ fun TripPlanScreen(
                 ) { Text("Zapisz notatki") }
             }
 
+            if (uiState.canRevert) {
+                item {
+                    Button(
+                        onClick = { viewModel.revertPlan() },
+                        modifier = Modifier.fillMaxWidth()
+                    ) { Text("Cofnij zmianę planu") }
+                }
+            }
+
             item {
                 Button(
                     onClick = onDiscussWithAssistant,

@@ -16,6 +16,7 @@ import com.iicytower.wanderlist.domain.usecase.GetTripListsUseCase
 import com.iicytower.wanderlist.domain.usecase.GetTripPlanUseCase
 import com.iicytower.wanderlist.domain.usecase.RemoveFromTripListUseCase
 import com.iicytower.wanderlist.domain.usecase.SearchAttractionsUseCase
+import com.iicytower.wanderlist.domain.state.TripPlanRevertStore
 import com.iicytower.wanderlist.feature.assistant.viewmodel.AssistantViewModel
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -48,6 +49,7 @@ class AssistantViewModelTest {
     private val settingsRepository = mockk<SettingsRepository>()
     private val getTripPlanUseCase = mockk<GetTripPlanUseCase>()
     private val generateTripPlanUseCase = mockk<GenerateTripPlanUseCase>()
+    private val tripPlanRevertStore = TripPlanRevertStore()
     private lateinit var viewModel: AssistantViewModel
 
     private val fakeSettings = AppSettings(
@@ -79,7 +81,8 @@ class AssistantViewModelTest {
             webSearchService = webSearchService,
             settingsRepository = settingsRepository,
             getTripPlanUseCase = getTripPlanUseCase,
-            generateTripPlanUseCase = generateTripPlanUseCase
+            generateTripPlanUseCase = generateTripPlanUseCase,
+            tripPlanRevertStore = tripPlanRevertStore
         )
     }
 
@@ -171,6 +174,95 @@ class AssistantViewModelTest {
         viewModel.sendMessage()
         testDispatcher.scheduler.advanceUntilIdle()
         coVerify(atLeast = 1) { getTripListsUseCase() }
+    }
+
+    @Test
+    fun removeFromList_waitsForConfirmation_andExecutesOnConfirm() = runTest {
+        coEvery { getAttractionsForListUseCase(5L) } returns flowOf(emptyList())
+        coEvery { removeFromTripListUseCase("xid1", 5L) } returns Result.success(Unit)
+        coEvery { llmService.completeChat(any(), any(), any()) } returnsMany listOf(
+            Result.success(listOf(
+                LlmEvent.ToolCall("id1", "remove_from_list", mapOf("xid" to "xid1", "list_id" to 5)),
+                LlmEvent.Done
+            )),
+            Result.success(listOf(LlmEvent.TextChunk("Usunięto"), LlmEvent.Done))
+        )
+        viewModel.updateInput("Usuń xid1 z listy 5")
+        viewModel.sendMessage()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        assertNotNull(viewModel.uiState.value.pendingConfirmation)
+        coVerify(exactly = 0) { removeFromTripListUseCase(any(), any()) }
+
+        viewModel.confirmPendingAction()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        assertNull(viewModel.uiState.value.pendingConfirmation)
+        coVerify(exactly = 1) { removeFromTripListUseCase("xid1", 5L) }
+    }
+
+    @Test
+    fun removeFromList_rejectedByUser_doesNotExecute() = runTest {
+        coEvery { getAttractionsForListUseCase(5L) } returns flowOf(emptyList())
+        coEvery { llmService.completeChat(any(), any(), any()) } returnsMany listOf(
+            Result.success(listOf(
+                LlmEvent.ToolCall("id1", "remove_from_list", mapOf("xid" to "xid1", "list_id" to 5)),
+                LlmEvent.Done
+            )),
+            Result.success(listOf(LlmEvent.TextChunk("Rozumiem, nie usuwam"), LlmEvent.Done))
+        )
+        viewModel.updateInput("Usuń xid1 z listy 5")
+        viewModel.sendMessage()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        viewModel.rejectPendingAction()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        assertNull(viewModel.uiState.value.pendingConfirmation)
+        coVerify(exactly = 0) { removeFromTripListUseCase(any(), any()) }
+        assertFalse(viewModel.uiState.value.isProcessing)
+    }
+
+    @Test
+    fun updateTripPlan_confirmed_storesPreviousPlanForRevert() = runTest {
+        val previousPlan = TripPlan(days = emptyList())
+        val newPlan = TripPlan(days = emptyList())
+        coEvery { getTripPlanUseCase(5L) } returns (previousPlan to null)
+        coEvery { generateTripPlanUseCase.updateFromJson(5L, any()) } returns Result.success(newPlan)
+        coEvery { llmService.completeChat(any(), any(), any()) } returnsMany listOf(
+            Result.success(listOf(
+                LlmEvent.ToolCall("id1", "update_trip_plan", mapOf("list_id" to 5, "plan_json" to "{}")),
+                LlmEvent.Done
+            )),
+            Result.success(listOf(LlmEvent.TextChunk("Zaktualizowano"), LlmEvent.Done))
+        )
+        viewModel.updateInput("Zmień plan listy 5")
+        viewModel.sendMessage()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        viewModel.confirmPendingAction()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        coVerify(exactly = 1) { generateTripPlanUseCase.updateFromJson(5L, "{}") }
+        assertEquals(previousPlan, tripPlanRevertStore.consume(5L))
+    }
+
+    @Test
+    fun addToList_executesWithoutConfirmation() = runTest {
+        coEvery { addToTripListUseCase("xid1", 5L) } returns Result.success(Unit)
+        coEvery { llmService.completeChat(any(), any(), any()) } returnsMany listOf(
+            Result.success(listOf(
+                LlmEvent.ToolCall("id1", "add_to_list", mapOf("xid" to "xid1", "list_id" to 5)),
+                LlmEvent.Done
+            )),
+            Result.success(listOf(LlmEvent.TextChunk("Dodano"), LlmEvent.Done))
+        )
+        viewModel.updateInput("Dodaj xid1 do listy 5")
+        viewModel.sendMessage()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        assertNull(viewModel.uiState.value.pendingConfirmation)
+        coVerify(exactly = 1) { addToTripListUseCase("xid1", 5L) }
     }
 
     @Test

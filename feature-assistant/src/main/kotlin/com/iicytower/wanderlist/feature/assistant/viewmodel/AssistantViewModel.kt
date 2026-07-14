@@ -20,7 +20,9 @@ import com.iicytower.wanderlist.domain.usecase.GetTripListsUseCase
 import com.iicytower.wanderlist.domain.usecase.GetTripPlanUseCase
 import com.iicytower.wanderlist.domain.usecase.RemoveFromTripListUseCase
 import com.iicytower.wanderlist.domain.usecase.SearchAttractionsUseCase
+import com.iicytower.wanderlist.domain.state.TripPlanRevertStore
 import com.iicytower.wanderlist.feature.assistant.AssistantToolDefs
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableStateFlow
 import timber.log.Timber
 import kotlinx.coroutines.flow.StateFlow
@@ -40,13 +42,16 @@ class AssistantViewModel(
     private val webSearchService: WebSearchService,
     private val settingsRepository: SettingsRepository,
     private val getTripPlanUseCase: GetTripPlanUseCase,
-    private val generateTripPlanUseCase: GenerateTripPlanUseCase
+    private val generateTripPlanUseCase: GenerateTripPlanUseCase,
+    private val tripPlanRevertStore: TripPlanRevertStore
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AssistantUiState())
     val uiState: StateFlow<AssistantUiState> = _uiState.asStateFlow()
 
     private val conversationHistory = mutableListOf<ChatMessage>()
+
+    private var pendingDecision: CompletableDeferred<Boolean>? = null
 
     fun setContextList(listId: Long) {
         // no-op if already set — prevents re-trigger on recomposition
@@ -81,12 +86,32 @@ class AssistantViewModel(
     }
 
     fun confirmClearChat() {
+        pendingDecision?.complete(false)
         conversationHistory.clear()
         _uiState.update { AssistantUiState() }
     }
 
     fun dismissClearConfirmation() {
         _uiState.update { it.copy(showClearConfirmation = false) }
+    }
+
+    fun confirmPendingAction() {
+        pendingDecision?.complete(true)
+    }
+
+    fun rejectPendingAction() {
+        pendingDecision?.complete(false)
+    }
+
+    /** Wstrzymuje pętlę czatu do decyzji użytkownika w dialogu potwierdzenia. */
+    private suspend fun awaitUserConfirmation(description: String): Boolean {
+        val decision = CompletableDeferred<Boolean>()
+        pendingDecision = decision
+        _uiState.update { it.copy(pendingConfirmation = PendingToolConfirmation(description)) }
+        val approved = decision.await()
+        pendingDecision = null
+        _uiState.update { it.copy(pendingConfirmation = null) }
+        return approved
     }
 
     private suspend fun runChatLoop() {
@@ -194,6 +219,16 @@ class AssistantViewModel(
             "remove_from_list" -> {
                 val xid = args["xid"] as? String ?: return "Brak xid"
                 val listId = (args["list_id"] as? Number)?.toLong() ?: return "Brak list_id"
+                val attractionName = runCatching {
+                    getAttractionsForListUseCase(listId).first().find { it.xid == xid }?.name
+                }.getOrNull() ?: xid
+                val listName = runCatching {
+                    getTripListsUseCase().first().find { it.id == listId }?.name
+                }.getOrNull() ?: "id=$listId"
+                val approved = awaitUserConfirmation(
+                    "Asystent chce usunąć „$attractionName” z listy „$listName”. Potwierdzić?"
+                )
+                if (!approved) return "Użytkownik odmówił usunięcia atrakcji $xid z listy $listId. Nie ponawiaj tej operacji bez wyraźnej prośby użytkownika."
                 removeFromTripListUseCase(xid, listId).fold(
                     onSuccess = { "Usunieto atrakcje $xid z listy $listId." },
                     onFailure = { "Blad usuwania: ${it.message}" }
@@ -226,8 +261,19 @@ class AssistantViewModel(
             "update_trip_plan" -> {
                 val listId = (args["list_id"] as? Number)?.toLong() ?: return "Brak list_id"
                 val planJson = args["plan_json"] as? String ?: return "Brak plan_json"
+                val listName = runCatching {
+                    getTripListsUseCase().first().find { it.id == listId }?.name
+                }.getOrNull() ?: "id=$listId"
+                val approved = awaitUserConfirmation(
+                    "Asystent chce nadpisać plan wycieczki dla listy „$listName”. Potwierdzić?"
+                )
+                if (!approved) return "Użytkownik odmówił nadpisania planu wycieczki listy $listId. Nie ponawiaj tej operacji bez wyraźnej prośby użytkownika."
+                val previousPlan = runCatching { getTripPlanUseCase(listId).first }.getOrNull()
                 generateTripPlanUseCase.updateFromJson(listId, planJson).fold(
-                    onSuccess = { "Plan wycieczki dla listy $listId zaktualizowany." },
+                    onSuccess = {
+                        previousPlan?.let { tripPlanRevertStore.store(listId, it) }
+                        "Plan wycieczki dla listy $listId zaktualizowany."
+                    },
                     onFailure = { "Blad aktualizacji planu: ${it.message}" }
                 )
             }

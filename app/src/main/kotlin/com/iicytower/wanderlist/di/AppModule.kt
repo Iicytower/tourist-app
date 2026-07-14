@@ -18,10 +18,13 @@ import com.iicytower.wanderlist.domain.usecase.RemoveFromMyListUseCase
 import com.iicytower.wanderlist.domain.usecase.RemoveFromTripListUseCase
 import com.iicytower.wanderlist.domain.usecase.SaveTripPlanNotesUseCase
 import com.iicytower.wanderlist.domain.usecase.SearchAttractionsUseCase
+import com.iicytower.wanderlist.domain.usecase.RevertTripPlanUseCase
 import com.iicytower.wanderlist.domain.usecase.SendChatMessageUseCase
+import com.iicytower.wanderlist.domain.state.TripPlanRevertStore
 import org.koin.dsl.module
 
 val useCaseModule = module {
+    single { TripPlanRevertStore() }
     factory { SearchAttractionsUseCase(get()) }
     factory { FilterAttractionsByQualityUseCase(get()) }
     factory { GetMyListUseCase(get()) }
@@ -41,4 +44,5 @@ val useCaseModule = module {
     factory { GetTripPlanUseCase(get()) }
     factory { SaveTripPlanNotesUseCase(get()) }
     factory { DeleteTripPlanUseCase(get()) }
+    factory { RevertTripPlanUseCase(get(), get()) }
 }

@@ -63,6 +63,20 @@ fun AssistantScreen(
         if (itemCount > 0) listState.animateScrollToItem(itemCount - 1)
     }
 
+    uiState.pendingConfirmation?.let { confirmation ->
+        AlertDialog(
+            onDismissRequest = { viewModel.rejectPendingAction() },
+            title = { Text("Potwierdz akcje asystenta") },
+            text = { Text(confirmation.description) },
+            confirmButton = {
+                TextButton(onClick = { viewModel.confirmPendingAction() }) { Text("Tak") }
+            },
+            dismissButton = {
+                TextButton(onClick = { viewModel.rejectPendingAction() }) { Text("Nie") }
+            }
+        )
+    }
+
     if (uiState.showClearConfirmation) {
         AlertDialog(
             onDismissRequest = { viewModel.dismissClearConfirmation() },
