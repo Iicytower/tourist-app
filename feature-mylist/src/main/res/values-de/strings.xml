@@ -25,4 +25,6 @@
     <string name="save_notes">Notizen speichern</string>
     <string name="revert_plan">Planänderung rückgängig machen</string>
     <string name="discuss_with_assistant">Mit dem Assistenten besprechen</string>
+    <string name="notes_markdown_hint">Markdown wird unterstützt (z. B. **fett**, Listen mit \"- \")</string>
+    <string name="notes_preview_label">Vorschau</string>
 </resources>

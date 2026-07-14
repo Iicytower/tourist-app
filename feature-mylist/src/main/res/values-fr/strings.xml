@@ -25,4 +25,6 @@
     <string name="save_notes">Enregistrer les notes</string>
     <string name="revert_plan">Annuler la modification du plan</string>
     <string name="discuss_with_assistant">Discuter avec l\'assistant</string>
+    <string name="notes_markdown_hint">Markdown pris en charge (p. ex. **gras**, listes commençant par \"- \")</string>
+    <string name="notes_preview_label">Aperçu</string>
 </resources>

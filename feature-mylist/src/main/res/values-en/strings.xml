@@ -25,4 +25,6 @@
     <string name="save_notes">Save notes</string>
     <string name="revert_plan">Undo plan change</string>
     <string name="discuss_with_assistant">Discuss with assistant</string>
+    <string name="notes_markdown_hint">Markdown supported (e.g. **bold**, lists starting with \"- \")</string>
+    <string name="notes_preview_label">Preview</string>
 </resources>

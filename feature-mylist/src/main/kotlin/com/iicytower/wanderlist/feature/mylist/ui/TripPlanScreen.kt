@@ -121,8 +121,32 @@ fun TripPlanScreen(
                     onValueChange = { viewModel.updateNotes(it) },
                     label = { Text(stringResource(R.string.notes_label)) },
                     modifier = Modifier.fillMaxWidth(),
-                    minLines = 3
+                    minLines = 3,
+                    supportingText = { Text(stringResource(R.string.notes_markdown_hint)) }
                 )
+            }
+
+            // Podgląd renderowanego Markdown pod polem edycji (edycja zawsze na źródle)
+            if (uiState.notes.isNotBlank()) {
+                item {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                    ) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Text(
+                                stringResource(R.string.notes_preview_label),
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(Modifier.height(4.dp))
+                            MarkdownText(
+                                markdown = uiState.notes,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                    }
+                }
             }
 
             item {
@@ -182,8 +206,8 @@ private fun DayCard(day: TripDay) {
                     )
                 }
                 if (!point.note.isNullOrBlank()) {
-                    Text(
-                        point.note ?: "",
+                    MarkdownText(
+                        markdown = point.note ?: "",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(start = 16.dp, bottom = 4.dp)
