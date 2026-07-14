@@ -4,6 +4,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -19,12 +21,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.iicytower.wanderlist.core.model.displayNameRes
+import com.iicytower.wanderlist.core.ui.AttractionImage
 import com.iicytower.wanderlist.feature.map.R
 import com.iicytower.wanderlist.feature.map.viewmodel.MapViewModel
 import org.koin.androidx.compose.koinViewModel
@@ -172,8 +176,19 @@ fun MapScreen(
                     .padding(16.dp)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text(attraction.name, style = MaterialTheme.typography.titleMedium)
-                    Text(stringResource(attraction.category.displayNameRes), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
+                    androidx.compose.foundation.layout.Row(verticalAlignment = Alignment.CenterVertically) {
+                        AttractionImage(
+                            imageUrl = attraction.imageUrl,
+                            category = attraction.category,
+                            modifier = Modifier
+                                .size(56.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                        )
+                        Column(modifier = Modifier.padding(start = 12.dp)) {
+                            Text(attraction.name, style = MaterialTheme.typography.titleMedium)
+                            Text(stringResource(attraction.category.displayNameRes), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
+                        }
+                    }
                     Button(
                         onClick = { onAttractionClick(attraction.xid) },
                         modifier = Modifier.fillMaxWidth().padding(top = 8.dp)

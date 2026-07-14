@@ -28,8 +28,17 @@ fun OverpassElement.toAttraction(
         isFromLastSearch = true,
         distanceKm = distanceKm,
         countryCode = tags["addr:country"]?.uppercase()?.takeIf { it.length == 2 },
-        openingHours = tags["opening_hours"]?.let { OsmOpeningHoursParser.parse(it) }
+        openingHours = tags["opening_hours"]?.let { OsmOpeningHoursParser.parse(it) },
+        imageUrl = resolveImageUrl(tags)
     )
+}
+
+private fun resolveImageUrl(tags: Map<String, String>): String? {
+    tags["image"]?.takeIf { it.startsWith("http") }?.let { return it }
+    val commons = tags["wikimedia_commons"] ?: return null
+    if (!commons.startsWith("File:")) return null
+    val fileName = java.net.URLEncoder.encode(commons.removePrefix("File:"), "UTF-8").replace("+", "%20")
+    return "https://commons.wikimedia.org/wiki/Special:FilePath/$fileName?width=640"
 }
 
 fun resolveCategory(tags: Map<String, String>): AttractionCategory {

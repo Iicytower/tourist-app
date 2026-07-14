@@ -30,7 +30,8 @@ class WikipediaServiceImpl(
                     val body: WikipediaSummaryResponse = response.body()
                     WikipediaResult(
                         extract = body.extract,
-                        url = body.contentUrls?.desktop?.page ?: "https://$lang.wikipedia.org/wiki/$encodedQuery"
+                        url = body.contentUrls?.desktop?.page ?: "https://$lang.wikipedia.org/wiki/$encodedQuery",
+                        imageUrl = body.thumbnail?.source ?: body.originalimage?.source
                     )
                 }
             }

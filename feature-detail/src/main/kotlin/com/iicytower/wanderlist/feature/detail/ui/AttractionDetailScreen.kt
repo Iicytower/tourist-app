@@ -49,6 +49,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -56,6 +57,7 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import com.iicytower.wanderlist.core.model.displayNameRes
+import com.iicytower.wanderlist.core.ui.AttractionImage
 import com.iicytower.wanderlist.core.util.formatDistance
 import com.iicytower.wanderlist.feature.detail.R
 import com.iicytower.wanderlist.domain.model.OpeningHours
@@ -136,6 +138,16 @@ fun AttractionDetailScreen(
                 val attraction = state.attraction!!
                 LazyColumn(modifier = Modifier.padding(innerPadding).padding(16.dp)) {
                     item {
+                        AttractionImage(
+                            imageUrl = attraction.imageUrl,
+                            category = attraction.category,
+                            contentDescription = attraction.name,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(200.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                        )
+                        Spacer(Modifier.height(12.dp))
                         Text(attraction.name, style = MaterialTheme.typography.headlineMedium)
                         Spacer(Modifier.height(4.dp))
                         Text(stringResource(attraction.category.displayNameRes), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)

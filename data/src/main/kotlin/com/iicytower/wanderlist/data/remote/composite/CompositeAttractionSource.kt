@@ -43,9 +43,18 @@ class CompositeAttractionSource(
                 val best = group.maxByOrNull { it.name.length }!!
                 best.copy(
                     countryCode = best.countryCode ?: group.firstNotNullOfOrNull { it.countryCode },
-                    openingHours = best.openingHours ?: group.firstNotNullOfOrNull { it.openingHours }
+                    openingHours = best.openingHours ?: group.firstNotNullOfOrNull { it.openingHours },
+                    imageUrl = group.sortedByDescending { imageSourcePriority(it.xid) }
+                        .firstNotNullOfOrNull { it.imageUrl }
                 )
             }
+
+    // Wikidata P18 > miniatura Wikipedii > surowe tagi OSM (jakość/trafność obrazu)
+    private fun imageSourcePriority(xid: String): Int = when {
+        xid.startsWith("wd") -> 3
+        xid.startsWith("wg") -> 2
+        else -> 1
+    }
 
     private fun coordKey(lat: Double, lon: Double): String {
         val latR = (lat * 1000).roundToInt()

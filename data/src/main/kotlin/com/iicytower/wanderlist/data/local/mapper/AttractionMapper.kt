@@ -33,7 +33,8 @@ fun AttractionEntity.toDomain(distanceKm: Double? = null): Attraction {
         isFromLastSearch = isFromLastSearch,
         distanceKm = distanceKm,
         countryCode = countryCode,
-        openingHours = openingHoursRaw?.let { OsmOpeningHoursParser.parse(it) }
+        openingHours = openingHoursRaw?.let { OsmOpeningHoursParser.parse(it) },
+        imageUrl = imageUrl
     )
 }
 
@@ -53,6 +54,7 @@ fun Attraction.toEntity(): AttractionEntity {
         descriptionSources = sourcesJson,
         isFromLastSearch = isFromLastSearch,
         countryCode = countryCode,
-        openingHoursRaw = openingHours?.raw
+        openingHoursRaw = openingHours?.raw,
+        imageUrl = imageUrl
     )
 }

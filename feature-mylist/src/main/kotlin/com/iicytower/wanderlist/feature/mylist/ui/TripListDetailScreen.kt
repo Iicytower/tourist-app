@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -36,10 +38,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.iicytower.wanderlist.core.constant.AppConstants
 import com.iicytower.wanderlist.core.model.displayNameRes
+import com.iicytower.wanderlist.core.ui.AttractionImage
 import com.iicytower.wanderlist.domain.model.Attraction
 import com.iicytower.wanderlist.feature.mylist.R
 import com.iicytower.wanderlist.feature.mylist.viewmodel.TripListDetailViewModel
@@ -154,7 +158,14 @@ private fun AttractionListItem(
             modifier = Modifier.fillMaxWidth().padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(modifier = Modifier.weight(1f)) {
+            AttractionImage(
+                imageUrl = attraction.imageUrl,
+                category = attraction.category,
+                modifier = Modifier
+                    .size(56.dp)
+                    .clip(RoundedCornerShape(8.dp))
+            )
+            Column(modifier = Modifier.weight(1f).padding(start = 12.dp)) {
                 Text(attraction.name, style = MaterialTheme.typography.titleSmall)
                 Text(
                     stringResource(attraction.category.displayNameRes),

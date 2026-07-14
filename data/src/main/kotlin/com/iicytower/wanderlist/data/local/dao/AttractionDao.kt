@@ -28,7 +28,10 @@ interface AttractionDao {
 
     @Query(
         "UPDATE attractions SET name = :name, latitude = :latitude, longitude = :longitude, " +
-            "category = :category, isFromLastSearch = :isFromLastSearch WHERE xid = :xid"
+            "category = :category, isFromLastSearch = :isFromLastSearch, " +
+            "countryCode = COALESCE(:countryCode, countryCode), " +
+            "openingHoursRaw = COALESCE(:openingHoursRaw, openingHoursRaw), " +
+            "imageUrl = COALESCE(:imageUrl, imageUrl) WHERE xid = :xid"
     )
     suspend fun updateRemoteFields(
         xid: String,
@@ -36,14 +39,20 @@ interface AttractionDao {
         latitude: Double,
         longitude: Double,
         category: String,
-        isFromLastSearch: Boolean
+        isFromLastSearch: Boolean,
+        countryCode: String?,
+        openingHoursRaw: String?,
+        imageUrl: String?
     )
 
     @Transaction
     suspend fun upsertAll(attractions: List<AttractionEntity>) {
         insertIgnoringConflicts(attractions)
         attractions.forEach {
-            updateRemoteFields(it.xid, it.name, it.latitude, it.longitude, it.category, it.isFromLastSearch)
+            updateRemoteFields(
+                it.xid, it.name, it.latitude, it.longitude, it.category, it.isFromLastSearch,
+                it.countryCode, it.openingHoursRaw, it.imageUrl
+            )
         }
     }
 
@@ -71,6 +80,9 @@ interface AttractionDao {
 
     @Query("UPDATE attractions SET description = :description, descriptionSources = :sources WHERE xid = :xid")
     suspend fun saveDescription(xid: String, description: String, sources: String)
+
+    @Query("UPDATE attractions SET imageUrl = :imageUrl WHERE xid = :xid")
+    suspend fun saveImageUrl(xid: String, imageUrl: String)
 
     @Transaction
     suspend fun replaceSearchResults(newResults: List<AttractionEntity>) {

@@ -73,6 +73,9 @@ class GenerateDescriptionUseCase(
                         Timber.tag("GenerateDesc").d("wikipedia OK, %d chars", result.extract.length)
                         contextParts += "[Wikipedia]\n${result.extract}"
                         sources += DescriptionSource(name = "Wikipedia", url = result.url)
+                        if (attraction.imageUrl == null && result.imageUrl != null) {
+                            attractionRepository.saveImageUrl(attraction.xid, result.imageUrl)
+                        }
                     } else {
                         Timber.tag("GenerateDesc").d("wikipedia: no article found")
                     }
