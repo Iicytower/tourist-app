@@ -24,7 +24,7 @@ Osobista aplikacja turystyczna Android. Wyszukiwanie atrakcji, generowanie opisÃ
 | Serializacja | Kotlinx Serialization |
 | Mapa | MapLibre Android SDK (kafelki OSM) |
 | LLM | OpenRouter (OpenAI-compatible, SSE streaming) |
-| Wyszukiwanie atrakcji | OpenTripMap REST API |
+| Wyszukiwanie atrakcji | Overpass API (OSM) + Wikipedia/Wikidata (`CompositeAttractionSource`) |
 | Web search | Tavily (interfejs `WebSearchService` â€” wymienny) |
 | GPS | Android Location API (bez Google Play Services) |
 | Logowanie | Timber |

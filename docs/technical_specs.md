@@ -57,6 +57,8 @@
 - REST API zbudowane na danych OSM, gotowa kategoryzacja atrakcji turystycznych
 - Eliminuje konieczność ręcznego mapowania kategorii na tagi OSM
 
+<!-- TODO: konsultacja — realnie używany dostawca to Overpass API + Wikipedia/Wikidata przez CompositeAttractionSource (BUG-16 usunął nieużywaną integrację OpenTripMap z kodu). Ta sekcja opisuje architekturę, która nie została wdrożona — do przepisania jako osobny task, nie jako część prostego usunięcia martwego kodu. -->
+
 **Dostawca wyszukiwania internetowego:** Tavily (domyślny, free tier: 1000 zapytań/miesiąc)
 - Interfejs `WebSearchService` zdefiniowany w module `domain`
 - Implementacja Tavily w module `data` — zamiana na innego dostawcę (np. Brave Search) wymaga tylko nowej implementacji w `data`, bez zmian w `domain` ani `feature-*`
