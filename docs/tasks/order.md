@@ -6,7 +6,6 @@ Przy dodawaniu nowego taska do `docs/tasks/todo/` dopisz go tutaj we właściwym
 
 | # | Task | Opis | Czas | Trudność | Ważność |
 |---|---|---|---|---|---|
-| 2 | BUG-14 | Wolniejsze wyszukiwanie potrafi nadpisać nowsze wyniki (brak anulowania joba) | 1-2 h | Średnia | Średnia |
 | 3 | FEAT-14 | Asystent musi potwierdzać destrukcyjne zmiany (dialog Tak/Nie) + cofnięcie planu | 3-4 h | Średnia/Wysoka | Wysoka (bezpieczeństwo) |
 | 4 | BUG-07 | Przeprojektowanie pickera lokalizacji na mapie (long-press zamiast pan-under-pin) | 3-4 h | Średnia/Wysoka | Średnia |
 | 5 | FEAT-13 | Dogonienie ekranu Ustawień + weryfikacja wpływu zainteresowań na wyszukiwanie | 4-6 h | Średnia | Wysoka (fundament) |

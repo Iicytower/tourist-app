@@ -13,6 +13,7 @@ import com.iicytower.wanderlist.domain.usecase.FilterAttractionsByQualityUseCase
 import com.iicytower.wanderlist.domain.usecase.SearchAttractionsUseCase
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -32,6 +33,8 @@ class SearchViewModel(
     val uiState: StateFlow<SearchUiState> = _uiState.asStateFlow()
 
     private var suggestJob: Job? = null
+    private var searchJob: Job? = null
+    private var filterJob: Job? = null
 
     fun setLocationFromGps() {
         viewModelScope.launch {
@@ -154,15 +157,21 @@ class SearchViewModel(
 
     fun search() {
         val location = _uiState.value.searchLocation ?: return
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, error = null) }
+        filterJob?.cancel()
+        searchJob?.cancel()
+        searchJob = viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, isFiltering = false, error = null, filterRemovedCount = null) }
             val params = SearchParams(
                 latitude = location.latitude,
                 longitude = location.longitude,
                 radiusKm = _uiState.value.radiusKm,
                 categories = _uiState.value.selectedCategories
             )
-            searchAttractionsUseCase(params).fold(
+            val result = searchAttractionsUseCase(params)
+            // Warstwa data łapie wyjątki przez runCatching, więc CancellationException
+            // wraca jako Result.failure — bez tego anulowany job zapisałby stary stan.
+            ensureActive()
+            result.fold(
                 onSuccess = { results ->
                     val stats = attractionRepository.getLastSearchStats()
                     Timber.tag("SearchVM").d("Wyniki per źródło: %s", stats)
@@ -185,9 +194,11 @@ class SearchViewModel(
     fun filterByQuality() {
         val attractions = _uiState.value.results
         if (attractions.isEmpty() || _uiState.value.isFiltering) return
-        viewModelScope.launch {
+        filterJob = viewModelScope.launch {
             _uiState.update { it.copy(isFiltering = true, error = null, filterRemovedCount = null) }
-            filterAttractionsByQualityUseCase(attractions).fold(
+            val result = filterAttractionsByQualityUseCase(attractions)
+            ensureActive()
+            result.fold(
                 onSuccess = { result ->
                     _uiState.update { state ->
                         state.copy(

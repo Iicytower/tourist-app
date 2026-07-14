@@ -11,10 +11,14 @@ import com.iicytower.wanderlist.domain.usecase.FilterAttractionsByQualityUseCase
 import com.iicytower.wanderlist.domain.usecase.SearchAttractionsUseCase
 import com.iicytower.wanderlist.feature.search.viewmodel.SearchViewModel
 import com.iicytower.wanderlist.feature.search.viewmodel.SortOrder
+import com.iicytower.wanderlist.domain.repository.FilterResult
+import com.iicytower.wanderlist.domain.repository.RemovedAttraction
 import io.mockk.coEvery
 import io.mockk.mockk
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -102,6 +106,70 @@ class SearchViewModelTest {
         testDispatcher.scheduler.advanceUntilIdle()
         viewModel.clearError()
         assertNull(viewModel.uiState.value.error)
+    }
+
+    @Test
+    fun search_olderSlowerSearch_doesNotOverwriteNewerResults() = runTest {
+        viewModel.setLocationFromCoordinates(50.0, 20.0, "Test")
+        val oldResults = listOf(makeAttraction("old"))
+        val newResults = listOf(makeAttraction("new"))
+        // Symulacja warstwy data: runCatching połyka CancellationException i zwraca failure
+        coEvery { searchUseCase(match { it.radiusKm == 5 }) } coAnswers {
+            try {
+                delay(10_000)
+                Result.success(oldResults)
+            } catch (e: CancellationException) {
+                Result.failure(e)
+            }
+        }
+        coEvery { searchUseCase(match { it.radiusKm == 20 }) } coAnswers {
+            delay(100)
+            Result.success(newResults)
+        }
+
+        viewModel.setRadius(5)
+        viewModel.search()
+        testDispatcher.scheduler.advanceTimeBy(50)
+        viewModel.setRadius(20)
+        viewModel.search()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertEquals(listOf("new"), state.results.map { it.xid })
+        assertNull(state.error)
+        assertFalse(state.isLoading)
+    }
+
+    @Test
+    fun search_duringFiltering_cancelsFilterAndKeepsNewResults() = runTest {
+        viewModel.setLocationFromCoordinates(50.0, 20.0, "Test")
+        val firstResults = listOf(makeAttraction("a"), makeAttraction("b"))
+        val secondResults = listOf(makeAttraction("c"))
+        coEvery { searchUseCase(match { it.radiusKm == 5 }) } returns Result.success(firstResults)
+        coEvery { searchUseCase(match { it.radiusKm == 20 }) } returns Result.success(secondResults)
+        coEvery { filterUseCase(any()) } coAnswers {
+            try {
+                delay(10_000)
+                Result.success(FilterResult(kept = listOf(firstResults[0]), removed = listOf(RemovedAttraction("b", "test"))))
+            } catch (e: CancellationException) {
+                Result.failure(e)
+            }
+        }
+
+        viewModel.setRadius(5)
+        viewModel.search()
+        testDispatcher.scheduler.advanceUntilIdle()
+        viewModel.filterByQuality()
+        testDispatcher.scheduler.advanceTimeBy(50)
+        viewModel.setRadius(20)
+        viewModel.search()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertEquals(listOf("c"), state.results.map { it.xid })
+        assertFalse(state.isFiltering)
+        assertNull(state.filterRemovedCount)
+        assertNull(state.error)
     }
 
     @Test
