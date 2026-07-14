@@ -21,4 +21,7 @@
     <string name="cancel">Cancelar</string>
     <string name="create_and_add">Crear y añadir</string>
     <string name="create_new_list">Crear nueva lista</string>
+    <string name="opening_hours_section">Horario de apertura</string>
+    <string name="open_now">Abierto ahora</string>
+    <string name="closed_now">Cerrado</string>
 </resources>

@@ -41,7 +41,10 @@ class CompositeAttractionSource(
             .values
             .map { group ->
                 val best = group.maxByOrNull { it.name.length }!!
-                best.copy(countryCode = best.countryCode ?: group.firstNotNullOfOrNull { it.countryCode })
+                best.copy(
+                    countryCode = best.countryCode ?: group.firstNotNullOfOrNull { it.countryCode },
+                    openingHours = best.openingHours ?: group.firstNotNullOfOrNull { it.openingHours }
+                )
             }
 
     private fun coordKey(lat: Double, lon: Double): String {

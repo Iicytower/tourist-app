@@ -2,6 +2,7 @@ package com.iicytower.wanderlist.data.remote.overpass.mapper
 
 import com.iicytower.wanderlist.core.model.AttractionCategory
 import com.iicytower.wanderlist.core.util.calculateDistanceKm
+import com.iicytower.wanderlist.data.local.OsmOpeningHoursParser
 import com.iicytower.wanderlist.data.remote.overpass.dto.OverpassElement
 import com.iicytower.wanderlist.domain.model.Attraction
 
@@ -26,7 +27,8 @@ fun OverpassElement.toAttraction(
         descriptionSources = emptyList(),
         isFromLastSearch = true,
         distanceKm = distanceKm,
-        countryCode = tags["addr:country"]?.uppercase()?.takeIf { it.length == 2 }
+        countryCode = tags["addr:country"]?.uppercase()?.takeIf { it.length == 2 },
+        openingHours = tags["opening_hours"]?.let { OsmOpeningHoursParser.parse(it) }
     )
 }
 

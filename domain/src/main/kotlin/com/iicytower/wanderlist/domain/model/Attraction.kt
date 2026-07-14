@@ -14,5 +14,6 @@ data class Attraction(
     val descriptionSources: List<DescriptionSource>,
     val isFromLastSearch: Boolean,
     val distanceKm: Double?,
-    val countryCode: String? = null
+    val countryCode: String? = null,
+    val openingHours: OpeningHours? = null
 )
