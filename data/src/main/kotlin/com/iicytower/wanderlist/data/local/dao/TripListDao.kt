@@ -35,7 +35,9 @@ interface TripListDao {
     fun getListsWithCount(): Flow<List<TripListWithCount>>
 
     @Query("""
-        SELECT t.*, 0 as attractionCount
+        SELECT t.*, (
+            SELECT COUNT(*) FROM attraction_list_crossref cc WHERE cc.listId = t.id
+        ) as attractionCount
         FROM trip_lists t
         INNER JOIN attraction_list_crossref c ON t.id = c.listId
         WHERE c.attractionXid = :xid
@@ -58,6 +60,18 @@ interface TripListDao {
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun addToList(crossRef: AttractionListCrossRefEntity)
+
+    @Transaction
+    suspend fun addToListIfUnderLimit(
+        crossRef: AttractionListCrossRefEntity,
+        maxSize: Int,
+        attractionDao: AttractionDao
+    ): Boolean {
+        if (getCountForList(crossRef.listId) >= maxSize) return false
+        addToList(crossRef)
+        attractionDao.addToMyList(crossRef.attractionXid, crossRef.addedAt)
+        return true
+    }
 
     @Query("DELETE FROM attraction_list_crossref WHERE attractionXid = :xid AND listId = :listId")
     suspend fun removeFromList(xid: String, listId: Long)

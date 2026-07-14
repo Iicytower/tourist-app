@@ -1,5 +1,6 @@
 package com.iicytower.wanderlist.feature.settings.viewmodel
 
+import com.iicytower.wanderlist.core.model.AttractionCategory
 import com.iicytower.wanderlist.domain.model.AppSettings
 
 enum class ConnectionTestState { IDLE, TESTING, SUCCESS, FAILURE }
@@ -12,5 +13,6 @@ data class SettingsUiState(
     val tavilyTestState: ConnectionTestState = ConnectionTestState.IDLE,
     val tavilyTestError: String? = null,
     val openRouterKeyVisible: Boolean = false,
-    val tavilyKeyVisible: Boolean = false
+    val tavilyKeyVisible: Boolean = false,
+    val interests: Set<AttractionCategory>? = null
 )

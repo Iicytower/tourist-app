@@ -62,6 +62,13 @@ interface AttractionDao {
     @Query("SELECT COUNT(*) FROM attractions WHERE isInMyList = 1")
     suspend fun getMyListCount(): Int
 
+    @Transaction
+    suspend fun addToMyListIfUnderLimit(xid: String, timestamp: Long, maxSize: Int): Boolean {
+        if (getMyListCount() >= maxSize) return false
+        addToMyList(xid, timestamp)
+        return true
+    }
+
     @Query("UPDATE attractions SET description = :description, descriptionSources = :sources WHERE xid = :xid")
     suspend fun saveDescription(xid: String, description: String, sources: String)
 

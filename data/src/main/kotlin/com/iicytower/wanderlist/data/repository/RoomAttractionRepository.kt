@@ -45,11 +45,10 @@ class RoomAttractionRepository(
     override fun getLastSearchStats(): Map<String, Int> = lastSearchStats
 
     override suspend fun addToMyList(xid: String): Result<Unit> = runCatching {
-        val count = dao.getMyListCount()
-        if (count >= AppConstants.MY_LIST_MAX_SIZE) {
+        val added = dao.addToMyListIfUnderLimit(xid, System.currentTimeMillis(), AppConstants.MY_LIST_MAX_SIZE)
+        if (!added) {
             error("Lista pelna (${AppConstants.MY_LIST_MAX_SIZE}/${AppConstants.MY_LIST_MAX_SIZE})")
         }
-        dao.addToMyList(xid, System.currentTimeMillis())
     }
 
     override suspend fun removeFromMyList(xid: String): Result<Unit> = runCatching {

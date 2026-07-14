@@ -2,6 +2,7 @@ package com.iicytower.wanderlist.data
 
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
+import com.iicytower.wanderlist.core.constant.AppConstants
 import com.iicytower.wanderlist.core.model.AttractionCategory
 import com.iicytower.wanderlist.data.local.AppDatabase
 import com.iicytower.wanderlist.data.local.entity.AttractionEntity
@@ -10,6 +11,8 @@ import com.iicytower.wanderlist.data.repository.RoomAttractionRepository
 import com.iicytower.wanderlist.domain.model.Attraction
 import com.iicytower.wanderlist.domain.model.DescriptionSource
 import com.iicytower.wanderlist.domain.model.SearchParams
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -69,6 +72,23 @@ class RoomAttractionRepositoryTest {
         assertTrue(result.isSuccess)
         val myList = repository.getMyList().first()
         assertTrue(myList.any { it.xid == "xid1" })
+    }
+
+    @Test
+    fun addToMyList_concurrent_calls_never_exceed_limit() = runTest {
+        repeat(AppConstants.MY_LIST_MAX_SIZE - 1) { i -> insertEntity("xid_$i", inMyList = true) }
+        insertEntity("candidate_a")
+        insertEntity("candidate_b")
+
+        val results = listOf(
+            async { repository.addToMyList("candidate_a") },
+            async { repository.addToMyList("candidate_b") }
+        ).awaitAll()
+
+        assertEquals(1, results.count { it.isSuccess })
+        assertEquals(1, results.count { it.isFailure })
+        val finalCount = repository.getMyList().first().size
+        assertEquals(AppConstants.MY_LIST_MAX_SIZE, finalCount)
     }
 
     @Test

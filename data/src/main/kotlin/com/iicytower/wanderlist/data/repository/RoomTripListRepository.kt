@@ -46,12 +46,11 @@ class RoomTripListRepository(
     }
 
     override suspend fun addToList(xid: String, listId: Long): Result<Unit> = runCatching {
-        val count = tripListDao.getCountForList(listId)
-        if (count >= AppConstants.MY_LIST_MAX_SIZE) {
+        val crossRef = AttractionListCrossRefEntity(attractionXid = xid, listId = listId, addedAt = System.currentTimeMillis())
+        val added = tripListDao.addToListIfUnderLimit(crossRef, AppConstants.MY_LIST_MAX_SIZE, attractionDao)
+        if (!added) {
             error("Lista jest pełna (${AppConstants.MY_LIST_MAX_SIZE}/${AppConstants.MY_LIST_MAX_SIZE})")
         }
-        tripListDao.addToList(AttractionListCrossRefEntity(attractionXid = xid, listId = listId, addedAt = System.currentTimeMillis()))
-        attractionDao.addToMyList(xid, System.currentTimeMillis())
     }
 
     override suspend fun removeFromList(xid: String, listId: Long): Result<Unit> = runCatching {

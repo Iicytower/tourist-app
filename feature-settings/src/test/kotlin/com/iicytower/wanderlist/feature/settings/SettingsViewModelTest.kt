@@ -109,11 +109,31 @@ class SettingsViewModelTest {
     }
 
     @Test
-    fun updateInterests_callsRepository() = runTest {
-        val interests = setOf(AttractionCategory.MUSEUMS_AND_GALLERIES)
-        viewModel.updateInterests(interests)
+    fun toggleInterest_checked_addsCategoryAndCallsRepository() = runTest {
         testDispatcher.scheduler.advanceUntilIdle()
-        coVerify { settingsRepository.updateUserInterests(interests) }
+        viewModel.toggleInterest(AttractionCategory.MUSEUMS_AND_GALLERIES, checked = true)
+        testDispatcher.scheduler.advanceUntilIdle()
+        assertEquals(setOf(AttractionCategory.MUSEUMS_AND_GALLERIES), viewModel.uiState.value.interests)
+        coVerify { settingsRepository.updateUserInterests(setOf(AttractionCategory.MUSEUMS_AND_GALLERIES)) }
+    }
+
+    @Test
+    fun toggleInterest_rapidSuccessiveToggles_doesNotLosePreviousSelections() = runTest {
+        testDispatcher.scheduler.advanceUntilIdle()
+        // Symuluje szybkie zaznaczenie 3 kategorii pod rzad, zanim DataStore zdazy
+        // ponownie wyemitowac zaktualizowane ustawienia (flowOf emituje tylko raz).
+        viewModel.toggleInterest(AttractionCategory.MUSEUMS_AND_GALLERIES, checked = true)
+        viewModel.toggleInterest(AttractionCategory.NATURE_AND_PARKS, checked = true)
+        viewModel.toggleInterest(AttractionCategory.VIEWPOINTS, checked = true)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val expected = setOf(
+            AttractionCategory.MUSEUMS_AND_GALLERIES,
+            AttractionCategory.NATURE_AND_PARKS,
+            AttractionCategory.VIEWPOINTS
+        )
+        assertEquals(expected, viewModel.uiState.value.interests)
+        coVerify { settingsRepository.updateUserInterests(expected) }
     }
 
     @Test
