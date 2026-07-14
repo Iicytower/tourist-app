@@ -30,7 +30,8 @@ fun AttractionEntity.toDomain(distanceKm: Double? = null): Attraction {
         description = description,
         descriptionSources = sources,
         isFromLastSearch = isFromLastSearch,
-        distanceKm = distanceKm
+        distanceKm = distanceKm,
+        countryCode = countryCode
     )
 }
 
@@ -48,6 +49,7 @@ fun Attraction.toEntity(): AttractionEntity {
         dateAddedToList = dateAddedToList,
         description = description,
         descriptionSources = sourcesJson,
-        isFromLastSearch = isFromLastSearch
+        isFromLastSearch = isFromLastSearch,
+        countryCode = countryCode
     )
 }

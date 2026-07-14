@@ -79,7 +79,7 @@ class WikidataSparqlSource(private val httpClient: HttpClient) : RemoteAttractio
 
     private fun buildQuery(lat: Double, lon: Double, radiusKm: Int): String =
         """
-        SELECT DISTINCT ?place ?placeLabel ?lat ?lon ?type WHERE {
+        SELECT DISTINCT ?place ?placeLabel ?lat ?lon ?type ?countryCode WHERE {
           SERVICE wikibase:around {
             ?place wdt:P625 ?coords .
             bd:serviceParam wikibase:center "Point($lon $lat)"^^geo:wktLiteral .
@@ -87,6 +87,7 @@ class WikidataSparqlSource(private val httpClient: HttpClient) : RemoteAttractio
           }
           ?place wdt:P31 ?type .
           FILTER(?type IN ($ALLOWED_TYPES))
+          OPTIONAL { ?place wdt:P17 ?country . ?country wdt:P297 ?countryCode . }
           BIND(geof:latitude(?coords) AS ?lat)
           BIND(geof:longitude(?coords) AS ?lon)
           SERVICE wikibase:label { bd:serviceParam wikibase:language "pl,en". }
@@ -113,6 +114,7 @@ private fun SparqlBinding.toAttraction(searchLat: Double, searchLon: Double): At
         description = null,
         descriptionSources = emptyList(),
         isFromLastSearch = true,
-        distanceKm = calculateDistanceKm(searchLat, searchLon, lat, lon)
+        distanceKm = calculateDistanceKm(searchLat, searchLon, lat, lon),
+        countryCode = countryCode?.value?.uppercase()?.takeIf { it.length == 2 }
     )
 }

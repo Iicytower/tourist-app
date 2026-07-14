@@ -1,9 +1,12 @@
 package com.iicytower.wanderlist.domain.usecase
 
 import com.iicytower.wanderlist.core.agents.AgentPrompts
+import com.iicytower.wanderlist.core.util.languageForCountryCode
+import com.iicytower.wanderlist.domain.model.Attraction
 import com.iicytower.wanderlist.domain.model.ChatMessage
 import com.iicytower.wanderlist.domain.model.DescriptionSource
 import com.iicytower.wanderlist.domain.repository.AttractionRepository
+import com.iicytower.wanderlist.domain.repository.GeocoderService
 import com.iicytower.wanderlist.domain.repository.LlmService
 import com.iicytower.wanderlist.domain.repository.SettingsRepository
 import com.iicytower.wanderlist.domain.repository.WebSearchService
@@ -18,7 +21,8 @@ class GenerateDescriptionUseCase(
     private val webSearchService: WebSearchService,
     private val wikipediaService: WikipediaService,
     private val llmService: LlmService,
-    private val settingsRepository: SettingsRepository
+    private val settingsRepository: SettingsRepository,
+    private val geocoderService: GeocoderService
 ) {
     suspend operator fun invoke(xid: String): Result<Pair<String, List<DescriptionSource>>> {
         Timber.tag("GenerateDesc").d("start xid=%s", xid)
@@ -31,10 +35,17 @@ class GenerateDescriptionUseCase(
         val contextParts = mutableListOf<String>()
         contextParts += "Nazwa: ${attraction.name}\nKategoria: ${attraction.category.displayName}"
 
-        Timber.tag("GenerateDesc").d("fetching web+wiki for: %s", attraction.name)
+        // Lokalny język kraju atrakcji — lokalne źródła są zwykle najbogatsze w szczegóły
+        val localLanguage = resolveLocalLanguage(attraction)
+            ?.takeIf { it != settings.appLanguage }
+
+        Timber.tag("GenerateDesc").d("fetching web+wiki for: %s (localLanguage=%s)", attraction.name, localLanguage)
         coroutineScope {
             val webDeferred = async {
                 webSearchService.search("${attraction.name} atrakcja turystyczna")
+            }
+            val localWebDeferred = localLanguage?.let { lang ->
+                async { webSearchService.search(attraction.name, language = lang) }
             }
             val wikiDeferred = async {
                 wikipediaService.getArticle(attraction.name)
@@ -47,6 +58,14 @@ class GenerateDescriptionUseCase(
                     sources += DescriptionSource(name = "Web Search", url = "https://tavily.com")
                 }
                 .onFailure { Timber.tag("GenerateDesc").w(it, "web search failed") }
+
+            localWebDeferred?.await()
+                ?.onSuccess { text ->
+                    Timber.tag("GenerateDesc").d("local web search (%s) OK, %d chars", localLanguage, text.length)
+                    contextParts += "[Web Search — lokalne źródła, język: $localLanguage]\n$text"
+                    sources += DescriptionSource(name = "Web Search (lokalne źródła)", url = "https://tavily.com")
+                }
+                ?.onFailure { Timber.tag("GenerateDesc").w(it, "local web search failed") }
 
             wikiDeferred.await()
                 .onSuccess { result ->
@@ -87,5 +106,12 @@ class GenerateDescriptionUseCase(
                 Result.failure(e)
             }
         )
+    }
+
+    /** Kraj ze źródła atrakcji, a gdy brak — reverse-geocoding on-demand (tylko przy generowaniu opisu). */
+    private suspend fun resolveLocalLanguage(attraction: Attraction): String? {
+        val countryCode = attraction.countryCode
+            ?: geocoderService.reverseCountryCode(attraction.latitude, attraction.longitude).getOrNull()
+        return countryCode?.let { languageForCountryCode(it) }
     }
 }

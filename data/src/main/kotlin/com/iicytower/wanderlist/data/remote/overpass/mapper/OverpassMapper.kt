@@ -25,7 +25,8 @@ fun OverpassElement.toAttraction(
         description = null,
         descriptionSources = emptyList(),
         isFromLastSearch = true,
-        distanceKm = distanceKm
+        distanceKm = distanceKm,
+        countryCode = tags["addr:country"]?.uppercase()?.takeIf { it.length == 2 }
     )
 }
 

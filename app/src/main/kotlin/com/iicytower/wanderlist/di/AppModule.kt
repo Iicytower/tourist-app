@@ -30,7 +30,7 @@ val useCaseModule = module {
     factory { GetMyListUseCase(get()) }
     factory { AddToMyListUseCase(get()) }
     factory { RemoveFromMyListUseCase(get()) }
-    factory { GenerateDescriptionUseCase(get(), get(), get(), get(), get()) }
+    factory { GenerateDescriptionUseCase(get(), get(), get(), get(), get(), get()) }
     factory { GetSettingsUseCase(get()) }
     factory { GetAttractionDetailUseCase(get()) }
     factory { SendChatMessageUseCase(get()) }

@@ -39,7 +39,10 @@ class CompositeAttractionSource(
         attractions
             .groupBy { coordKey(it.latitude, it.longitude) }
             .values
-            .map { group -> group.maxByOrNull { it.name.length }!! }
+            .map { group ->
+                val best = group.maxByOrNull { it.name.length }!!
+                best.copy(countryCode = best.countryCode ?: group.firstNotNullOfOrNull { it.countryCode })
+            }
 
     private fun coordKey(lat: Double, lon: Double): String {
         val latR = (lat * 1000).roundToInt()

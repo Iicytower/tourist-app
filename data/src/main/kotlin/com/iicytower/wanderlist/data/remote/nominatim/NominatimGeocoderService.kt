@@ -16,7 +16,13 @@ import timber.log.Timber
 private data class NominatimResult(
     val lat: String,
     val lon: String,
-    @SerialName("display_name") val displayName: String
+    @SerialName("display_name") val displayName: String,
+    val address: NominatimAddress? = null
+)
+
+@Serializable
+private data class NominatimAddress(
+    @SerialName("country_code") val countryCode: String? = null
 )
 
 @Serializable
@@ -97,4 +103,15 @@ class NominatimGeocoderService(private val httpClient: HttpClient) : GeocoderSer
             header("User-Agent", "WanderList/1.0 (tourist app)")
         }.body<NominatimResult>().displayName
     }.onFailure { Timber.tag("Nominatim").e(it, "reverseGeocode failed") }
+
+    override suspend fun reverseCountryCode(lat: Double, lon: Double): Result<String?> = runCatching {
+        httpClient.get("https://nominatim.openstreetmap.org/reverse") {
+            parameter("lat", lat)
+            parameter("lon", lon)
+            parameter("format", "json")
+            parameter("zoom", "3")
+            parameter("addressdetails", "1")
+            header("User-Agent", "WanderList/1.0 (tourist app)")
+        }.body<NominatimResult>().address?.countryCode?.uppercase()
+    }.onFailure { Timber.tag("Nominatim").e(it, "reverseCountryCode failed") }
 }

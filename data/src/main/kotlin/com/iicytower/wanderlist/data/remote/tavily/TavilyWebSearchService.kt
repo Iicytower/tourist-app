@@ -20,7 +20,7 @@ class TavilyWebSearchService(
 
     private val baseUrl = "https://api.tavily.com/search"
 
-    override suspend fun search(query: String): Result<String> {
+    override suspend fun search(query: String, language: String?): Result<String> {
         val settings = settingsRepository.getSettings().first()
         val apiKey = settings.tavilyApiKey
         if (apiKey.isBlank()) {
@@ -29,7 +29,7 @@ class TavilyWebSearchService(
         return runCatching {
             val response = httpClient.post(baseUrl) {
                 contentType(ContentType.Application.Json)
-                setBody(TavilySearchRequest(query = query, apiKey = apiKey))
+                setBody(TavilySearchRequest(query = query, apiKey = apiKey, searchLang = language))
             }
             when {
                 response.status.value == 401 -> error("Nieprawidłowy klucz Tavily API")

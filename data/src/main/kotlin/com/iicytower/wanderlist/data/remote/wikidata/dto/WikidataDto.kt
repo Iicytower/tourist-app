@@ -18,7 +18,8 @@ data class SparqlBinding(
     val placeLabel: SparqlValue? = null,
     val lat: SparqlValue? = null,
     val lon: SparqlValue? = null,
-    val type: SparqlValue? = null
+    val type: SparqlValue? = null,
+    val countryCode: SparqlValue? = null
 )
 
 @Serializable
