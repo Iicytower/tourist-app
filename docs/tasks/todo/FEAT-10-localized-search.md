@@ -12,10 +12,14 @@ Gdy atrakcja znajduje się w kraju, którego język da się ustalić, dodatkowo 
 
 ### Kraj atrakcji
 
+> Zaktualizowano po BUG-16 (usunięcie martwej integracji OpenTripMap) — faktycznym źródłem atrakcji jest dziś `CompositeAttractionSource` (Overpass + Wikipedia geosearch + Wikidata SPARQL), nie OpenTripMap.
+
 - `domain/.../model/Attraction.kt` — dodać pole `countryCode: String?` (ISO 3166-1 alpha-2).
-- `data/remote/opentripmap/dto/OtmAttractionDetailDto.kt` — sprawdzić czy OpenTripMap w odpowiedzi detali zwraca `address.country_code` (dostępne w API OTM); jeśli tak, zmapować.
-- `data/remote/opentripmap/OtmMapper.kt` — uzupełnić `toDomain()` o `countryCode`.
-- Jeśli OTM nie zwraca kraju dla danej atrakcji (część odpowiedzi może nie mieć `address`), pole zostaje `null` i logika lokalizacji języka jest pomijana (fallback do obecnego zachowania).
+- `data/remote/overpass/dto/OverpassDto.kt` — Overpass zwraca tagi OSM per element; sprawdzić dostępność `tags["addr:country"]` (ISO alpha-2, gdy w ogóle obecny — w praktyce rzadko wypełniony dla POI, częściej trzeba by reverse-geocodingu).
+- `data/remote/overpass/mapper/OverpassMapper.kt` — uzupełnić `toAttraction()` o `countryCode = tags["addr:country"]`.
+- `data/remote/wikidata/...` — sprawdzić czy odpowiedź SPARQL z Wikidata (źródło `WikidataSparqlSource`) da się rozszerzyć o `wdt:P17` (kraj) w zapytaniu — Wikidata ma to pole bardziej niezawodnie niż tagi OSM.
+- Skoro żadne z trzech źródeł nie gwarantuje kraju dla każdej atrakcji, rozważyć fallback: reverse-geocoding przez istniejący `GeocoderService`/Nominatim (`reverseGeocode()` z FEAT-07) po współrzędnych, tylko gdy `countryCode` z Overpass/Wikidata jest `null` — kosztowniejsze (dodatkowe zapytanie), więc ograniczyć do atrakcji faktycznie dodawanych do opisu (on-demand w `GenerateDescriptionUseCase`, nie przy każdym wyniku wyszukiwania).
+- Jeśli żadne źródło nie da kraju, pole zostaje `null` i logika lokalizacji języka jest pomijana (fallback do obecnego zachowania).
 
 ### Mapowanie kraj → język
 
@@ -36,8 +40,9 @@ Gdy atrakcja znajduje się w kraju, którego język da się ustalić, dodatkowo 
 - `domain/src/.../model/Attraction.kt`
 - `domain/src/.../repository/WebSearchService.kt`
 - `domain/src/.../usecase/GenerateDescriptionUseCase.kt`
-- `data/src/.../remote/opentripmap/dto/OtmAttractionDetailDto.kt`
-- `data/src/.../remote/opentripmap/OtmMapper.kt`
+- `data/src/.../remote/overpass/dto/OverpassDto.kt`
+- `data/src/.../remote/overpass/mapper/OverpassMapper.kt`
+- `data/src/.../remote/wikidata/...` (mapper/DTO dla SPARQL — dodanie `wdt:P17`, jeśli używane jako drugie źródło kraju)
 - `data/src/.../remote/tavily/TavilyWebSearchService.kt`
 - `data/src/.../remote/tavily/dto/TavilySearchDto.kt`
 - `core/src/.../util/CountryLanguage.kt` (nowy)
