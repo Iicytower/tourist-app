@@ -133,7 +133,7 @@ fun MapScreen(
             }},
             update = { _ ->
                 val style = currentStyle ?: return@AndroidView
-                val attractions = if (state.showMyListOnly) state.myList else emptyList()
+                val attractions = if (state.showMyListOnly) state.myList else state.searchResults
                 fun attractionFeature(a: com.iicytower.wanderlist.domain.model.Attraction): String {
                     val name = a.name.replace("\\", "\\\\").replace("\"", "\\\"")
                     return """{"type":"Feature","geometry":{"type":"Point","coordinates":[${a.longitude},${a.latitude}]},"properties":{"xid":"${a.xid}","name":"$name"}}"""
