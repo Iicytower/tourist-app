@@ -5,6 +5,7 @@ import com.iicytower.wanderlist.domain.model.Attraction
 import com.iicytower.wanderlist.domain.repository.AttractionRepository
 import com.iicytower.wanderlist.domain.repository.SettingsRepository
 import com.iicytower.wanderlist.domain.usecase.GetMyListUseCase
+import com.iicytower.wanderlist.domain.usecase.PlanRouteUseCase
 import com.iicytower.wanderlist.feature.map.viewmodel.MapViewModel
 import io.mockk.coEvery
 import io.mockk.every
@@ -28,6 +29,7 @@ class MapViewModelTest {
     private val getMyListUseCase = mockk<GetMyListUseCase>()
     private val attractionRepository = mockk<AttractionRepository>()
     private val settingsRepository = mockk<SettingsRepository>()
+    private val planRouteUseCase = mockk<PlanRouteUseCase>(relaxed = true)
     private lateinit var viewModel: MapViewModel
 
     @Before
@@ -36,7 +38,7 @@ class MapViewModelTest {
         every { getMyListUseCase() } returns flowOf(emptyList())
         coEvery { attractionRepository.getLastSearchResults() } returns emptyList()
         coEvery { settingsRepository.getLastMapPosition() } returns null
-        viewModel = MapViewModel(getMyListUseCase, attractionRepository, settingsRepository)
+        viewModel = MapViewModel(getMyListUseCase, attractionRepository, settingsRepository, planRouteUseCase)
     }
 
     @After

@@ -2,4 +2,8 @@
 <resources>
     <string name="my_list_switch">Mi lista</string>
     <string name="more_button">Más →</string>
+    <string name="plan_route">Planificar ruta</string>
+    <string name="route_title">Ruta turística</string>
+    <string name="route_total">Distancia total: %1$s · %2$d puntos</string>
+    <string name="ok">OK</string>
 </resources>
