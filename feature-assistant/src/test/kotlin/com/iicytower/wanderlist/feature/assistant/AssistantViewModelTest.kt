@@ -3,8 +3,10 @@ package com.iicytower.wanderlist.feature.assistant
 import com.iicytower.wanderlist.domain.model.AppSettings
 import com.iicytower.wanderlist.domain.model.ChatMessage
 import com.iicytower.wanderlist.domain.model.LlmEvent
+import com.iicytower.wanderlist.domain.model.TripDay
 import com.iicytower.wanderlist.domain.model.TripList
 import com.iicytower.wanderlist.domain.model.TripPlan
+import com.iicytower.wanderlist.domain.model.TripPoint
 import com.iicytower.wanderlist.domain.repository.LlmService
 import com.iicytower.wanderlist.domain.repository.SettingsRepository
 import com.iicytower.wanderlist.domain.repository.WebSearchService
@@ -22,6 +24,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
@@ -263,6 +266,44 @@ class AssistantViewModelTest {
 
         assertNull(viewModel.uiState.value.pendingConfirmation)
         coVerify(exactly = 1) { addToTripListUseCase("xid1", 5L) }
+    }
+
+    @Test
+    fun setContextList_injectsHiddenPlanIntoFirstLlmMessage_butNotIntoVisibleChat() = runTest {
+        val plan = TripPlan(days = listOf(TripDay("Dzień 1", listOf(TripPoint("xid1", "Wawel", "rano")))))
+        coEvery { getTripPlanUseCase(5L) } returns (plan to "Pamiętaj o butach")
+        val historySlot = slot<List<ChatMessage>>()
+        coEvery { llmService.completeChat(capture(historySlot), any(), any()) } returns
+            Result.success(listOf(LlmEvent.TextChunk("Cześć"), LlmEvent.Done))
+
+        viewModel.setContextList(5L)
+        testDispatcher.scheduler.advanceUntilIdle()
+        viewModel.updateInput("Co proponujesz?")
+        viewModel.sendMessage()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val sentToLlm = historySlot.captured.filterIsInstance<ChatMessage.User>().single().text
+        assertTrue(sentToLlm.contains("Wawel"))
+        assertTrue(sentToLlm.contains("Pamiętaj o butach"))
+        assertTrue(sentToLlm.contains("Co proponujesz?"))
+
+        val visibleMessages = viewModel.uiState.value.messages.filterIsInstance<ChatMessage.User>()
+        assertEquals(1, visibleMessages.size)
+        assertEquals("Co proponujesz?", visibleMessages.first().text)
+    }
+
+    @Test
+    fun setContextList_planMissing_doesNotBreakSendMessage() = runTest {
+        coEvery { getTripPlanUseCase(5L) } returns (null to null)
+        mockLlmSuccess(LlmEvent.Done)
+
+        viewModel.setContextList(5L)
+        testDispatcher.scheduler.advanceUntilIdle()
+        viewModel.updateInput("Hej")
+        viewModel.sendMessage()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        assertFalse(viewModel.uiState.value.isProcessing)
     }
 
     @Test

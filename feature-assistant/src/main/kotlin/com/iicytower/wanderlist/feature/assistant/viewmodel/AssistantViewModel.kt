@@ -23,6 +23,8 @@ import com.iicytower.wanderlist.domain.usecase.SearchAttractionsUseCase
 import com.iicytower.wanderlist.domain.state.TripPlanRevertStore
 import com.iicytower.wanderlist.feature.assistant.AssistantToolDefs
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import timber.log.Timber
 import kotlinx.coroutines.flow.StateFlow
@@ -53,10 +55,17 @@ class AssistantViewModel(
 
     private var pendingDecision: CompletableDeferred<Boolean>? = null
 
+    // Plan wycieczki pobrany w tle po wejściu z "Omów z asystentem" (FEAT-14) — wstrzykiwany
+    // ukrycie do pierwszej wiadomości wysłanej do LLM, żeby asystent od razu znał kontekst.
+    private var planContextDeferred: Deferred<String?>? = null
+    private var planContextPending = false
+
     fun setContextList(listId: Long) {
         // no-op if already set — prevents re-trigger on recomposition
         if (_uiState.value.contextListId == listId) return
         _uiState.update { it.copy(contextListId = listId) }
+        planContextPending = true
+        planContextDeferred = viewModelScope.async { formatTripPlan(listId) }
     }
 
     fun updateInput(text: String) {
@@ -67,16 +76,25 @@ class AssistantViewModel(
         val text = _uiState.value.currentInput.trim()
         if (text.isBlank() || _uiState.value.isProcessing) return
 
-        val userMsg = ChatMessage.User(text)
-        conversationHistory.add(userMsg)
         _uiState.update { it.copy(
-            messages = it.messages + userMsg,
+            messages = it.messages + ChatMessage.User(text),
             currentInput = "",
             isProcessing = true,
             streamingText = ""
         ) }
 
         viewModelScope.launch {
+            val planContext = if (planContextPending) {
+                planContextPending = false
+                planContextDeferred?.await()
+            } else null
+            conversationHistory.add(
+                if (planContext != null) {
+                    ChatMessage.User("$planContext\n\nPytanie użytkownika: $text")
+                } else {
+                    ChatMessage.User(text)
+                }
+            )
             runChatLoop()
         }
     }
@@ -88,6 +106,8 @@ class AssistantViewModel(
     fun confirmClearChat() {
         pendingDecision?.complete(false)
         conversationHistory.clear()
+        // historia wyczyszczona — jeśli wciąż jesteśmy w kontekście planu, wstrzyknij go ponownie
+        planContextPending = planContextDeferred != null
         _uiState.update { AssistantUiState() }
     }
 
@@ -243,20 +263,7 @@ class AssistantViewModel(
             }
             "get_trip_plan" -> {
                 val listId = (args["list_id"] as? Number)?.toLong() ?: return "Brak list_id"
-                val (plan, notes) = getTripPlanUseCase(listId)
-                if (plan == null) return "Brak planu wycieczki dla listy $listId."
-                buildString {
-                    appendLine("Plan wycieczki dla listy $listId:")
-                    plan.days.forEach { day ->
-                        appendLine(day.label)
-                        day.points.forEach { point ->
-                            append("  - ${point.name}")
-                            if (!point.note.isNullOrBlank()) append(" (${point.note})")
-                            appendLine()
-                        }
-                    }
-                    if (!notes.isNullOrBlank()) appendLine("Notatki użytkownika: $notes")
-                }
+                formatTripPlan(listId) ?: "Brak planu wycieczki dla listy $listId."
             }
             "update_trip_plan" -> {
                 val listId = (args["list_id"] as? Number)?.toLong() ?: return "Brak list_id"
@@ -278,6 +285,23 @@ class AssistantViewModel(
                 )
             }
             else -> "Nieznane narzedzie: $name"
+        }
+    }
+
+    private suspend fun formatTripPlan(listId: Long): String? {
+        val (plan, notes) = getTripPlanUseCase(listId)
+        if (plan == null) return null
+        return buildString {
+            appendLine("Plan wycieczki dla listy $listId:")
+            plan.days.forEach { day ->
+                appendLine(day.label)
+                day.points.forEach { point ->
+                    append("  - ${point.name}")
+                    if (!point.note.isNullOrBlank()) append(" (${point.note})")
+                    appendLine()
+                }
+            }
+            if (!notes.isNullOrBlank()) appendLine("Notatki użytkownika: $notes")
         }
     }
 
