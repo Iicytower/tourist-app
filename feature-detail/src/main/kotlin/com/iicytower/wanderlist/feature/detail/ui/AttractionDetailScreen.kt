@@ -259,6 +259,8 @@ fun AttractionDetailScreen(
                             onInputChange = { viewModel.updateQaInput(it) },
                             onAsk = { viewModel.askQuestion() }
                         )
+                        // Odstęp, żeby pole czatu z przyciskiem wyślij nie chowało się pod FAB-em serduszka
+                        Spacer(Modifier.height(88.dp))
                     }
                 }
             }
