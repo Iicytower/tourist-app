@@ -4,9 +4,11 @@ import com.iicytower.wanderlist.core.model.AttractionCategory
 import com.iicytower.wanderlist.domain.model.Attraction
 import com.iicytower.wanderlist.domain.model.Location
 import com.iicytower.wanderlist.domain.model.SearchParams
+import com.iicytower.wanderlist.domain.model.AppSettings
 import com.iicytower.wanderlist.domain.repository.AttractionRepository
 import com.iicytower.wanderlist.domain.repository.GeocoderService
 import com.iicytower.wanderlist.domain.repository.LocationService
+import com.iicytower.wanderlist.domain.repository.SettingsRepository
 import com.iicytower.wanderlist.domain.usecase.FilterAttractionsByQualityUseCase
 import com.iicytower.wanderlist.domain.usecase.SearchAttractionsUseCase
 import com.iicytower.wanderlist.feature.search.viewmodel.SearchViewModel
@@ -14,7 +16,10 @@ import com.iicytower.wanderlist.feature.search.viewmodel.SortOrder
 import com.iicytower.wanderlist.domain.repository.FilterResult
 import com.iicytower.wanderlist.domain.repository.RemovedAttraction
 import io.mockk.coEvery
+import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -37,12 +42,27 @@ class SearchViewModelTest {
     private val locationService = mockk<LocationService>()
     private val geocoderService = mockk<GeocoderService>()
     private val attractionRepository = mockk<AttractionRepository>(relaxed = true)
+    private val settingsRepository = mockk<SettingsRepository>()
     private lateinit var viewModel: SearchViewModel
+
+    private val fakeSettings = AppSettings(
+        openRouterApiKey = "key",
+        tavilyApiKey = "tkey",
+        aiModel = "model",
+        defaultRadiusKm = 10,
+        appLanguage = "pl",
+        userInterests = emptySet(),
+        systemPromptDescription = "desc prompt",
+        systemPromptAssistant = "assistant prompt",
+        tavilyUsageCount = 0,
+        tavilyUsageMonth = "2026-06"
+    )
 
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
-        viewModel = SearchViewModel(searchUseCase, filterUseCase, locationService, geocoderService, attractionRepository)
+        every { settingsRepository.getSettings() } returns flowOf(fakeSettings)
+        viewModel = SearchViewModel(searchUseCase, filterUseCase, locationService, geocoderService, attractionRepository, settingsRepository)
     }
 
     @After
@@ -52,6 +72,74 @@ class SearchViewModelTest {
 
     private fun makeAttraction(xid: String, dist: Double = 1.0, category: AttractionCategory = AttractionCategory.MUSEUMS_AND_GALLERIES) =
         Attraction(xid, "Name", 50.0, 20.0, category, false, null, null, emptyList(), true, dist)
+
+    @Test
+    fun init_preselectsInterestsAndRadiusFromSettings() = runTest {
+        val interests = setOf(AttractionCategory.CASTLES_AND_FORTIFICATIONS, AttractionCategory.VIEWPOINTS)
+        every { settingsRepository.getSettings() } returns flowOf(
+            fakeSettings.copy(userInterests = interests, defaultRadiusKm = 25)
+        )
+        val vm = SearchViewModel(searchUseCase, filterUseCase, locationService, geocoderService, attractionRepository, settingsRepository)
+        testDispatcher.scheduler.advanceUntilIdle()
+        assertEquals(interests, vm.uiState.value.selectedCategories)
+        assertEquals(25, vm.uiState.value.radiusKm)
+    }
+
+    @Test
+    fun settingsInterestsChange_updatesSelectedCategoriesImmediately_withoutRestart() = runTest {
+        val settingsFlow = MutableStateFlow(fakeSettings)
+        every { settingsRepository.getSettings() } returns settingsFlow
+        val vm = SearchViewModel(searchUseCase, filterUseCase, locationService, geocoderService, attractionRepository, settingsRepository)
+        testDispatcher.scheduler.advanceUntilIdle()
+        assertEquals(emptySet<AttractionCategory>(), vm.uiState.value.selectedCategories)
+
+        val newInterests = setOf(AttractionCategory.VIEWPOINTS)
+        settingsFlow.value = fakeSettings.copy(userInterests = newInterests)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals(newInterests, vm.uiState.value.selectedCategories)
+    }
+
+    @Test
+    fun setCategories_manualSelection_survivesLaterSettingsChange() = runTest {
+        val settingsFlow = MutableStateFlow(fakeSettings)
+        every { settingsRepository.getSettings() } returns settingsFlow
+        val vm = SearchViewModel(searchUseCase, filterUseCase, locationService, geocoderService, attractionRepository, settingsRepository)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val manualChoice = setOf(AttractionCategory.CASTLES_AND_FORTIFICATIONS)
+        vm.setCategories(manualChoice)
+        settingsFlow.value = fakeSettings.copy(userInterests = setOf(AttractionCategory.VIEWPOINTS))
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals(manualChoice, vm.uiState.value.selectedCategories)
+    }
+
+    @Test
+    fun search_autoQualityFilterEnabled_runsFilterAfterSearch() = runTest {
+        every { settingsRepository.getSettings() } returns flowOf(fakeSettings.copy(autoQualityFilter = true))
+        val vm = SearchViewModel(searchUseCase, filterUseCase, locationService, geocoderService, attractionRepository, settingsRepository)
+        val attractions = listOf(makeAttraction("a"), makeAttraction("b"))
+        vm.setLocationFromCoordinates(50.0, 20.0, "Test")
+        coEvery { searchUseCase(any()) } returns Result.success(attractions)
+        coEvery { filterUseCase(any()) } returns Result.success(
+            FilterResult(kept = listOf(attractions.first()), removed = listOf(RemovedAttraction(attractions.last().name, "nudne")))
+        )
+        vm.search()
+        testDispatcher.scheduler.advanceUntilIdle()
+        assertEquals(1, vm.uiState.value.results.size)
+        assertEquals(1, vm.uiState.value.filterRemovedCount)
+    }
+
+    @Test
+    fun search_autoQualityFilterDisabled_doesNotFilter() = runTest {
+        viewModel.setLocationFromCoordinates(50.0, 20.0, "Test")
+        coEvery { searchUseCase(any()) } returns Result.success(listOf(makeAttraction("a")))
+        viewModel.search()
+        testDispatcher.scheduler.advanceUntilIdle()
+        assertNull(viewModel.uiState.value.filterRemovedCount)
+        assertEquals(1, viewModel.uiState.value.results.size)
+    }
 
     @Test
     fun search_withEmptyResults_setsHasSearched() = runTest {

@@ -5,7 +5,7 @@ import com.iicytower.wanderlist.core.constant.DefaultSettings as CoreDefaultSett
 object DefaultSettings {
     const val AI_MODEL = CoreDefaultSettings.AI_MODEL
     const val DEFAULT_RADIUS_KM = CoreDefaultSettings.DEFAULT_RADIUS_KM
-    const val DESCRIPTION_LANGUAGE = CoreDefaultSettings.DESCRIPTION_LANGUAGE
+    const val APP_LANGUAGE = CoreDefaultSettings.APP_LANGUAGE
     val SYSTEM_PROMPT_DESCRIPTION get() = CoreDefaultSettings.SYSTEM_PROMPT_DESCRIPTION
     val SYSTEM_PROMPT_ASSISTANT get() = CoreDefaultSettings.SYSTEM_PROMPT_ASSISTANT
 }

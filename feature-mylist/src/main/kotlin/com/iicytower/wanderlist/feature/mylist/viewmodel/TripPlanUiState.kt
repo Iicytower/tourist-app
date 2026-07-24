@@ -7,5 +7,6 @@ data class TripPlanUiState(
     val notes: String = "",
     val isLoading: Boolean = true,
     val error: String? = null,
-    val showDeleteConfirmation: Boolean = false
+    val showDeleteConfirmation: Boolean = false,
+    val canRevert: Boolean = false
 )

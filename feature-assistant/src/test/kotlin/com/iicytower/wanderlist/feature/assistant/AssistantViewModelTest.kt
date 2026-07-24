@@ -3,8 +3,10 @@ package com.iicytower.wanderlist.feature.assistant
 import com.iicytower.wanderlist.domain.model.AppSettings
 import com.iicytower.wanderlist.domain.model.ChatMessage
 import com.iicytower.wanderlist.domain.model.LlmEvent
+import com.iicytower.wanderlist.domain.model.TripDay
 import com.iicytower.wanderlist.domain.model.TripList
 import com.iicytower.wanderlist.domain.model.TripPlan
+import com.iicytower.wanderlist.domain.model.TripPoint
 import com.iicytower.wanderlist.domain.repository.LlmService
 import com.iicytower.wanderlist.domain.repository.SettingsRepository
 import com.iicytower.wanderlist.domain.repository.WebSearchService
@@ -16,11 +18,13 @@ import com.iicytower.wanderlist.domain.usecase.GetTripListsUseCase
 import com.iicytower.wanderlist.domain.usecase.GetTripPlanUseCase
 import com.iicytower.wanderlist.domain.usecase.RemoveFromTripListUseCase
 import com.iicytower.wanderlist.domain.usecase.SearchAttractionsUseCase
+import com.iicytower.wanderlist.domain.state.TripPlanRevertStore
 import com.iicytower.wanderlist.feature.assistant.viewmodel.AssistantViewModel
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
@@ -48,6 +52,7 @@ class AssistantViewModelTest {
     private val settingsRepository = mockk<SettingsRepository>()
     private val getTripPlanUseCase = mockk<GetTripPlanUseCase>()
     private val generateTripPlanUseCase = mockk<GenerateTripPlanUseCase>()
+    private val tripPlanRevertStore = TripPlanRevertStore()
     private lateinit var viewModel: AssistantViewModel
 
     private val fakeSettings = AppSettings(
@@ -55,7 +60,7 @@ class AssistantViewModelTest {
         tavilyApiKey = "tkey",
         aiModel = "model",
         defaultRadiusKm = 10,
-        descriptionLanguage = "pl",
+        appLanguage = "pl",
         userInterests = emptySet(),
         systemPromptDescription = "desc prompt",
         systemPromptAssistant = "assistant prompt",
@@ -79,7 +84,8 @@ class AssistantViewModelTest {
             webSearchService = webSearchService,
             settingsRepository = settingsRepository,
             getTripPlanUseCase = getTripPlanUseCase,
-            generateTripPlanUseCase = generateTripPlanUseCase
+            generateTripPlanUseCase = generateTripPlanUseCase,
+            tripPlanRevertStore = tripPlanRevertStore
         )
     }
 
@@ -171,6 +177,133 @@ class AssistantViewModelTest {
         viewModel.sendMessage()
         testDispatcher.scheduler.advanceUntilIdle()
         coVerify(atLeast = 1) { getTripListsUseCase() }
+    }
+
+    @Test
+    fun removeFromList_waitsForConfirmation_andExecutesOnConfirm() = runTest {
+        coEvery { getAttractionsForListUseCase(5L) } returns flowOf(emptyList())
+        coEvery { removeFromTripListUseCase("xid1", 5L) } returns Result.success(Unit)
+        coEvery { llmService.completeChat(any(), any(), any()) } returnsMany listOf(
+            Result.success(listOf(
+                LlmEvent.ToolCall("id1", "remove_from_list", mapOf("xid" to "xid1", "list_id" to 5)),
+                LlmEvent.Done
+            )),
+            Result.success(listOf(LlmEvent.TextChunk("Usunięto"), LlmEvent.Done))
+        )
+        viewModel.updateInput("Usuń xid1 z listy 5")
+        viewModel.sendMessage()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        assertNotNull(viewModel.uiState.value.pendingConfirmation)
+        coVerify(exactly = 0) { removeFromTripListUseCase(any(), any()) }
+
+        viewModel.confirmPendingAction()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        assertNull(viewModel.uiState.value.pendingConfirmation)
+        coVerify(exactly = 1) { removeFromTripListUseCase("xid1", 5L) }
+    }
+
+    @Test
+    fun removeFromList_rejectedByUser_doesNotExecute() = runTest {
+        coEvery { getAttractionsForListUseCase(5L) } returns flowOf(emptyList())
+        coEvery { llmService.completeChat(any(), any(), any()) } returnsMany listOf(
+            Result.success(listOf(
+                LlmEvent.ToolCall("id1", "remove_from_list", mapOf("xid" to "xid1", "list_id" to 5)),
+                LlmEvent.Done
+            )),
+            Result.success(listOf(LlmEvent.TextChunk("Rozumiem, nie usuwam"), LlmEvent.Done))
+        )
+        viewModel.updateInput("Usuń xid1 z listy 5")
+        viewModel.sendMessage()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        viewModel.rejectPendingAction()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        assertNull(viewModel.uiState.value.pendingConfirmation)
+        coVerify(exactly = 0) { removeFromTripListUseCase(any(), any()) }
+        assertFalse(viewModel.uiState.value.isProcessing)
+    }
+
+    @Test
+    fun updateTripPlan_confirmed_storesPreviousPlanForRevert() = runTest {
+        val previousPlan = TripPlan(days = emptyList())
+        val newPlan = TripPlan(days = emptyList())
+        coEvery { getTripPlanUseCase(5L) } returns (previousPlan to null)
+        coEvery { generateTripPlanUseCase.updateFromJson(5L, any()) } returns Result.success(newPlan)
+        coEvery { llmService.completeChat(any(), any(), any()) } returnsMany listOf(
+            Result.success(listOf(
+                LlmEvent.ToolCall("id1", "update_trip_plan", mapOf("list_id" to 5, "plan_json" to "{}")),
+                LlmEvent.Done
+            )),
+            Result.success(listOf(LlmEvent.TextChunk("Zaktualizowano"), LlmEvent.Done))
+        )
+        viewModel.updateInput("Zmień plan listy 5")
+        viewModel.sendMessage()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        viewModel.confirmPendingAction()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        coVerify(exactly = 1) { generateTripPlanUseCase.updateFromJson(5L, "{}") }
+        assertEquals(previousPlan, tripPlanRevertStore.consume(5L))
+    }
+
+    @Test
+    fun addToList_executesWithoutConfirmation() = runTest {
+        coEvery { addToTripListUseCase("xid1", 5L) } returns Result.success(Unit)
+        coEvery { llmService.completeChat(any(), any(), any()) } returnsMany listOf(
+            Result.success(listOf(
+                LlmEvent.ToolCall("id1", "add_to_list", mapOf("xid" to "xid1", "list_id" to 5)),
+                LlmEvent.Done
+            )),
+            Result.success(listOf(LlmEvent.TextChunk("Dodano"), LlmEvent.Done))
+        )
+        viewModel.updateInput("Dodaj xid1 do listy 5")
+        viewModel.sendMessage()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        assertNull(viewModel.uiState.value.pendingConfirmation)
+        coVerify(exactly = 1) { addToTripListUseCase("xid1", 5L) }
+    }
+
+    @Test
+    fun setContextList_injectsHiddenPlanIntoFirstLlmMessage_butNotIntoVisibleChat() = runTest {
+        val plan = TripPlan(days = listOf(TripDay("Dzień 1", listOf(TripPoint("xid1", "Wawel", "rano")))))
+        coEvery { getTripPlanUseCase(5L) } returns (plan to "Pamiętaj o butach")
+        val historySlot = slot<List<ChatMessage>>()
+        coEvery { llmService.completeChat(capture(historySlot), any(), any()) } returns
+            Result.success(listOf(LlmEvent.TextChunk("Cześć"), LlmEvent.Done))
+
+        viewModel.setContextList(5L)
+        testDispatcher.scheduler.advanceUntilIdle()
+        viewModel.updateInput("Co proponujesz?")
+        viewModel.sendMessage()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val sentToLlm = historySlot.captured.filterIsInstance<ChatMessage.User>().single().text
+        assertTrue(sentToLlm.contains("Wawel"))
+        assertTrue(sentToLlm.contains("Pamiętaj o butach"))
+        assertTrue(sentToLlm.contains("Co proponujesz?"))
+
+        val visibleMessages = viewModel.uiState.value.messages.filterIsInstance<ChatMessage.User>()
+        assertEquals(1, visibleMessages.size)
+        assertEquals("Co proponujesz?", visibleMessages.first().text)
+    }
+
+    @Test
+    fun setContextList_planMissing_doesNotBreakSendMessage() = runTest {
+        coEvery { getTripPlanUseCase(5L) } returns (null to null)
+        mockLlmSuccess(LlmEvent.Done)
+
+        viewModel.setContextList(5L)
+        testDispatcher.scheduler.advanceUntilIdle()
+        viewModel.updateInput("Hej")
+        viewModel.sendMessage()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        assertFalse(viewModel.uiState.value.isProcessing)
     }
 
     @Test

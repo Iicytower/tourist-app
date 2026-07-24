@@ -24,7 +24,7 @@ class TavilyWebSearchServiceTest {
 
     private fun makeSettings(apiKey: String = "valid-key") = AppSettings(
         openRouterApiKey = "", tavilyApiKey = apiKey,
-        aiModel = "model", defaultRadiusKm = 10, descriptionLanguage = "pl",
+        aiModel = "model", defaultRadiusKm = 10, appLanguage = "pl",
         userInterests = emptySet(), systemPromptDescription = "", systemPromptAssistant = "",
         tavilyUsageCount = 0, tavilyUsageMonth = "2026-06"
     )

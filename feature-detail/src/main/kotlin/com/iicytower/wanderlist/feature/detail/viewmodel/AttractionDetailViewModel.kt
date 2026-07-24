@@ -2,8 +2,10 @@ package com.iicytower.wanderlist.feature.detail.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.iicytower.wanderlist.domain.model.ChatMessage
 import com.iicytower.wanderlist.domain.repository.TripListRepository
 import com.iicytower.wanderlist.domain.usecase.AddToTripListUseCase
+import com.iicytower.wanderlist.domain.usecase.AskAboutAttractionUseCase
 import com.iicytower.wanderlist.domain.usecase.CreateTripListUseCase
 import com.iicytower.wanderlist.domain.usecase.GenerateDescriptionUseCase
 import com.iicytower.wanderlist.domain.usecase.GetAttractionDetailUseCase
@@ -24,11 +26,14 @@ class AttractionDetailViewModel(
     private val addToTripListUseCase: AddToTripListUseCase,
     private val removeFromTripListUseCase: RemoveFromTripListUseCase,
     private val createTripListUseCase: CreateTripListUseCase,
-    private val tripListRepository: TripListRepository
+    private val tripListRepository: TripListRepository,
+    private val askAboutAttractionUseCase: AskAboutAttractionUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AttractionDetailUiState())
     val uiState: StateFlow<AttractionDetailUiState> = _uiState.asStateFlow()
+
+    private val qaHistory = mutableListOf<ChatMessage>()
 
     fun load(xid: String, showDistance: Boolean) {
         viewModelScope.launch {
@@ -123,5 +128,38 @@ class AttractionDetailViewModel(
 
     fun clearDescriptionError() {
         _uiState.update { it.copy(descriptionError = null) }
+    }
+
+    fun updateQaInput(text: String) = _uiState.update { it.copy(qaInput = text) }
+
+    fun askQuestion() {
+        val attraction = _uiState.value.attraction ?: return
+        val question = _uiState.value.qaInput.trim()
+        if (question.isBlank() || _uiState.value.isQaLoading) return
+
+        _uiState.update { it.copy(
+            qaMessages = it.qaMessages + QaMessage(isUser = true, text = question),
+            qaInput = "",
+            isQaLoading = true
+        ) }
+
+        viewModelScope.launch {
+            askAboutAttractionUseCase(attraction, question, qaHistory.toList()).fold(
+                onSuccess = { answer ->
+                    qaHistory += ChatMessage.User(question)
+                    qaHistory += ChatMessage.Assistant(answer)
+                    _uiState.update { it.copy(
+                        qaMessages = it.qaMessages + QaMessage(isUser = false, text = answer),
+                        isQaLoading = false
+                    ) }
+                },
+                onFailure = { e ->
+                    _uiState.update { it.copy(
+                        qaMessages = it.qaMessages + QaMessage(isUser = false, text = e.message ?: "Błąd agenta"),
+                        isQaLoading = false
+                    ) }
+                }
+            )
+        }
     }
 }

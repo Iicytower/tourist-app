@@ -42,7 +42,7 @@ class OverpassApiClient(private val httpClient: HttpClient) : RemoteAttractionSo
                     }
                 }
             }.awaitAll().flatten()
-                .mapNotNull { it.toAttraction(params.latitude, params.longitude) }
+                .mapNotNull { it.toAttraction(params.latitude, params.longitude, params.language) }
                 .distinctBy { it.xid }
         }
     }

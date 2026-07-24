@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -45,14 +47,19 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.iicytower.wanderlist.core.constant.AppConstants
 import com.iicytower.wanderlist.feature.search.BuildConfig
+import com.iicytower.wanderlist.core.model.displayNameRes
+import com.iicytower.wanderlist.core.ui.AttractionImage
 import com.iicytower.wanderlist.core.util.formatDistance
+import com.iicytower.wanderlist.feature.search.R
 import com.iicytower.wanderlist.domain.model.Attraction
 import com.iicytower.wanderlist.feature.search.viewmodel.SearchViewModel
 import com.iicytower.wanderlist.feature.search.viewmodel.SortOrder
@@ -77,14 +84,14 @@ fun SearchScreen(
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-            Text("Wyszukaj atrakcje", style = MaterialTheme.typography.headlineSmall)
+            Text(stringResource(R.string.search_title), style = MaterialTheme.typography.headlineSmall)
             Spacer(Modifier.height(8.dp))
 
             // Pole lokalizacji
             OutlinedTextField(
                 value = state.locationQuery,
                 onValueChange = { viewModel.updateLocationQuery(it) },
-                label = { Text("Szukaj miejsca (miasto, adres...)") },
+                label = { Text(stringResource(R.string.search_place_label)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 trailingIcon = {
@@ -93,10 +100,10 @@ fun SearchScreen(
                             onClick = { viewModel.searchLocationByName(state.locationQuery) },
                             enabled = state.locationQuery.isNotBlank() && !state.isLoading
                         ) {
-                            Icon(Icons.Default.Search, contentDescription = "Szukaj miejsca")
+                            Icon(Icons.Default.Search, contentDescription = stringResource(R.string.cd_search_place))
                         }
                         IconButton(onClick = { viewModel.openLocationPicker() }) {
-                            Icon(Icons.Default.Map, contentDescription = "Wybierz na mapie")
+                            Icon(Icons.Default.Map, contentDescription = stringResource(R.string.cd_pick_on_map))
                         }
                     }
                 },
@@ -137,7 +144,7 @@ fun SearchScreen(
             Spacer(Modifier.height(4.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    text = state.searchLocationLabel.ifBlank { "Wybierz punkt wyszukiwania" },
+                    text = state.searchLocationLabel.ifBlank { stringResource(R.string.choose_search_point) },
                     modifier = Modifier.weight(1f),
                     style = MaterialTheme.typography.bodySmall,
                     color = if (state.searchLocation == null) MaterialTheme.colorScheme.onSurfaceVariant
@@ -147,14 +154,14 @@ fun SearchScreen(
                     onClick = { viewModel.setLocationFromGps() },
                     enabled = !state.isLoading
                 ) {
-                    Icon(Icons.Default.GpsFixed, contentDescription = "Moja lokalizacja (GPS)")
+                    Icon(Icons.Default.GpsFixed, contentDescription = stringResource(R.string.cd_my_location))
                 }
             }
 
             Spacer(Modifier.height(8.dp))
 
             // Promień
-            Text("Promień: ${state.radiusKm} km", style = MaterialTheme.typography.bodyMedium)
+            Text(stringResource(R.string.radius_label, state.radiusKm), style = MaterialTheme.typography.bodyMedium)
             Slider(
                 value = state.radiusKm.toFloat(),
                 onValueChange = { viewModel.setRadius(it.toInt()) },
@@ -170,7 +177,7 @@ fun SearchScreen(
                 enabled = state.searchLocation != null && !state.isLoading,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Szukaj")
+                Text(stringResource(R.string.search_button))
             }
 
             Spacer(Modifier.height(8.dp))
@@ -182,7 +189,7 @@ fun SearchScreen(
                 }
             } else if (state.hasSearched && state.results.isEmpty() && state.error == null) {
                 Text(
-                    "Brak atrakcji w promieniu ${state.radiusKm} km. Spróbuj zwiększyć promień.",
+                    stringResource(R.string.no_results_in_radius, state.radiusKm),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -208,10 +215,10 @@ fun SearchScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column {
-                        Text("Znaleziono: ${state.results.size}", style = MaterialTheme.typography.bodySmall)
+                        Text(stringResource(R.string.found_count, state.results.size), style = MaterialTheme.typography.bodySmall)
                         state.filterRemovedCount?.let { count ->
                             Text(
-                                "Odfiltrowano: $count",
+                                stringResource(R.string.filtered_out_count, count),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.secondary
                             )
@@ -226,7 +233,7 @@ fun SearchScreen(
                                 enabled = !state.isLoading
                             ) {
                                 Icon(Icons.Default.AutoFixHigh, contentDescription = null, modifier = Modifier.padding(end = 4.dp))
-                                Text("Przefiltruj")
+                                Text(stringResource(R.string.filter_button))
                             }
                         }
                         OutlinedButton(onClick = {
@@ -235,7 +242,7 @@ fun SearchScreen(
                             )
                         }) {
                             Icon(Icons.Default.Sort, contentDescription = null, modifier = Modifier.padding(end = 4.dp))
-                            Text(if (state.sortOrder == SortOrder.BY_DISTANCE) "Odległość" else "Kategoria")
+                            Text(if (state.sortOrder == SortOrder.BY_DISTANCE) stringResource(R.string.sort_by_distance) else stringResource(R.string.sort_by_category))
                         }
                     }
                 }
@@ -254,7 +261,7 @@ fun SearchScreen(
         state.error?.let { error ->
             Snackbar(
                 modifier = Modifier.align(Alignment.BottomCenter).padding(16.dp),
-                action = { TextButton(onClick = { viewModel.clearError() }) { Text("OK") } }
+                action = { TextButton(onClick = { viewModel.clearError() }) { Text(stringResource(R.string.ok)) } }
             ) { Text(error) }
         }
     }
@@ -293,9 +300,9 @@ private fun LocationPickerContent(
         """{"type":"Feature","geometry":{"type":"Point","coordinates":[$lon,$lat]},"properties":{}}"""
 
     Column(modifier = Modifier.padding(16.dp)) {
-        Text("Wybierz lokalizację", style = MaterialTheme.typography.titleMedium)
+        Text(stringResource(R.string.location_picker_title), style = MaterialTheme.typography.titleMedium)
         Spacer(Modifier.height(4.dp))
-        Text("Przytrzymaj palec na mapie, aby wybrać punkt", style = MaterialTheme.typography.bodySmall,
+        Text(stringResource(R.string.location_picker_hint), style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(Modifier.height(8.dp))
 
@@ -359,13 +366,13 @@ private fun LocationPickerContent(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             OutlinedButton(onClick = onCancel, modifier = Modifier.weight(1f)) {
-                Text("Anuluj")
+                Text(stringResource(R.string.cancel))
             }
             Button(
                 onClick = { onPick(pickedLat.value, pickedLon.value) },
                 modifier = Modifier.weight(1f)
             ) {
-                Text("Wybierz tę lokalizację")
+                Text(stringResource(R.string.pick_this_location))
             }
         }
         Spacer(Modifier.height(16.dp))
@@ -380,10 +387,18 @@ private fun AttractionListItem(attraction: Attraction, onClick: () -> Unit) {
             .padding(vertical = 4.dp)
             .clickable(onClick = onClick)
     ) {
-        Column(modifier = Modifier.padding(12.dp)) {
+        Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+            AttractionImage(
+                imageUrl = attraction.imageUrl,
+                category = attraction.category,
+                modifier = Modifier
+                    .size(72.dp)
+                    .clip(RoundedCornerShape(8.dp))
+            )
+            Column(modifier = Modifier.padding(start = 12.dp)) {
             Text(attraction.name, style = MaterialTheme.typography.titleMedium)
             Text(
-                attraction.category.displayName,
+                stringResource(attraction.category.displayNameRes),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.primary
             )
@@ -395,8 +410,9 @@ private fun AttractionListItem(attraction: Attraction, onClick: () -> Unit) {
                 )
             }
             if (attraction.description != null) {
-                Text("• Opis dostępny", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.secondary)
+                Text(stringResource(R.string.description_available), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.secondary)
             }
+        }
         }
     }
 }

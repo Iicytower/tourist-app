@@ -38,8 +38,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.iicytower.wanderlist.domain.model.TripList
+import com.iicytower.wanderlist.feature.mylist.R
 import com.iicytower.wanderlist.feature.mylist.viewmodel.TripListsViewModel
 import org.koin.androidx.compose.koinViewModel
 
@@ -71,21 +73,21 @@ fun MyListScreen(
         val name = uiState.lists.find { it.id == id }?.name ?: ""
         AlertDialog(
             onDismissRequest = { viewModel.cancelDelete() },
-            title = { Text("Usuń listę") },
-            text = { Text("Czy na pewno chcesz usunąć listę \"$name\"? Atrakcje nie zostaną usunięte z bazy.") },
-            confirmButton = { TextButton(onClick = { viewModel.confirmDelete() }) { Text("Usuń") } },
-            dismissButton = { TextButton(onClick = { viewModel.cancelDelete() }) { Text("Anuluj") } }
+            title = { Text(stringResource(R.string.delete_list_title)) },
+            text = { Text(stringResource(R.string.delete_list_message, name)) },
+            confirmButton = { TextButton(onClick = { viewModel.confirmDelete() }) { Text(stringResource(R.string.delete)) } },
+            dismissButton = { TextButton(onClick = { viewModel.cancelDelete() }) { Text(stringResource(R.string.cancel)) } }
         )
     }
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
-            TopAppBar(title = { Text("Moje Listy") })
+            TopAppBar(title = { Text(stringResource(R.string.my_lists_title)) })
         },
         floatingActionButton = {
             FloatingActionButton(onClick = { viewModel.showCreateDialog() }) {
-                Icon(Icons.Default.Add, contentDescription = "Nowa lista")
+                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.new_list_title))
             }
         }
     ) { padding ->
@@ -96,13 +98,13 @@ fun MyListScreen(
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
-                        "Nie masz jeszcze żadnych list.",
+                        stringResource(R.string.empty_lists_title),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(Modifier.height(8.dp))
                     Text(
-                        "Naciśnij + aby utworzyć pierwszą.",
+                        stringResource(R.string.empty_lists_hint),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -141,13 +143,13 @@ private fun TripListItem(
             Column(modifier = Modifier.weight(1f)) {
                 Text(tripList.name, style = MaterialTheme.typography.titleSmall)
                 Text(
-                    "${tripList.attractionCount} atrakcji",
+                    stringResource(R.string.attractions_count, tripList.attractionCount),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
             IconButton(onClick = onDelete) {
-                Icon(Icons.Default.Delete, contentDescription = "Usuń listę", tint = MaterialTheme.colorScheme.error)
+                Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.delete_list_title), tint = MaterialTheme.colorScheme.error)
             }
         }
     }
@@ -158,20 +160,20 @@ private fun CreateListDialog(onConfirm: (String) -> Unit, onDismiss: () -> Unit)
     var name by remember { mutableStateOf("") }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Nowa lista") },
+        title = { Text(stringResource(R.string.new_list_title)) },
         text = {
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },
-                label = { Text("Nazwa listy") },
+                label = { Text(stringResource(R.string.list_name_label)) },
                 singleLine = true
             )
         },
         confirmButton = {
             TextButton(onClick = { onConfirm(name) }, enabled = name.isNotBlank()) {
-                Text("Utwórz")
+                Text(stringResource(R.string.create))
             }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Anuluj") } }
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } }
     )
 }

@@ -1,6 +1,7 @@
 package com.iicytower.wanderlist.data.local.mapper
 
 import com.iicytower.wanderlist.core.model.AttractionCategory
+import com.iicytower.wanderlist.data.local.OsmOpeningHoursParser
 import com.iicytower.wanderlist.data.local.entity.AttractionEntity
 import com.iicytower.wanderlist.domain.model.Attraction
 import com.iicytower.wanderlist.domain.model.DescriptionSource
@@ -30,7 +31,11 @@ fun AttractionEntity.toDomain(distanceKm: Double? = null): Attraction {
         description = description,
         descriptionSources = sources,
         isFromLastSearch = isFromLastSearch,
-        distanceKm = distanceKm
+        distanceKm = distanceKm,
+        countryCode = countryCode,
+        openingHours = openingHoursRaw?.let { OsmOpeningHoursParser.parse(it) },
+        imageUrl = imageUrl,
+        originalName = originalName
     )
 }
 
@@ -48,6 +53,10 @@ fun Attraction.toEntity(): AttractionEntity {
         dateAddedToList = dateAddedToList,
         description = description,
         descriptionSources = sourcesJson,
-        isFromLastSearch = isFromLastSearch
+        isFromLastSearch = isFromLastSearch,
+        countryCode = countryCode,
+        openingHoursRaw = openingHours?.raw,
+        imageUrl = imageUrl,
+        originalName = originalName
     )
 }

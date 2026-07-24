@@ -39,9 +39,12 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.iicytower.wanderlist.domain.model.ChatMessage
+import com.iicytower.wanderlist.feature.assistant.R
+import com.iicytower.wanderlist.feature.assistant.viewmodel.PendingToolConfirmation
 import com.iicytower.wanderlist.feature.assistant.viewmodel.AssistantViewModel
 import org.koin.androidx.compose.koinViewModel
 
@@ -63,16 +66,37 @@ fun AssistantScreen(
         if (itemCount > 0) listState.animateScrollToItem(itemCount - 1)
     }
 
+    uiState.pendingConfirmation?.let { confirmation ->
+        AlertDialog(
+            onDismissRequest = { viewModel.rejectPendingAction() },
+            title = { Text(stringResource(R.string.confirm_action_title)) },
+            text = {
+                Text(when (confirmation) {
+                    is PendingToolConfirmation.RemoveFromList ->
+                        stringResource(R.string.confirm_remove_from_list, confirmation.attractionName, confirmation.listName)
+                    is PendingToolConfirmation.UpdateTripPlan ->
+                        stringResource(R.string.confirm_update_plan, confirmation.listName)
+                })
+            },
+            confirmButton = {
+                TextButton(onClick = { viewModel.confirmPendingAction() }) { Text(stringResource(R.string.yes)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { viewModel.rejectPendingAction() }) { Text(stringResource(R.string.no)) }
+            }
+        )
+    }
+
     if (uiState.showClearConfirmation) {
         AlertDialog(
             onDismissRequest = { viewModel.dismissClearConfirmation() },
-            title = { Text("Wyczysc czat") },
-            text = { Text("Czy na pewno chcesz wyczysc historie rozmowy?") },
+            title = { Text(stringResource(R.string.clear_chat_title)) },
+            text = { Text(stringResource(R.string.clear_chat_message)) },
             confirmButton = {
-                TextButton(onClick = { viewModel.confirmClearChat() }) { Text("Wyczysc") }
+                TextButton(onClick = { viewModel.confirmClearChat() }) { Text(stringResource(R.string.clear)) }
             },
             dismissButton = {
-                TextButton(onClick = { viewModel.dismissClearConfirmation() }) { Text("Anuluj") }
+                TextButton(onClick = { viewModel.dismissClearConfirmation() }) { Text(stringResource(R.string.cancel)) }
             }
         )
     }
@@ -80,13 +104,13 @@ fun AssistantScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Asystent") },
+                title = { Text(stringResource(R.string.assistant_title)) },
                 actions = {
                     IconButton(
                         onClick = { viewModel.clearChat() },
                         enabled = uiState.messages.isNotEmpty()
                     ) {
-                        Icon(Icons.Default.Delete, contentDescription = "Wyczysc czat")
+                        Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.cd_clear_chat))
                     }
                 }
             )
@@ -138,7 +162,7 @@ fun AssistantScreen(
                     value = uiState.currentInput,
                     onValueChange = { viewModel.updateInput(it) },
                     modifier = Modifier.weight(1f),
-                    placeholder = { Text("Napisz wiadomosc...") },
+                    placeholder = { Text(stringResource(R.string.message_placeholder)) },
                     enabled = !uiState.isProcessing,
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
                     keyboardActions = KeyboardActions(onSend = { viewModel.sendMessage() }),
@@ -149,7 +173,7 @@ fun AssistantScreen(
                     onClick = { viewModel.sendMessage() },
                     enabled = uiState.currentInput.isNotBlank() && !uiState.isProcessing
                 ) {
-                    Icon(Icons.Default.Send, contentDescription = "Wyslij")
+                    Icon(Icons.Default.Send, contentDescription = stringResource(R.string.cd_send))
                 }
             }
         }
@@ -207,7 +231,7 @@ private fun AssistantBubble(text: String) {
 private fun ErrorBubble(text: String) {
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start) {
         Text(
-            text = "Blad: $text",
+            text = stringResource(R.string.error_prefix, text),
             modifier = Modifier
                 .widthIn(max = 280.dp)
                 .background(

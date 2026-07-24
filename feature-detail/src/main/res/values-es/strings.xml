@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="detail_fallback_title">Detalles</string>
+    <string name="original_name_label">Nombre original: %1$s</string>
+    <string name="cd_back">Atrás</string>
+    <string name="cd_add_to_list">Añadir a la lista</string>
+    <string name="distance_label">Distancia: %1$s</string>
+    <string name="description_section">Descripción</string>
+    <string name="sources_label">Fuentes:</string>
+    <string name="reload_description">Recargar descripción</string>
+    <string name="generating_description">Generando descripción…</string>
+    <string name="try_again">Reintentar</string>
+    <string name="load_description">Cargar descripción</string>
+    <string name="navigate_to">Navegar</string>
+    <string name="copy_location">Copiar ubicación</string>
+    <string name="copied">Copiado: %1$s</string>
+    <string name="show_on_map">Mostrar en el mapa</string>
+    <string name="add_to_list_title">Añadir a la lista</string>
+    <string name="no_lists_yet">Aún no tienes listas.</string>
+    <string name="attractions_count">%1$d atracciones</string>
+    <string name="new_list_name_label">Nombre de la nueva lista</string>
+    <string name="cancel">Cancelar</string>
+    <string name="create_and_add">Crear y añadir</string>
+    <string name="create_new_list">Crear nueva lista</string>
+    <string name="opening_hours_section">Horario de apertura</string>
+    <string name="open_now">Abierto ahora</string>
+    <string name="closed_now">Cerrado</string>
+    <string name="ask_section_title">Pregunta sobre este lugar</string>
+    <string name="ask_placeholder">p. ej. ¿cuánto cuesta la entrada?</string>
+    <string name="cd_ask_send">Hacer una pregunta</string>
+    <string name="ask_loading">El agente está buscando una respuesta…</string>
+</resources>

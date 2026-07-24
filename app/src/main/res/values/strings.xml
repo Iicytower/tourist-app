@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">WanderList</string>
+    <string name="nav_search">Szukaj</string>
+    <string name="nav_map">Mapa</string>
+    <string name="nav_my_list">Moja Lista</string>
+    <string name="nav_assistant">Asystent</string>
+    <string name="nav_settings">Ustawienia</string>
 </resources>

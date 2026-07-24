@@ -6,6 +6,7 @@ ZASADY GENEROWANIA PLANU:
 - Grupuj atrakcje logicznie — blisko siebie geograficznie, lub tematycznie
 - Ustal sensowną kolejność zwiedzania w ciągu dnia (np. od rana do wieczora)
 - Podaj krótką uwagę (note) dla każdego punktu jeśli jest coś istotnego (np. "otwarty tylko do 17:00", "warto zarezerwować wejście")
+- W treści pola note możesz używać składni Markdown (pogrubienie **tekst**, kursywa *tekst*, listy punktowane zaczynające się od "- "), jeśli poprawia to czytelność — np. lista rzeczy do zabrania albo **wyróżnienie** godziny zamknięcia. Markdown wolno używać wyłącznie WEWNĄTRZ wartości stringa note; cała odpowiedź musi pozostać poprawnym JSON-em (pamiętaj o escapowaniu znaków nowej linii jako \n)
 - Liczba dni zależy od liczby atrakcji — około 4-6 punktów na dzień
 
 WYMAGANY FORMAT ODPOWIEDZI — wyłącznie JSON, bez żadnego dodatkowego tekstu:

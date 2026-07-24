@@ -30,6 +30,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -42,10 +43,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.iicytower.wanderlist.core.constant.AppConstants
 import com.iicytower.wanderlist.core.model.AttractionCategory
+import com.iicytower.wanderlist.core.model.displayNameRes
+import com.iicytower.wanderlist.feature.settings.R
 import com.iicytower.wanderlist.feature.settings.viewmodel.ConnectionTestState
 import com.iicytower.wanderlist.feature.settings.viewmodel.SettingsViewModel
 import org.koin.androidx.compose.koinViewModel
@@ -66,10 +70,10 @@ fun SettingsScreen(
     uiState.openRouterTestError?.let { error ->
         AlertDialog(
             onDismissRequest = { viewModel.clearOpenRouterTestError() },
-            title = { Text("Blad polaczenia OpenRouter") },
+            title = { Text(stringResource(R.string.openrouter_error_title)) },
             text = { Text(error) },
             confirmButton = {
-                TextButton(onClick = { viewModel.clearOpenRouterTestError() }) { Text("OK") }
+                TextButton(onClick = { viewModel.clearOpenRouterTestError() }) { Text(stringResource(R.string.ok)) }
             }
         )
     }
@@ -77,16 +81,16 @@ fun SettingsScreen(
     uiState.tavilyTestError?.let { error ->
         AlertDialog(
             onDismissRequest = { viewModel.clearTavilyTestError() },
-            title = { Text("Blad polaczenia Tavily") },
+            title = { Text(stringResource(R.string.tavily_error_title)) },
             text = { Text(error) },
             confirmButton = {
-                TextButton(onClick = { viewModel.clearTavilyTestError() }) { Text("OK") }
+                TextButton(onClick = { viewModel.clearTavilyTestError() }) { Text(stringResource(R.string.ok)) }
             }
         )
     }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Ustawienia") }) }
+        topBar = { TopAppBar(title = { Text(stringResource(R.string.settings_title)) }) }
     ) { padding ->
         LazyColumn(
             modifier = Modifier
@@ -98,7 +102,7 @@ fun SettingsScreen(
             item { Spacer(Modifier.height(8.dp)) }
 
             // === API Keys ===
-            item { SectionHeader("Klucze API") }
+            item { SectionHeader(stringResource(R.string.section_api_keys)) }
 
             item {
                 ApiKeySection(
@@ -122,7 +126,7 @@ fun SettingsScreen(
                 )
                 if (settings != null) {
                     Text(
-                        "Wykorzystano ${settings.tavilyUsageCount} / 1000 zapytan w tym miesiacu",
+                        stringResource(R.string.tavily_usage, settings.tavilyUsageCount),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(top = 4.dp)
@@ -133,22 +137,22 @@ fun SettingsScreen(
             item { HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp)) }
 
             // === AI Model ===
-            item { SectionHeader("Model AI") }
+            item { SectionHeader(stringResource(R.string.section_ai_model)) }
 
             item {
                 var modelInput by remember(settings?.aiModel) { mutableStateOf(settings?.aiModel ?: "") }
                 OutlinedTextField(
                     value = modelInput,
                     onValueChange = { modelInput = it },
-                    label = { Text("Model AI") },
+                    label = { Text(stringResource(R.string.ai_model_label)) },
                     modifier = Modifier.fillMaxWidth(),
-                    supportingText = { Text("Modele dostepne na openrouter.ai/models") },
+                    supportingText = { Text(stringResource(R.string.ai_model_hint)) },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Ascii)
                 )
                 if (modelInput != settings?.aiModel && modelInput.isNotBlank()) {
                     Button(onClick = { viewModel.updateAiModel(modelInput) }) {
-                        Text("Zapisz model")
+                        Text(stringResource(R.string.save_model))
                     }
                 }
             }
@@ -156,7 +160,7 @@ fun SettingsScreen(
             item { HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp)) }
 
             // === System Prompts ===
-            item { SectionHeader("System Prompty") }
+            item { SectionHeader(stringResource(R.string.section_prompts)) }
 
             item {
                 var descPrompt by remember(settings?.systemPromptDescription) {
@@ -166,7 +170,7 @@ fun SettingsScreen(
                     OutlinedTextField(
                         value = descPrompt,
                         onValueChange = { descPrompt = it },
-                        label = { Text("Agent opisow") },
+                        label = { Text(stringResource(R.string.desc_agent_label)) },
                         modifier = Modifier.fillMaxWidth(),
                         minLines = 3,
                         maxLines = 6
@@ -174,11 +178,11 @@ fun SettingsScreen(
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         if (descPrompt != settings?.systemPromptDescription) {
                             Button(onClick = { viewModel.updateSystemPromptDescription(descPrompt) }) {
-                                Text("Zapisz")
+                                Text(stringResource(R.string.save))
                             }
                         }
                         OutlinedButton(onClick = { viewModel.resetSystemPromptDescription() }) {
-                            Text("Przywroc domyslny")
+                            Text(stringResource(R.string.restore_default))
                         }
                     }
                 }
@@ -192,7 +196,7 @@ fun SettingsScreen(
                     OutlinedTextField(
                         value = assistantPrompt,
                         onValueChange = { assistantPrompt = it },
-                        label = { Text("Asystent") },
+                        label = { Text(stringResource(R.string.assistant_label)) },
                         modifier = Modifier.fillMaxWidth(),
                         minLines = 3,
                         maxLines = 6
@@ -200,11 +204,11 @@ fun SettingsScreen(
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         if (assistantPrompt != settings?.systemPromptAssistant) {
                             Button(onClick = { viewModel.updateSystemPromptAssistant(assistantPrompt) }) {
-                                Text("Zapisz")
+                                Text(stringResource(R.string.save))
                             }
                         }
                         OutlinedButton(onClick = { viewModel.resetSystemPromptAssistant() }) {
-                            Text("Przywroc domyslny")
+                            Text(stringResource(R.string.restore_default))
                         }
                     }
                 }
@@ -213,7 +217,15 @@ fun SettingsScreen(
             item { HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp)) }
 
             // === Interests ===
-            item { SectionHeader("Zainteresowania") }
+            item { SectionHeader(stringResource(R.string.section_interests)) }
+
+            item {
+                Text(
+                    stringResource(R.string.interests_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
 
             item {
                 val currentInterests = uiState.interests ?: settings?.userInterests ?: emptySet()
@@ -229,7 +241,7 @@ fun SettingsScreen(
                                     viewModel.toggleInterest(category, checked)
                                 }
                             )
-                            Text(category.displayName, style = MaterialTheme.typography.bodyMedium)
+                            Text(stringResource(category.displayNameRes), style = MaterialTheme.typography.bodyMedium)
                         }
                     }
                 }
@@ -238,12 +250,12 @@ fun SettingsScreen(
             item { HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp)) }
 
             // === Preferences ===
-            item { SectionHeader("Preferencje") }
+            item { SectionHeader(stringResource(R.string.section_preferences)) }
 
             item {
                 val languages = listOf("pl" to "Polski", "en" to "English", "de" to "Deutsch", "fr" to "Francais", "es" to "Espanol")
                 var expanded by remember { mutableStateOf(false) }
-                val selectedLabel = languages.find { it.first == settings?.descriptionLanguage }?.second ?: "Polski"
+                val selectedLabel = languages.find { it.first == settings?.appLanguage }?.second ?: "Polski"
                 ExposedDropdownMenuBox(
                     expanded = expanded,
                     onExpandedChange = { expanded = it }
@@ -252,7 +264,7 @@ fun SettingsScreen(
                         value = selectedLabel,
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text("Jezyk opisow") },
+                        label = { Text(stringResource(R.string.app_language_label)) },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -266,12 +278,38 @@ fun SettingsScreen(
                             DropdownMenuItem(
                                 text = { Text(name) },
                                 onClick = {
-                                    viewModel.updateDescriptionLanguage(code)
+                                    viewModel.updateAppLanguage(code)
                                     expanded = false
                                 }
                             )
                         }
                     }
+                }
+                Text(
+                    stringResource(R.string.app_language_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 4.dp)
+                )
+            }
+
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(Modifier.weight(1f)) {
+                        Text(stringResource(R.string.auto_filter_title), style = MaterialTheme.typography.bodyMedium)
+                        Text(
+                            stringResource(R.string.auto_filter_hint),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Switch(
+                        checked = settings?.autoQualityFilter ?: false,
+                        onCheckedChange = { viewModel.updateAutoQualityFilter(it) }
+                    )
                 }
             }
 
@@ -280,7 +318,7 @@ fun SettingsScreen(
                 var sliderValue by remember(settings?.defaultRadiusKm) { mutableStateOf(currentRadius) }
                 Column {
                     Text(
-                        "Domyslny promien: ${sliderValue.toInt()} km",
+                        stringResource(R.string.default_radius, sliderValue.toInt()),
                         style = MaterialTheme.typography.bodyMedium
                     )
                     Slider(
@@ -341,14 +379,14 @@ private fun ApiKeySection(
         ) {
             if (isDirty) {
                 Button(onClick = { onValueChange(localValue) }) {
-                    Text("Zapisz")
+                    Text(stringResource(R.string.save))
                 }
             }
             OutlinedButton(
                 onClick = { onTest(localValue) },
                 enabled = testState != ConnectionTestState.TESTING && localValue.isNotBlank()
             ) {
-                Text("Przetestuj")
+                Text(stringResource(R.string.test_button))
             }
             when (testState) {
                 ConnectionTestState.TESTING -> CircularProgressIndicator(
@@ -356,12 +394,12 @@ private fun ApiKeySection(
                 )
                 ConnectionTestState.SUCCESS -> Icon(
                     Icons.Default.Check,
-                    contentDescription = "Polaczenie OK",
+                    contentDescription = stringResource(R.string.cd_connection_ok),
                     tint = MaterialTheme.colorScheme.primary
                 )
                 ConnectionTestState.FAILURE -> Icon(
                     Icons.Default.Close,
-                    contentDescription = "Blad polaczenia",
+                    contentDescription = stringResource(R.string.cd_connection_error),
                     tint = MaterialTheme.colorScheme.error
                 )
                 ConnectionTestState.IDLE -> Unit

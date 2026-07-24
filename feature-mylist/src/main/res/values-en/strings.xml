@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="my_lists_title">My Lists</string>
+    <string name="delete_list_title">Delete list</string>
+    <string name="delete_list_message">Delete list \"%1$s\"? Attractions will not be removed from the database.</string>
+    <string name="delete">Delete</string>
+    <string name="cancel">Cancel</string>
+    <string name="empty_lists_title">You don\'t have any lists yet.</string>
+    <string name="empty_lists_hint">Tap + to create your first one.</string>
+    <string name="attractions_count">%1$d attractions</string>
+    <string name="new_list_title">New list</string>
+    <string name="list_name_label">List name</string>
+    <string name="create">Create</string>
+    <string name="remove_attraction_title">Remove attraction</string>
+    <string name="remove_attraction_message">Remove \"%1$s\" from this list?</string>
+    <string name="cd_back">Back</string>
+    <string name="cd_plan_trip">Plan trip</string>
+    <string name="list_fallback">List</string>
+    <string name="empty_list">This list is empty.</string>
+    <string name="plan_title">Plan: %1$s</string>
+    <string name="delete_plan_title">Delete plan</string>
+    <string name="delete_plan_message">Delete the trip plan? The attraction list will remain.</string>
+    <string name="no_plan">No plan.</string>
+    <string name="notes_label">Notes</string>
+    <string name="save_notes">Save notes</string>
+    <string name="revert_plan">Undo plan change</string>
+    <string name="discuss_with_assistant">Discuss with assistant</string>
+    <string name="notes_markdown_hint">Markdown supported (e.g. **bold**, lists starting with \"- \")</string>
+    <string name="notes_preview_label">Preview</string>
+</resources>

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="my_lists_title">Moje Listy</string>
+    <string name="delete_list_title">Usuń listę</string>
+    <string name="delete_list_message">Czy na pewno chcesz usunąć listę \"%1$s\"? Atrakcje nie zostaną usunięte z bazy.</string>
+    <string name="delete">Usuń</string>
+    <string name="cancel">Anuluj</string>
+    <string name="empty_lists_title">Nie masz jeszcze żadnych list.</string>
+    <string name="empty_lists_hint">Naciśnij + aby utworzyć pierwszą.</string>
+    <string name="attractions_count">%1$d atrakcji</string>
+    <string name="new_list_title">Nowa lista</string>
+    <string name="list_name_label">Nazwa listy</string>
+    <string name="create">Utwórz</string>
+    <string name="remove_attraction_title">Usuń atrakcję</string>
+    <string name="remove_attraction_message">Usunąć \"%1$s\" z tej listy?</string>
+    <string name="cd_back">Wróć</string>
+    <string name="cd_plan_trip">Zaplanuj wycieczkę</string>
+    <string name="list_fallback">Lista</string>
+    <string name="empty_list">Ta lista jest pusta.</string>
+    <string name="plan_title">Plan: %1$s</string>
+    <string name="delete_plan_title">Usuń plan</string>
+    <string name="delete_plan_message">Usunąć plan wycieczki? Lista atrakcji pozostanie.</string>
+    <string name="no_plan">Brak planu.</string>
+    <string name="notes_label">Notatki</string>
+    <string name="save_notes">Zapisz notatki</string>
+    <string name="revert_plan">Cofnij zmianę planu</string>
+    <string name="discuss_with_assistant">Omów z asystentem</string>
+    <string name="notes_markdown_hint">Możesz używać Markdown (np. **pogrubienie**, listy od \"- \")</string>
+    <string name="notes_preview_label">Podgląd</string>
+</resources>

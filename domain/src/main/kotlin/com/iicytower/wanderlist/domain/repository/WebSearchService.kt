@@ -1,5 +1,5 @@
 package com.iicytower.wanderlist.domain.repository
 
 interface WebSearchService {
-    suspend fun search(query: String): Result<String>
+    suspend fun search(query: String, language: String? = null): Result<String>
 }

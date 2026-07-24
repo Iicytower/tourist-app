@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">Settings</string>
+    <string name="section_api_keys">API Keys</string>
+    <string name="openrouter_error_title">OpenRouter connection error</string>
+    <string name="tavily_error_title">Tavily connection error</string>
+    <string name="ok">OK</string>
+    <string name="tavily_usage">Used %1$d / 1000 requests this month</string>
+    <string name="section_ai_model">AI Model</string>
+    <string name="ai_model_label">AI Model</string>
+    <string name="ai_model_hint">Models available at openrouter.ai/models</string>
+    <string name="save_model">Save model</string>
+    <string name="section_prompts">System Prompts</string>
+    <string name="desc_agent_label">Description agent</string>
+    <string name="assistant_label">Assistant</string>
+    <string name="save">Save</string>
+    <string name="restore_default">Restore default</string>
+    <string name="section_interests">Interests</string>
+    <string name="interests_hint">Selected categories are pre-selected when searching and hint the AI about your preferences.</string>
+    <string name="section_preferences">Preferences</string>
+    <string name="app_language_label">App language</string>
+    <string name="app_language_hint">Applies to the interface, attraction descriptions, location suggestions and assistant replies. Attraction names stay in the original language of the data source.</string>
+    <string name="auto_filter_title">Automatic quality filter</string>
+    <string name="auto_filter_hint">After each search, AI filters out uninteresting places</string>
+    <string name="default_radius">Default radius: %1$d km</string>
+    <string name="cd_connection_ok">Connection OK</string>
+    <string name="cd_connection_error">Connection error</string>
+    <string name="test_button">Test</string>
+</resources>

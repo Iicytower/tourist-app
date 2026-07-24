@@ -14,5 +14,9 @@ data class AttractionEntity(
     val dateAddedToList: Long?,
     val description: String?,
     val descriptionSources: String?,
-    val isFromLastSearch: Boolean
+    val isFromLastSearch: Boolean,
+    val countryCode: String? = null,
+    val openingHoursRaw: String? = null,
+    val imageUrl: String? = null,
+    val originalName: String? = null
 )

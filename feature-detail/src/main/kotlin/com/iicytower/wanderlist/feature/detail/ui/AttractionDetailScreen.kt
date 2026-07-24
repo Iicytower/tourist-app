@@ -2,6 +2,7 @@ package com.iicytower.wanderlist.feature.detail.ui
 
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -9,9 +10,13 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckBox
 import androidx.compose.material.icons.filled.CheckBoxOutlineBlank
@@ -44,15 +49,26 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import com.iicytower.wanderlist.core.model.displayNameRes
+import com.iicytower.wanderlist.core.ui.AttractionImage
 import com.iicytower.wanderlist.core.util.formatDistance
+import com.iicytower.wanderlist.feature.detail.R
+import com.iicytower.wanderlist.domain.model.OpeningHours
 import com.iicytower.wanderlist.domain.model.TripList
+import java.time.DayOfWeek
+import java.time.format.TextStyle
+import java.util.Locale
 import com.iicytower.wanderlist.feature.detail.viewmodel.AttractionDetailViewModel
+import com.iicytower.wanderlist.feature.detail.viewmodel.QaMessage
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
@@ -101,9 +117,9 @@ fun AttractionDetailScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(state.attraction?.name ?: "Szczegóły") },
+                title = { Text(state.attraction?.name ?: stringResource(R.string.detail_fallback_title)) },
                 navigationIcon = {
-                    IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, "Wróć") }
+                    IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, stringResource(R.string.cd_back)) }
                 }
             )
         },
@@ -112,7 +128,7 @@ fun AttractionDetailScreen(
                 FloatingActionButton(onClick = { viewModel.openListSheet() }) {
                     Icon(
                         if (state.attractionListIds.isNotEmpty()) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                        contentDescription = "Dodaj do listy"
+                        contentDescription = stringResource(R.string.cd_add_to_list)
                     )
                 }
             }
@@ -125,26 +141,48 @@ fun AttractionDetailScreen(
                 val attraction = state.attraction!!
                 LazyColumn(modifier = Modifier.padding(innerPadding).padding(16.dp)) {
                     item {
+                        AttractionImage(
+                            imageUrl = attraction.imageUrl,
+                            category = attraction.category,
+                            contentDescription = attraction.name,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(200.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                        )
+                        Spacer(Modifier.height(12.dp))
                         Text(attraction.name, style = MaterialTheme.typography.headlineMedium)
+                        attraction.originalName?.let { original ->
+                            Text(
+                                stringResource(R.string.original_name_label, original),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                         Spacer(Modifier.height(4.dp))
-                        Text(attraction.category.displayName, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
+                        Text(stringResource(attraction.category.displayNameRes), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
 
                         if (state.showDistanceFromSearch) {
                             attraction.distanceKm?.let { dist ->
-                                Text("Odległość: ${formatDistance(dist)}", style = MaterialTheme.typography.bodySmall)
+                                Text(stringResource(R.string.distance_label, formatDistance(dist)), style = MaterialTheme.typography.bodySmall)
                             }
+                        }
+
+                        attraction.openingHours?.let { openingHours ->
+                            Spacer(Modifier.height(16.dp))
+                            OpeningHoursSection(openingHours)
                         }
 
                         Spacer(Modifier.height(16.dp))
 
                         when {
                             attraction.description != null -> {
-                                Text("Opis", style = MaterialTheme.typography.titleMedium)
+                                Text(stringResource(R.string.description_section), style = MaterialTheme.typography.titleMedium)
                                 Spacer(Modifier.height(8.dp))
                                 Text(attraction.description ?: "", style = MaterialTheme.typography.bodyMedium)
                                 if (attraction.descriptionSources.isNotEmpty()) {
                                     Spacer(Modifier.height(8.dp))
-                                    Text("Źródła:", style = MaterialTheme.typography.labelMedium)
+                                    Text(stringResource(R.string.sources_label), style = MaterialTheme.typography.labelMedium)
                                     attraction.descriptionSources.forEach { source ->
                                         TextButton(onClick = {
                                             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(source.url))
@@ -158,22 +196,22 @@ fun AttractionDetailScreen(
                                     OutlinedButton(
                                         onClick = { viewModel.loadDescription(force = true) },
                                         modifier = Modifier.fillMaxWidth()
-                                    ) { Text("Przeładuj opis") }
+                                    ) { Text(stringResource(R.string.reload_description)) }
                                 }
                             }
                             state.isDescriptionLoading -> {
                                 Row {
                                     CircularProgressIndicator(modifier = Modifier.padding(end = 8.dp))
-                                    Text("Generuję opis...", style = MaterialTheme.typography.bodyMedium)
+                                    Text(stringResource(R.string.generating_description), style = MaterialTheme.typography.bodyMedium)
                                 }
                             }
                             state.descriptionError != null -> {
                                 Text(state.descriptionError!!, color = MaterialTheme.colorScheme.error)
-                                OutlinedButton(onClick = { viewModel.loadDescription() }) { Text("Spróbuj ponownie") }
+                                OutlinedButton(onClick = { viewModel.loadDescription() }) { Text(stringResource(R.string.try_again)) }
                             }
                             else -> {
                                 Button(onClick = { viewModel.loadDescription() }, modifier = Modifier.fillMaxWidth()) {
-                                    Text("Załaduj opis")
+                                    Text(stringResource(R.string.load_description))
                                 }
                             }
                         }
@@ -195,7 +233,7 @@ fun AttractionDetailScreen(
                             },
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text("Nawiguj do")
+                            Text(stringResource(R.string.navigate_to))
                         }
 
                         OutlinedButton(
@@ -203,12 +241,12 @@ fun AttractionDetailScreen(
                                 val coords = "${attraction.latitude},${attraction.longitude}"
                                 clipboardManager.setText(AnnotatedString(coords))
                                 scope.launch {
-                                    snackbarHostState.showSnackbar("Skopiowano: $coords")
+                                    snackbarHostState.showSnackbar(context.getString(R.string.copied, coords))
                                 }
                             },
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text("Kopiuj lokalizację")
+                            Text(stringResource(R.string.copy_location))
                         }
 
                         onShowOnMap?.let { callback ->
@@ -216,14 +254,137 @@ fun AttractionDetailScreen(
                                 onClick = { callback(attraction.latitude, attraction.longitude, attraction.xid) },
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                Text("Pokaż na mapie")
+                                Text(stringResource(R.string.show_on_map))
                             }
                         }
+
+                        Spacer(Modifier.height(24.dp))
+                        AskAboutSection(
+                            messages = state.qaMessages,
+                            input = state.qaInput,
+                            isLoading = state.isQaLoading,
+                            onInputChange = { viewModel.updateQaInput(it) },
+                            onAsk = { viewModel.askQuestion() }
+                        )
+                        // Odstęp, żeby pole czatu z przyciskiem wyślij nie chowało się pod FAB-em serduszka
+                        Spacer(Modifier.height(88.dp))
                     }
                 }
             }
             state.error != null -> {
                 Text(state.error!!, modifier = Modifier.padding(innerPadding).padding(16.dp), color = MaterialTheme.colorScheme.error)
+            }
+        }
+    }
+}
+
+@Composable
+private fun AskAboutSection(
+    messages: List<QaMessage>,
+    input: String,
+    isLoading: Boolean,
+    onInputChange: (String) -> Unit,
+    onAsk: () -> Unit
+) {
+    Column {
+        Text(stringResource(R.string.ask_section_title), style = MaterialTheme.typography.titleMedium)
+        Spacer(Modifier.height(8.dp))
+
+        messages.forEach { message ->
+            val (container, content) = if (message.isUser) {
+                MaterialTheme.colorScheme.primaryContainer to MaterialTheme.colorScheme.onPrimaryContainer
+            } else {
+                MaterialTheme.colorScheme.surfaceVariant to MaterialTheme.colorScheme.onSurfaceVariant
+            }
+            Text(
+                message.text,
+                style = MaterialTheme.typography.bodyMedium,
+                color = content,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp)
+                    .background(container, RoundedCornerShape(12.dp))
+                    .padding(12.dp)
+            )
+        }
+
+        if (isLoading) {
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 8.dp)) {
+                CircularProgressIndicator(modifier = Modifier.size(20.dp))
+                Spacer(Modifier.width(8.dp))
+                Text(stringResource(R.string.ask_loading), style = MaterialTheme.typography.bodySmall)
+            }
+        }
+
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            OutlinedTextField(
+                value = input,
+                onValueChange = onInputChange,
+                placeholder = { Text(stringResource(R.string.ask_placeholder)) },
+                enabled = !isLoading,
+                modifier = Modifier.weight(1f),
+                maxLines = 3
+            )
+            IconButton(onClick = onAsk, enabled = input.isNotBlank() && !isLoading) {
+                Icon(Icons.Default.Send, contentDescription = stringResource(R.string.cd_ask_send))
+            }
+        }
+    }
+}
+
+@Composable
+private fun OpeningHoursSection(openingHours: OpeningHours) {
+    Column {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(stringResource(R.string.opening_hours_section), style = MaterialTheme.typography.titleMedium)
+            openingHours.isOpenNow?.let { isOpen ->
+                Spacer(Modifier.width(8.dp))
+                val (label, container, content) =
+                    if (isOpen) Triple(
+                        stringResource(R.string.open_now),
+                        MaterialTheme.colorScheme.primaryContainer,
+                        MaterialTheme.colorScheme.onPrimaryContainer
+                    ) else Triple(
+                        stringResource(R.string.closed_now),
+                        MaterialTheme.colorScheme.errorContainer,
+                        MaterialTheme.colorScheme.onErrorContainer
+                    )
+                Text(
+                    label,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = content,
+                    modifier = Modifier
+                        .background(container, RoundedCornerShape(8.dp))
+                        .padding(horizontal = 8.dp, vertical = 2.dp)
+                )
+            }
+        }
+        Spacer(Modifier.height(4.dp))
+        val slots = openingHours.slots
+        if (slots == null) {
+            // format nieobsługiwany przez parser — pokazujemy surowy tag OSM
+            Text(
+                openingHours.raw,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        } else {
+            val locale = Locale.getDefault()
+            (1..7).forEach { day ->
+                val daySlots = slots.filter { it.dayOfWeek == day }.sortedBy { it.openMinutes }
+                if (daySlots.isNotEmpty()) {
+                    val dayName = DayOfWeek.of(day).getDisplayName(TextStyle.SHORT, locale)
+                    val hours = daySlots.joinToString(", ") {
+                        "%d:%02d–%d:%02d".format(
+                            it.openMinutes / 60, it.openMinutes % 60,
+                            it.closeMinutes / 60, it.closeMinutes % 60
+                        )
+                    }
+                    Text(
+                        "$dayName  $hours",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
             }
         }
     }
@@ -245,7 +406,7 @@ private fun ListSelectionSheet(
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
         Column(modifier = Modifier.padding(bottom = 32.dp)) {
             Text(
-                "Dodaj do listy",
+                stringResource(R.string.add_to_list_title),
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
             )
@@ -253,7 +414,7 @@ private fun ListSelectionSheet(
 
             if (tripLists.isEmpty()) {
                 Text(
-                    "Nie masz jeszcze żadnych list.",
+                    stringResource(R.string.no_lists_yet),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(16.dp)
@@ -263,7 +424,7 @@ private fun ListSelectionSheet(
                     val isSelected = list.id in selectedIds
                     ListItem(
                         headlineContent = { Text(list.name) },
-                        supportingContent = { Text("${list.attractionCount} atrakcji") },
+                        supportingContent = { Text(stringResource(R.string.attractions_count, list.attractionCount)) },
                         leadingContent = {
                             Icon(
                                 if (isSelected) Icons.Default.CheckBox else Icons.Default.CheckBoxOutlineBlank,
@@ -282,13 +443,13 @@ private fun ListSelectionSheet(
                     OutlinedTextField(
                         value = newListName,
                         onValueChange = { newListName = it },
-                        label = { Text("Nazwa nowej listy") },
+                        label = { Text(stringResource(R.string.new_list_name_label)) },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )
                     Spacer(Modifier.height(8.dp))
                     Row {
-                        TextButton(onClick = { showCreateField = false; newListName = "" }) { Text("Anuluj") }
+                        TextButton(onClick = { showCreateField = false; newListName = "" }) { Text(stringResource(R.string.cancel)) }
                         Spacer(Modifier.weight(1f))
                         Button(
                             onClick = {
@@ -297,12 +458,12 @@ private fun ListSelectionSheet(
                                 newListName = ""
                             },
                             enabled = newListName.isNotBlank()
-                        ) { Text("Utwórz i dodaj") }
+                        ) { Text(stringResource(R.string.create_and_add)) }
                     }
                 }
             } else {
                 ListItem(
-                    headlineContent = { Text("Utwórz nową listę") },
+                    headlineContent = { Text(stringResource(R.string.create_new_list)) },
                     leadingContent = { Icon(Icons.Default.Add, contentDescription = null) },
                     modifier = Modifier.clickable { showCreateField = true }
                 )

@@ -16,7 +16,13 @@ import timber.log.Timber
 private data class NominatimResult(
     val lat: String,
     val lon: String,
-    @SerialName("display_name") val displayName: String
+    @SerialName("display_name") val displayName: String,
+    val address: NominatimAddress? = null
+)
+
+@Serializable
+private data class NominatimAddress(
+    @SerialName("country_code") val countryCode: String? = null
 )
 
 @Serializable
@@ -45,11 +51,15 @@ private data class PhotonGeometry(
 
 class NominatimGeocoderService(private val httpClient: HttpClient) : GeocoderService {
 
-    override suspend fun geocode(query: String): Result<Pair<Location, String>> = runCatching {
+    // Photon wspiera tylko część języków; nieobsługiwany kod = HTTP 400, więc pomijamy parametr
+    private val photonSupportedLanguages = setOf("en", "de", "fr")
+
+    override suspend fun geocode(query: String, language: String): Result<Pair<Location, String>> = runCatching {
         val results = httpClient.get("https://nominatim.openstreetmap.org/search") {
             parameter("q", query)
             parameter("format", "json")
             parameter("limit", "1")
+            parameter("accept-language", language)
             header("User-Agent", "WanderList/1.0 (tourist app)")
         }.body<List<NominatimResult>>()
 
@@ -59,11 +69,12 @@ class NominatimGeocoderService(private val httpClient: HttpClient) : GeocoderSer
         Location(first.lat.toDouble(), first.lon.toDouble()) to first.displayName
     }
 
-    override suspend fun suggest(query: String): Result<List<GeocodeSuggestion>> = runCatching {
+    override suspend fun suggest(query: String, language: String): Result<List<GeocodeSuggestion>> = runCatching {
         // Photon ma prefix-matching; Nominatim /search nie obsługuje prefiksów (szuka pełnych słów)
         val collection = httpClient.get("https://photon.komoot.io/api/") {
             parameter("q", query)
             parameter("limit", "8")
+            if (language in photonSupportedLanguages) parameter("lang", language)
             header("User-Agent", "WanderList/1.0 (tourist app)")
         }.body<PhotonFeatureCollection>()
         val seen = mutableSetOf<String>()
@@ -82,13 +93,25 @@ class NominatimGeocoderService(private val httpClient: HttpClient) : GeocoderSer
         suggestions
     }.onFailure { Timber.tag("Nominatim").e(it, "suggest failed for '%s'", query) }
 
-    override suspend fun reverseGeocode(lat: Double, lon: Double): Result<String> = runCatching {
+    override suspend fun reverseGeocode(lat: Double, lon: Double, language: String): Result<String> = runCatching {
         httpClient.get("https://nominatim.openstreetmap.org/reverse") {
             parameter("lat", lat)
             parameter("lon", lon)
             parameter("format", "json")
             parameter("zoom", "14")
+            parameter("accept-language", language)
             header("User-Agent", "WanderList/1.0 (tourist app)")
         }.body<NominatimResult>().displayName
     }.onFailure { Timber.tag("Nominatim").e(it, "reverseGeocode failed") }
+
+    override suspend fun reverseCountryCode(lat: Double, lon: Double): Result<String?> = runCatching {
+        httpClient.get("https://nominatim.openstreetmap.org/reverse") {
+            parameter("lat", lat)
+            parameter("lon", lon)
+            parameter("format", "json")
+            parameter("zoom", "3")
+            parameter("addressdetails", "1")
+            header("User-Agent", "WanderList/1.0 (tourist app)")
+        }.body<NominatimResult>().address?.countryCode?.uppercase()
+    }.onFailure { Timber.tag("Nominatim").e(it, "reverseCountryCode failed") }
 }

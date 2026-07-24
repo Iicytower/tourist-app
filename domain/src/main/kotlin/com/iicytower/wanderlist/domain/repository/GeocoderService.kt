@@ -4,7 +4,8 @@ import com.iicytower.wanderlist.domain.model.GeocodeSuggestion
 import com.iicytower.wanderlist.domain.model.Location
 
 interface GeocoderService {
-    suspend fun geocode(query: String): Result<Pair<Location, String>>
-    suspend fun suggest(query: String): Result<List<GeocodeSuggestion>>
-    suspend fun reverseGeocode(lat: Double, lon: Double): Result<String>
+    suspend fun geocode(query: String, language: String = "pl"): Result<Pair<Location, String>>
+    suspend fun suggest(query: String, language: String = "pl"): Result<List<GeocodeSuggestion>>
+    suspend fun reverseGeocode(lat: Double, lon: Double, language: String = "pl"): Result<String>
+    suspend fun reverseCountryCode(lat: Double, lon: Double): Result<String?>
 }

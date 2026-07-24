@@ -6,6 +6,7 @@ Przy dodawaniu nowego taska do `docs/tasks/todo/` dopisz go tutaj we właściwym
 
 | # | Task | Opis | Czas | Trudność | Ważność |
 |---|---|---|---|---|---|
+| 2 | FEAT-21 | Dopracowanie i testy manualne funkcji "Omów z asystentem" (kontekst planu wstrzyknięty w FEAT-14/PR #17) | 2-3 h | Niska/Średnia | Wysoka (regresja zgłoszona przez właściciela produktu) |
 | 3 | FEAT-14 | Asystent musi potwierdzać destrukcyjne zmiany (dialog Tak/Nie) + cofnięcie planu | 3-4 h | Średnia/Wysoka | Wysoka (bezpieczeństwo) |
 | 5 | FEAT-13 | Dogonienie ekranu Ustawień + weryfikacja wpływu zainteresowań na wyszukiwanie | 4-6 h | Średnia | Wysoka (fundament) |
 | 6 | FEAT-11 | Jedno ustawienie „Język aplikacji” (wyszukiwanie, podpowiedzi lokalizacji, asystent) | 3-4 h | Średnia | Średnia/Wysoka |

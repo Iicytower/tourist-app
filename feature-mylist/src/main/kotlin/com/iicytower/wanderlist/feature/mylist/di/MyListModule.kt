@@ -9,5 +9,5 @@ import org.koin.dsl.module
 val myListModule = module {
     viewModel { TripListsViewModel(get(), get(), get()) }
     viewModel { TripListDetailViewModel(get(), get(), get(), get()) }
-    viewModel { TripPlanViewModel(get(), get(), get()) }
+    viewModel { TripPlanViewModel(get(), get(), get(), get(), get()) }
 }
