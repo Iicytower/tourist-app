@@ -366,7 +366,10 @@ private fun ApiKeySection(
     Column {
         OutlinedTextField(
             value = localValue,
-            onValueChange = { localValue = it },
+            // Wklejony tekst może zawierać kilka linii (np. kilka kluczy skopiowanych razem) —
+            // singleLine = true tylko spłaszcza widok, nie usuwa \n z wartości, więc obcinamy
+            // ręcznie wszystko od pierwszego znaku końca linii.
+            onValueChange = { localValue = it.lineSequence().firstOrNull() ?: "" },
             label = { Text(label) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
