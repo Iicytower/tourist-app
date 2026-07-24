@@ -64,6 +64,10 @@ class RoomAttractionRepository(
         dao.saveDescription(xid, description, sourcesJson)
     }
 
+    override suspend fun saveImageUrl(xid: String, imageUrl: String): Result<Unit> = runCatching {
+        dao.saveImageUrl(xid, imageUrl)
+    }
+
     override suspend fun getLastSearchResults(): List<Attraction> =
         dao.getLastSearchResults().map { it.toDomain() }
 }

@@ -1,5 +1,7 @@
 # FEAT-03: Narzędzie rysowania i planowania trasy
 
+> **Status (2026-07-24):** Wariant MVP wdrożony w PR #17, ale wycofany na życzenie właściciela produktu (komentarz PR: "usuń całą funkcjonalność planowania na mapie"). Do ustalenia i opisania ponownie w innej iteracji — zakres, UX i architektura poniżej wymagają przemyślenia na nowo, nie traktować jako gotowej specyfikacji.
+
 ## Cel
 
 Dodać widok trasy w zakładce Mapa, który:

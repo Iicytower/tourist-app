@@ -13,5 +13,9 @@ data class Attraction(
     val description: String?,
     val descriptionSources: List<DescriptionSource>,
     val isFromLastSearch: Boolean,
-    val distanceKm: Double?
+    val distanceKm: Double?,
+    val countryCode: String? = null,
+    val openingHours: OpeningHours? = null,
+    val imageUrl: String? = null,
+    val originalName: String? = null
 )

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">Einstellungen</string>
+    <string name="section_api_keys">API-Schlüssel</string>
+    <string name="openrouter_error_title">OpenRouter-Verbindungsfehler</string>
+    <string name="tavily_error_title">Tavily-Verbindungsfehler</string>
+    <string name="ok">OK</string>
+    <string name="tavily_usage">%1$d / 1000 Anfragen diesen Monat verwendet</string>
+    <string name="section_ai_model">KI-Modell</string>
+    <string name="ai_model_label">KI-Modell</string>
+    <string name="ai_model_hint">Modelle verfügbar auf openrouter.ai/models</string>
+    <string name="save_model">Modell speichern</string>
+    <string name="section_prompts">System-Prompts</string>
+    <string name="desc_agent_label">Beschreibungs-Agent</string>
+    <string name="assistant_label">Assistent</string>
+    <string name="save">Speichern</string>
+    <string name="restore_default">Standard wiederherstellen</string>
+    <string name="section_interests">Interessen</string>
+    <string name="interests_hint">Ausgewählte Kategorien sind bei der Suche vorausgewählt und geben der KI Hinweise auf deine Vorlieben.</string>
+    <string name="section_preferences">Einstellungen</string>
+    <string name="app_language_label">App-Sprache</string>
+    <string name="app_language_hint">Gilt für die Oberfläche, Attraktionsbeschreibungen, Ortsvorschläge und Assistenten-Antworten. Attraktionsnamen bleiben in der Originalsprache der Datenquelle.</string>
+    <string name="auto_filter_title">Automatischer Qualitätsfilter</string>
+    <string name="auto_filter_hint">Nach jeder Suche filtert die KI uninteressante Orte heraus</string>
+    <string name="default_radius">Standardradius: %1$d km</string>
+    <string name="cd_connection_ok">Verbindung OK</string>
+    <string name="cd_connection_error">Verbindungsfehler</string>
+    <string name="test_button">Testen</string>
+</resources>

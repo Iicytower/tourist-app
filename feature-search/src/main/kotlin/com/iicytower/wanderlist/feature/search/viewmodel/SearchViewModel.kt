@@ -9,13 +9,16 @@ import com.iicytower.wanderlist.domain.model.SearchParams
 import com.iicytower.wanderlist.domain.repository.AttractionRepository
 import com.iicytower.wanderlist.domain.repository.GeocoderService
 import com.iicytower.wanderlist.domain.repository.LocationService
+import com.iicytower.wanderlist.domain.repository.SettingsRepository
 import com.iicytower.wanderlist.domain.usecase.FilterAttractionsByQualityUseCase
 import com.iicytower.wanderlist.domain.usecase.SearchAttractionsUseCase
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -25,13 +28,42 @@ class SearchViewModel(
     private val filterAttractionsByQualityUseCase: FilterAttractionsByQualityUseCase,
     private val locationService: LocationService,
     private val geocoderService: GeocoderService,
-    private val attractionRepository: AttractionRepository
+    private val attractionRepository: AttractionRepository,
+    private val settingsRepository: SettingsRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SearchUiState())
     val uiState: StateFlow<SearchUiState> = _uiState.asStateFlow()
 
     private var suggestJob: Job? = null
+    private var searchJob: Job? = null
+    private var filterJob: Job? = null
+
+    private var appLanguage: String = "pl"
+    private var categoriesManuallySet = false
+
+    init {
+        // Domyślny promień zasila suwak tylko raz przy starcie, dopóki użytkownik nie wyszukał.
+        viewModelScope.launch {
+            val settings = settingsRepository.getSettings().first()
+            _uiState.update { state ->
+                if (state.hasSearched) return@update state
+                state.copy(radiusKm = settings.defaultRadiusKm)
+            }
+        }
+        // Zainteresowania z Ustawień mają wpływać na wyszukiwanie od razu (FEAT-13),
+        // dopóki użytkownik sam nie wybierze kategorii ręcznie na ekranie wyszukiwania.
+        viewModelScope.launch {
+            settingsRepository.getSettings().collect { settings ->
+                if (!categoriesManuallySet) {
+                    _uiState.update { it.copy(selectedCategories = settings.userInterests) }
+                }
+            }
+        }
+        viewModelScope.launch {
+            settingsRepository.getSettings().collect { appLanguage = it.appLanguage }
+        }
+    }
 
     fun setLocationFromGps() {
         viewModelScope.launch {
@@ -60,7 +92,7 @@ class SearchViewModel(
         suggestJob = viewModelScope.launch {
             delay(400)
             Timber.tag("SearchVM").d("calling suggest for '%s'", query)
-            geocoderService.suggest(query)
+            geocoderService.suggest(query, appLanguage)
                 .onSuccess { suggestions ->
                     Timber.tag("SearchVM").d("suggest → %d suggestions", suggestions.size)
                     _uiState.update { it.copy(locationSuggestions = suggestions) }
@@ -95,7 +127,7 @@ class SearchViewModel(
     fun onLocationPicked(lat: Double, lon: Double) {
         _uiState.update { it.copy(showLocationPicker = false) }
         viewModelScope.launch {
-            val label = geocoderService.reverseGeocode(lat, lon)
+            val label = geocoderService.reverseGeocode(lat, lon, appLanguage)
                 .getOrDefault("%.4f, %.4f".format(lat, lon))
             _uiState.update {
                 it.copy(
@@ -110,7 +142,7 @@ class SearchViewModel(
         if (query.isBlank()) return
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
-            geocoderService.geocode(query).fold(
+            geocoderService.geocode(query, appLanguage).fold(
                 onSuccess = { (location, displayName) ->
                     _uiState.update {
                         it.copy(
@@ -142,6 +174,7 @@ class SearchViewModel(
     }
 
     fun setCategories(categories: Set<AttractionCategory>) {
+        categoriesManuallySet = true
         _uiState.update { it.copy(selectedCategories = categories) }
     }
 
@@ -154,15 +187,22 @@ class SearchViewModel(
 
     fun search() {
         val location = _uiState.value.searchLocation ?: return
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, error = null) }
+        filterJob?.cancel()
+        searchJob?.cancel()
+        searchJob = viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, isFiltering = false, error = null, filterRemovedCount = null) }
             val params = SearchParams(
                 latitude = location.latitude,
                 longitude = location.longitude,
                 radiusKm = _uiState.value.radiusKm,
-                categories = _uiState.value.selectedCategories
+                categories = _uiState.value.selectedCategories,
+                language = appLanguage
             )
-            searchAttractionsUseCase(params).fold(
+            val result = searchAttractionsUseCase(params)
+            // Warstwa data łapie wyjątki przez runCatching, więc CancellationException
+            // wraca jako Result.failure — bez tego anulowany job zapisałby stary stan.
+            ensureActive()
+            result.fold(
                 onSuccess = { results ->
                     val stats = attractionRepository.getLastSearchStats()
                     Timber.tag("SearchVM").d("Wyniki per źródło: %s", stats)
@@ -173,6 +213,9 @@ class SearchViewModel(
                             hasSearched = true,
                             debugSourceStats = stats
                         )
+                    }
+                    if (settingsRepository.getSettings().first().autoQualityFilter) {
+                        filterByQuality()
                     }
                 },
                 onFailure = { e ->
@@ -185,9 +228,11 @@ class SearchViewModel(
     fun filterByQuality() {
         val attractions = _uiState.value.results
         if (attractions.isEmpty() || _uiState.value.isFiltering) return
-        viewModelScope.launch {
+        filterJob = viewModelScope.launch {
             _uiState.update { it.copy(isFiltering = true, error = null, filterRemovedCount = null) }
-            filterAttractionsByQualityUseCase(attractions).fold(
+            val result = filterAttractionsByQualityUseCase(attractions)
+            ensureActive()
+            result.fold(
                 onSuccess = { result ->
                     _uiState.update { state ->
                         state.copy(

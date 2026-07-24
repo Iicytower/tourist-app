@@ -15,6 +15,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -24,6 +25,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.iicytower.wanderlist.R
 import com.iicytower.wanderlist.feature.assistant.ui.AssistantScreen
 import com.iicytower.wanderlist.feature.detail.ui.AttractionDetailScreen
 import com.iicytower.wanderlist.feature.map.ui.MapScreen
@@ -35,16 +37,16 @@ import com.iicytower.wanderlist.feature.settings.ui.SettingsScreen
 
 private data class BottomNavItem(
     val screen: Screen,
-    val label: String,
+    val labelRes: Int,
     val icon: androidx.compose.ui.graphics.vector.ImageVector
 )
 
 private val bottomNavItems = listOf(
-    BottomNavItem(Screen.Search, "Szukaj", Icons.Default.Search),
-    BottomNavItem(Screen.Map, "Mapa", Icons.Default.Place),
-    BottomNavItem(Screen.MyList, "Moja Lista", Icons.Default.Favorite),
-    BottomNavItem(Screen.Assistant, "Asystent", Icons.Default.List),
-    BottomNavItem(Screen.Settings, "Ustawienia", Icons.Default.Settings)
+    BottomNavItem(Screen.Search, R.string.nav_search, Icons.Default.Search),
+    BottomNavItem(Screen.Map, R.string.nav_map, Icons.Default.Place),
+    BottomNavItem(Screen.MyList, R.string.nav_my_list, Icons.Default.Favorite),
+    BottomNavItem(Screen.Assistant, R.string.nav_assistant, Icons.Default.List),
+    BottomNavItem(Screen.Settings, R.string.nav_settings, Icons.Default.Settings)
 )
 
 @Composable
@@ -61,8 +63,8 @@ fun WanderListNavGraph(navController: NavHostController = rememberNavController(
                 NavigationBar {
                     bottomNavItems.forEach { item ->
                         NavigationBarItem(
-                            icon = { Icon(item.icon, contentDescription = item.label) },
-                            label = { Text(item.label) },
+                            icon = { Icon(item.icon, contentDescription = stringResource(item.labelRes)) },
+                            label = { Text(stringResource(item.labelRes)) },
                             selected = currentDestination?.hierarchy?.any { dest ->
                                 when (item.screen) {
                                     Screen.Assistant -> dest.route?.startsWith(Screen.Assistant.baseRoute) == true

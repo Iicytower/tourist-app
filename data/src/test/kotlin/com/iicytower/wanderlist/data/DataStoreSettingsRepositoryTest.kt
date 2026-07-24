@@ -48,7 +48,7 @@ class DataStoreSettingsRepositoryTest {
         val settings = repository.getSettings().first()
         assertEquals(DefaultSettings.AI_MODEL, settings.aiModel)
         assertEquals(DefaultSettings.DEFAULT_RADIUS_KM, settings.defaultRadiusKm)
-        assertEquals(DefaultSettings.DESCRIPTION_LANGUAGE, settings.descriptionLanguage)
+        assertEquals(DefaultSettings.APP_LANGUAGE, settings.appLanguage)
         assertEquals(0, settings.tavilyUsageCount)
         assertTrue(settings.userInterests.isEmpty())
     }

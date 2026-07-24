@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -36,9 +38,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.iicytower.wanderlist.core.constant.AppConstants
+import com.iicytower.wanderlist.core.model.displayNameRes
+import com.iicytower.wanderlist.core.ui.AttractionImage
 import com.iicytower.wanderlist.domain.model.Attraction
+import com.iicytower.wanderlist.feature.mylist.R
 import com.iicytower.wanderlist.feature.mylist.viewmodel.TripListDetailViewModel
 import org.koin.androidx.compose.koinViewModel
 
@@ -76,10 +83,10 @@ fun TripListDetailScreen(
         val name = uiState.attractions.find { it.xid == xid }?.name ?: xid
         AlertDialog(
             onDismissRequest = { viewModel.cancelRemove() },
-            title = { Text("Usuń atrakcję") },
-            text = { Text("Usunąć \"$name\" z tej listy?") },
-            confirmButton = { TextButton(onClick = { viewModel.confirmRemove() }) { Text("Usuń") } },
-            dismissButton = { TextButton(onClick = { viewModel.cancelRemove() }) { Text("Anuluj") } }
+            title = { Text(stringResource(R.string.remove_attraction_title)) },
+            text = { Text(stringResource(R.string.remove_attraction_message, name)) },
+            confirmButton = { TextButton(onClick = { viewModel.confirmRemove() }) { Text(stringResource(R.string.delete)) } },
+            dismissButton = { TextButton(onClick = { viewModel.cancelRemove() }) { Text(stringResource(R.string.cancel)) } }
         )
     }
 
@@ -88,12 +95,12 @@ fun TripListDetailScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    val title = uiState.tripList?.name ?: "Lista"
+                    val title = uiState.tripList?.name ?: stringResource(R.string.list_fallback)
                     val count = uiState.attractions.size
                     Text("$title ($count/${AppConstants.MY_LIST_MAX_SIZE})")
                 },
                 navigationIcon = {
-                    IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, "Wróć") }
+                    IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, stringResource(R.string.cd_back)) }
                 },
                 actions = {
                     if (uiState.isGeneratingPlan) {
@@ -103,7 +110,7 @@ fun TripListDetailScreen(
                         )
                     } else {
                         IconButton(onClick = { viewModel.onPlanButtonClick() }) {
-                            Icon(Icons.Default.DateRange, contentDescription = "Zaplanuj wycieczkę")
+                            Icon(Icons.Default.DateRange, contentDescription = stringResource(R.string.cd_plan_trip))
                         }
                     }
                 }
@@ -116,7 +123,7 @@ fun TripListDetailScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    "Ta lista jest pusta.",
+                    stringResource(R.string.empty_list),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -151,16 +158,23 @@ private fun AttractionListItem(
             modifier = Modifier.fillMaxWidth().padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(modifier = Modifier.weight(1f)) {
+            AttractionImage(
+                imageUrl = attraction.imageUrl,
+                category = attraction.category,
+                modifier = Modifier
+                    .size(56.dp)
+                    .clip(RoundedCornerShape(8.dp))
+            )
+            Column(modifier = Modifier.weight(1f).padding(start = 12.dp)) {
                 Text(attraction.name, style = MaterialTheme.typography.titleSmall)
                 Text(
-                    attraction.category.displayName,
+                    stringResource(attraction.category.displayNameRes),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
             IconButton(onClick = onDelete) {
-                Icon(Icons.Default.Delete, contentDescription = "Usuń", tint = MaterialTheme.colorScheme.error)
+                Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.delete), tint = MaterialTheme.colorScheme.error)
             }
         }
     }

@@ -3,6 +3,7 @@ package com.iicytower.wanderlist.data.local
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.doublePreferencesKey
 import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
@@ -15,8 +16,10 @@ val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "ap
 object PreferencesKeys {
     val AI_MODEL = stringPreferencesKey("ai_model")
     val DEFAULT_RADIUS_KM = intPreferencesKey("default_radius_km")
-    val DESCRIPTION_LANGUAGE = stringPreferencesKey("description_language")
+    // klucz zachowuje historyczną nazwę, żeby nie zgubić zapisanej wartości sprzed przemianowania ustawienia
+    val APP_LANGUAGE = stringPreferencesKey("description_language")
     val USER_INTERESTS = stringSetPreferencesKey("user_interests")
+    val AUTO_QUALITY_FILTER = booleanPreferencesKey("auto_quality_filter")
     val SYSTEM_PROMPT_DESCRIPTION = stringPreferencesKey("system_prompt_description")
     val SYSTEM_PROMPT_ASSISTANT = stringPreferencesKey("system_prompt_assistant")
     val TAVILY_USAGE_COUNT = intPreferencesKey("tavily_usage_count")

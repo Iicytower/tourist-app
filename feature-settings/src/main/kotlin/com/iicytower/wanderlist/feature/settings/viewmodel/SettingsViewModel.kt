@@ -59,8 +59,8 @@ class SettingsViewModel(
         viewModelScope.launch { settingsRepository.updateDefaultRadius(radiusKm) }
     }
 
-    fun updateDescriptionLanguage(language: String) {
-        viewModelScope.launch { settingsRepository.updateDescriptionLanguage(language) }
+    fun updateAppLanguage(language: String) {
+        viewModelScope.launch { settingsRepository.updateAppLanguage(language) }
     }
 
     fun toggleInterest(category: AttractionCategory, checked: Boolean) {
@@ -72,6 +72,10 @@ class SettingsViewModel(
                 settingsRepository.updateUserInterests(newSet)
             }
         }
+    }
+
+    fun updateAutoQualityFilter(enabled: Boolean) {
+        viewModelScope.launch { settingsRepository.updateAutoQualityFilter(enabled) }
     }
 
     fun updateSystemPromptDescription(prompt: String) {

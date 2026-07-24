@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="detail_fallback_title">Details</string>
+    <string name="original_name_label">Original name: %1$s</string>
+    <string name="cd_back">Back</string>
+    <string name="cd_add_to_list">Add to list</string>
+    <string name="distance_label">Distance: %1$s</string>
+    <string name="description_section">Description</string>
+    <string name="sources_label">Sources:</string>
+    <string name="reload_description">Reload description</string>
+    <string name="generating_description">Generating description…</string>
+    <string name="try_again">Try again</string>
+    <string name="load_description">Load description</string>
+    <string name="navigate_to">Navigate to</string>
+    <string name="copy_location">Copy location</string>
+    <string name="copied">Copied: %1$s</string>
+    <string name="show_on_map">Show on map</string>
+    <string name="add_to_list_title">Add to list</string>
+    <string name="no_lists_yet">You don\'t have any lists yet.</string>
+    <string name="attractions_count">%1$d attractions</string>
+    <string name="new_list_name_label">New list name</string>
+    <string name="cancel">Cancel</string>
+    <string name="create_and_add">Create and add</string>
+    <string name="create_new_list">Create a new list</string>
+    <string name="opening_hours_section">Opening hours</string>
+    <string name="open_now">Open now</string>
+    <string name="closed_now">Closed</string>
+    <string name="ask_section_title">Ask about this place</string>
+    <string name="ask_placeholder">e.g. how much is a ticket?</string>
+    <string name="cd_ask_send">Ask a question</string>
+    <string name="ask_loading">The agent is looking for an answer…</string>
+</resources>

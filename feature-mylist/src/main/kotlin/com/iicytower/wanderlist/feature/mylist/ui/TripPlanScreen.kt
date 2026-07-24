@@ -37,8 +37,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.iicytower.wanderlist.domain.model.TripDay
+import com.iicytower.wanderlist.feature.mylist.R
 import com.iicytower.wanderlist.feature.mylist.viewmodel.TripPlanViewModel
 import org.koin.androidx.compose.koinViewModel
 
@@ -66,13 +68,13 @@ fun TripPlanScreen(
     if (uiState.showDeleteConfirmation) {
         AlertDialog(
             onDismissRequest = { viewModel.cancelDelete() },
-            title = { Text("Usuń plan") },
-            text = { Text("Usunąć plan wycieczki? Lista atrakcji pozostanie.") },
+            title = { Text(stringResource(R.string.delete_plan_title)) },
+            text = { Text(stringResource(R.string.delete_plan_message)) },
             confirmButton = {
-                TextButton(onClick = { viewModel.confirmDelete(onBack) }) { Text("Usuń") }
+                TextButton(onClick = { viewModel.confirmDelete(onBack) }) { Text(stringResource(R.string.delete)) }
             },
             dismissButton = {
-                TextButton(onClick = { viewModel.cancelDelete() }) { Text("Anuluj") }
+                TextButton(onClick = { viewModel.cancelDelete() }) { Text(stringResource(R.string.cancel)) }
             }
         )
     }
@@ -81,9 +83,9 @@ fun TripPlanScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text("Plan: $listName") },
+                title = { Text(stringResource(R.string.plan_title, listName)) },
                 navigationIcon = {
-                    IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, "Wróć") }
+                    IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, stringResource(R.string.cd_back)) }
                 }
             )
         }
@@ -98,7 +100,7 @@ fun TripPlanScreen(
         val plan = uiState.plan
         if (plan == null) {
             Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                Text("Brak planu.", style = MaterialTheme.typography.bodyMedium)
+                Text(stringResource(R.string.no_plan), style = MaterialTheme.typography.bodyMedium)
             }
             return@Scaffold
         }
@@ -117,24 +119,57 @@ fun TripPlanScreen(
                 OutlinedTextField(
                     value = uiState.notes,
                     onValueChange = { viewModel.updateNotes(it) },
-                    label = { Text("Notatki") },
+                    label = { Text(stringResource(R.string.notes_label)) },
                     modifier = Modifier.fillMaxWidth(),
-                    minLines = 3
+                    minLines = 3,
+                    supportingText = { Text(stringResource(R.string.notes_markdown_hint)) }
                 )
+            }
+
+            // Podgląd renderowanego Markdown pod polem edycji (edycja zawsze na źródle)
+            if (uiState.notes.isNotBlank()) {
+                item {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                    ) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Text(
+                                stringResource(R.string.notes_preview_label),
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(Modifier.height(4.dp))
+                            MarkdownText(
+                                markdown = uiState.notes,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                    }
+                }
             }
 
             item {
                 Button(
                     onClick = { viewModel.saveNotes() },
                     modifier = Modifier.fillMaxWidth()
-                ) { Text("Zapisz notatki") }
+                ) { Text(stringResource(R.string.save_notes)) }
+            }
+
+            if (uiState.canRevert) {
+                item {
+                    Button(
+                        onClick = { viewModel.revertPlan() },
+                        modifier = Modifier.fillMaxWidth()
+                    ) { Text(stringResource(R.string.revert_plan)) }
+                }
             }
 
             item {
                 Button(
                     onClick = onDiscussWithAssistant,
                     modifier = Modifier.fillMaxWidth()
-                ) { Text("Omów z asystentem") }
+                ) { Text(stringResource(R.string.discuss_with_assistant)) }
             }
 
             item {
@@ -145,7 +180,7 @@ fun TripPlanScreen(
                         containerColor = MaterialTheme.colorScheme.errorContainer,
                         contentColor = MaterialTheme.colorScheme.onErrorContainer
                     )
-                ) { Text("Usuń plan") }
+                ) { Text(stringResource(R.string.delete_plan_title)) }
             }
 
             item { Spacer(Modifier.height(8.dp)) }
@@ -171,8 +206,8 @@ private fun DayCard(day: TripDay) {
                     )
                 }
                 if (!point.note.isNullOrBlank()) {
-                    Text(
-                        point.note ?: "",
+                    MarkdownText(
+                        markdown = point.note ?: "",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(start = 16.dp, bottom = 4.dp)

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">Ajustes</string>
+    <string name="section_api_keys">Claves API</string>
+    <string name="openrouter_error_title">Error de conexión OpenRouter</string>
+    <string name="tavily_error_title">Error de conexión Tavily</string>
+    <string name="ok">OK</string>
+    <string name="tavily_usage">Usadas %1$d / 1000 consultas este mes</string>
+    <string name="section_ai_model">Modelo IA</string>
+    <string name="ai_model_label">Modelo IA</string>
+    <string name="ai_model_hint">Modelos disponibles en openrouter.ai/models</string>
+    <string name="save_model">Guardar modelo</string>
+    <string name="section_prompts">Prompts de sistema</string>
+    <string name="desc_agent_label">Agente de descripciones</string>
+    <string name="assistant_label">Asistente</string>
+    <string name="save">Guardar</string>
+    <string name="restore_default">Restaurar predeterminado</string>
+    <string name="section_interests">Intereses</string>
+    <string name="interests_hint">Las categorías marcadas se preseleccionan al buscar e indican tus preferencias a la IA.</string>
+    <string name="section_preferences">Preferencias</string>
+    <string name="app_language_label">Idioma de la aplicación</string>
+    <string name="app_language_hint">Se aplica a la interfaz, descripciones de atracciones, sugerencias de ubicación y respuestas del asistente. Los nombres de las atracciones permanecen en el idioma original de la fuente de datos.</string>
+    <string name="auto_filter_title">Filtro de calidad automático</string>
+    <string name="auto_filter_hint">Tras cada búsqueda, la IA filtra los lugares poco interesantes</string>
+    <string name="default_radius">Radio predeterminado: %1$d km</string>
+    <string name="cd_connection_ok">Conexión OK</string>
+    <string name="cd_connection_error">Error de conexión</string>
+    <string name="test_button">Probar</string>
+</resources>

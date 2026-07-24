@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="my_lists_title">Mes listes</string>
+    <string name="delete_list_title">Supprimer la liste</string>
+    <string name="delete_list_message">Supprimer la liste « %1$s » ? Les attractions ne seront pas supprimées de la base.</string>
+    <string name="delete">Supprimer</string>
+    <string name="cancel">Annuler</string>
+    <string name="empty_lists_title">Vous n\'avez pas encore de listes.</string>
+    <string name="empty_lists_hint">Appuyez sur + pour créer la première.</string>
+    <string name="attractions_count">%1$d attractions</string>
+    <string name="new_list_title">Nouvelle liste</string>
+    <string name="list_name_label">Nom de la liste</string>
+    <string name="create">Créer</string>
+    <string name="remove_attraction_title">Supprimer l\'attraction</string>
+    <string name="remove_attraction_message">Supprimer « %1$s » de cette liste ?</string>
+    <string name="cd_back">Retour</string>
+    <string name="cd_plan_trip">Planifier l\'excursion</string>
+    <string name="list_fallback">Liste</string>
+    <string name="empty_list">Cette liste est vide.</string>
+    <string name="plan_title">Plan : %1$s</string>
+    <string name="delete_plan_title">Supprimer le plan</string>
+    <string name="delete_plan_message">Supprimer le plan de voyage ? La liste des attractions sera conservée.</string>
+    <string name="no_plan">Aucun plan.</string>
+    <string name="notes_label">Notes</string>
+    <string name="save_notes">Enregistrer les notes</string>
+    <string name="revert_plan">Annuler la modification du plan</string>
+    <string name="discuss_with_assistant">Discuter avec l\'assistant</string>
+    <string name="notes_markdown_hint">Markdown pris en charge (p. ex. **gras**, listes commençant par \"- \")</string>
+    <string name="notes_preview_label">Aperçu</string>
+</resources>

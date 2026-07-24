@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="detail_fallback_title">Details</string>
+    <string name="original_name_label">Originalname: %1$s</string>
+    <string name="cd_back">Zurück</string>
+    <string name="cd_add_to_list">Zur Liste hinzufügen</string>
+    <string name="distance_label">Entfernung: %1$s</string>
+    <string name="description_section">Beschreibung</string>
+    <string name="sources_label">Quellen:</string>
+    <string name="reload_description">Beschreibung neu laden</string>
+    <string name="generating_description">Beschreibung wird erstellt…</string>
+    <string name="try_again">Erneut versuchen</string>
+    <string name="load_description">Beschreibung laden</string>
+    <string name="navigate_to">Navigieren</string>
+    <string name="copy_location">Standort kopieren</string>
+    <string name="copied">Kopiert: %1$s</string>
+    <string name="show_on_map">Auf der Karte zeigen</string>
+    <string name="add_to_list_title">Zur Liste hinzufügen</string>
+    <string name="no_lists_yet">Du hast noch keine Listen.</string>
+    <string name="attractions_count">%1$d Attraktionen</string>
+    <string name="new_list_name_label">Name der neuen Liste</string>
+    <string name="cancel">Abbrechen</string>
+    <string name="create_and_add">Erstellen und hinzufügen</string>
+    <string name="create_new_list">Neue Liste erstellen</string>
+    <string name="opening_hours_section">Öffnungszeiten</string>
+    <string name="open_now">Jetzt geöffnet</string>
+    <string name="closed_now">Geschlossen</string>
+    <string name="ask_section_title">Frag nach diesem Ort</string>
+    <string name="ask_placeholder">z. B. wie viel kostet ein Ticket?</string>
+    <string name="cd_ask_send">Frage stellen</string>
+    <string name="ask_loading">Der Agent sucht nach einer Antwort…</string>
+</resources>

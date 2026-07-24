@@ -7,7 +7,14 @@ import kotlinx.serialization.Serializable
 data class WikipediaSummaryResponse(
     val title: String,
     val extract: String,
-    @SerialName("content_urls") val contentUrls: WikipediaContentUrls? = null
+    @SerialName("content_urls") val contentUrls: WikipediaContentUrls? = null,
+    val thumbnail: WikipediaImage? = null,
+    val originalimage: WikipediaImage? = null
+)
+
+@Serializable
+data class WikipediaImage(
+    val source: String? = null
 )
 
 @Serializable

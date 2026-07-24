@@ -8,7 +8,9 @@ data class TavilySearchRequest(
     val query: String,
     @SerialName("api_key") val apiKey: String,
     @SerialName("search_depth") val searchDepth: String = "basic",
-    @SerialName("max_results") val maxResults: Int = 5
+    @SerialName("max_results") val maxResults: Int = 5,
+    // podpowiedź języka źródeł; nieznane pola Tavily ignoruje, więc brak wsparcia degraduje łagodnie
+    @SerialName("search_lang") val searchLang: String? = null
 )
 
 @Serializable

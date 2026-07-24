@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="category_castles_and_fortifications">Zamki i fortyfikacje</string>
+    <string name="category_churches_and_sacred">Kościoły i obiekty sakralne</string>
+    <string name="category_museums_and_galleries">Muzea i galerie</string>
+    <string name="category_ruins_and_archaeological">Ruiny i stanowiska archeologiczne</string>
+    <string name="category_nature_and_parks">Przyroda i parki narodowe</string>
+    <string name="category_viewpoints">Punkty widokowe</string>
+    <string name="category_military">Obiekty militarne</string>
+    <string name="category_mills_and_tech">Młyny, wiatraki, zabytki techniki</string>
+    <string name="category_memorials_and_cemeteries">Miejsca pamięci i cmentarze</string>
+    <string name="category_caves_and_geology">Jaskinie i formacje geologiczne</string>
+</resources>
