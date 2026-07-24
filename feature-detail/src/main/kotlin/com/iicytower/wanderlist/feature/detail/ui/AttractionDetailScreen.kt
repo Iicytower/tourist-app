@@ -152,6 +152,13 @@ fun AttractionDetailScreen(
                         )
                         Spacer(Modifier.height(12.dp))
                         Text(attraction.name, style = MaterialTheme.typography.headlineMedium)
+                        attraction.originalName?.let { original ->
+                            Text(
+                                stringResource(R.string.original_name_label, original),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                         Spacer(Modifier.height(4.dp))
                         Text(stringResource(attraction.category.displayNameRes), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
 

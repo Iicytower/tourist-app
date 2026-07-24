@@ -10,7 +10,7 @@ import com.iicytower.wanderlist.data.local.entity.TripListEntity
 
 @Database(
     entities = [AttractionEntity::class, TripListEntity::class, AttractionListCrossRefEntity::class],
-    version = 6,
+    version = 7,
     exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {

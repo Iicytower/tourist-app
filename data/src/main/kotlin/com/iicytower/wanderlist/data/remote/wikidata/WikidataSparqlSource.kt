@@ -61,7 +61,7 @@ private val ALLOWED_TYPES = WIKIDATA_TYPE_TO_CATEGORY.keys.joinToString(",") { "
 class WikidataSparqlSource(private val httpClient: HttpClient) : RemoteAttractionSource {
 
     override suspend fun searchAttractions(params: SearchParams): Result<List<Attraction>> = runCatching {
-        val query = buildQuery(params.latitude, params.longitude, params.radiusKm)
+        val query = buildQuery(params.latitude, params.longitude, params.radiusKm, params.language)
         val response = httpClient.get("https://query.wikidata.org/sparql") {
             parameter("query", query)
             parameter("format", "json")
@@ -77,7 +77,7 @@ class WikidataSparqlSource(private val httpClient: HttpClient) : RemoteAttractio
             .distinctBy { it.xid }
     }
 
-    private fun buildQuery(lat: Double, lon: Double, radiusKm: Int): String =
+    private fun buildQuery(lat: Double, lon: Double, radiusKm: Int, language: String): String =
         """
         SELECT DISTINCT ?place ?placeLabel ?lat ?lon ?type ?countryCode ?image WHERE {
           SERVICE wikibase:around {
@@ -91,7 +91,7 @@ class WikidataSparqlSource(private val httpClient: HttpClient) : RemoteAttractio
           OPTIONAL { ?place wdt:P18 ?image . }
           BIND(geof:latitude(?coords) AS ?lat)
           BIND(geof:longitude(?coords) AS ?lon)
-          SERVICE wikibase:label { bd:serviceParam wikibase:language "pl,en". }
+          SERVICE wikibase:label { bd:serviceParam wikibase:language "$language,pl,en". }
         }
         LIMIT 100
         """.trimIndent()

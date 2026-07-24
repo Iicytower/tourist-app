@@ -6,5 +6,6 @@ data class SearchParams(
     val latitude: Double,
     val longitude: Double,
     val radiusKm: Int,
-    val categories: Set<AttractionCategory>
+    val categories: Set<AttractionCategory>,
+    val language: String = "pl"
 )

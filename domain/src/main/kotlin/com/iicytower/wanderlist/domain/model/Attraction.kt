@@ -16,5 +16,6 @@ data class Attraction(
     val distanceKm: Double?,
     val countryCode: String? = null,
     val openingHours: OpeningHours? = null,
-    val imageUrl: String? = null
+    val imageUrl: String? = null,
+    val originalName: String? = null
 )

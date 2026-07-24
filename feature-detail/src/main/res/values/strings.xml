@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="detail_fallback_title">Szczegóły</string>
+    <string name="original_name_label">Nazwa oryginalna: %1$s</string>
     <string name="cd_back">Wróć</string>
     <string name="cd_add_to_list">Dodaj do listy</string>
     <string name="distance_label">Odległość: %1$s</string>

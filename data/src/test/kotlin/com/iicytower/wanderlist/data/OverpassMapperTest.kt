@@ -56,6 +56,30 @@ class OverpassMapperTest {
     }
 
     @Test
+    fun toAttraction_usesLocalizedNameTag_whenPresentAndDiffersFromRaw() {
+        val el = element(tags = mapOf("name" to "Zamek Królewski", "name:en" to "Royal Castle"))
+        val result = el.toAttraction(50.0, 20.0, language = "en")
+        assertEquals("Royal Castle", result!!.name)
+        assertEquals("Zamek Królewski", result.originalName)
+    }
+
+    @Test
+    fun toAttraction_noLocalizedTag_originalNameIsNull() {
+        val el = element(tags = mapOf("name" to "Zamek Królewski"))
+        val result = el.toAttraction(50.0, 20.0, language = "en")
+        assertEquals("Zamek Królewski", result!!.name)
+        assertNull(result.originalName)
+    }
+
+    @Test
+    fun toAttraction_localizedTagSameAsRaw_originalNameIsNull() {
+        val el = element(tags = mapOf("name" to "Wawel", "name:pl" to "Wawel"))
+        val result = el.toAttraction(50.0, 20.0, language = "pl")
+        assertEquals("Wawel", result!!.name)
+        assertNull(result.originalName)
+    }
+
+    @Test
     fun resolveCategory_castle() {
         assertEquals(
             AttractionCategory.CASTLES_AND_FORTIFICATIONS,

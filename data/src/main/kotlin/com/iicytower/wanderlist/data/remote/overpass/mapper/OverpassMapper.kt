@@ -8,16 +8,22 @@ import com.iicytower.wanderlist.domain.model.Attraction
 
 fun OverpassElement.toAttraction(
     searchLat: Double,
-    searchLon: Double
+    searchLon: Double,
+    language: String = "pl"
 ): Attraction? {
     val lat = effectiveLat() ?: return null
     val lon = effectiveLon() ?: return null
-    val name = tags["name"] ?: tags["name:pl"] ?: tags["name:en"] ?: return null
+    val rawName = tags["name"] ?: tags["name:pl"] ?: tags["name:en"] ?: return null
+    // Nazwa w języku aplikacji z tagu OSM name:<lang> (FEAT-11) — jeśli różni się od surowej
+    // nazwy, ta ostatnia jest pokazywana użytkownikowi jako nazwa oryginalna.
+    val translatedName = tags["name:$language"]?.takeIf { it.isNotBlank() }
+    val displayName = translatedName ?: rawName
+    val originalName = translatedName?.takeIf { it != rawName }?.let { rawName }
     val xid = "${type[0]}$id"
     val distanceKm = calculateDistanceKm(searchLat, searchLon, lat, lon)
     return Attraction(
         xid = xid,
-        name = name,
+        name = displayName,
         latitude = lat,
         longitude = lon,
         category = resolveCategory(tags),
@@ -29,7 +35,8 @@ fun OverpassElement.toAttraction(
         distanceKm = distanceKm,
         countryCode = tags["addr:country"]?.uppercase()?.takeIf { it.length == 2 },
         openingHours = tags["opening_hours"]?.let { OsmOpeningHoursParser.parse(it) },
-        imageUrl = resolveImageUrl(tags)
+        imageUrl = resolveImageUrl(tags),
+        originalName = originalName
     )
 }
 

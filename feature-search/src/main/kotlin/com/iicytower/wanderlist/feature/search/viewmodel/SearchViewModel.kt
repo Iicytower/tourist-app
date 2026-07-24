@@ -195,7 +195,8 @@ class SearchViewModel(
                 latitude = location.latitude,
                 longitude = location.longitude,
                 radiusKm = _uiState.value.radiusKm,
-                categories = _uiState.value.selectedCategories
+                categories = _uiState.value.selectedCategories,
+                language = appLanguage
             )
             val result = searchAttractionsUseCase(params)
             // Warstwa data łapie wyjątki przez runCatching, więc CancellationException

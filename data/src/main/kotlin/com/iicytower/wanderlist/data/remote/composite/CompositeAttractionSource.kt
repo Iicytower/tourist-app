@@ -44,6 +44,7 @@ class CompositeAttractionSource(
                 best.copy(
                     countryCode = best.countryCode ?: group.firstNotNullOfOrNull { it.countryCode },
                     openingHours = best.openingHours ?: group.firstNotNullOfOrNull { it.openingHours },
+                    originalName = best.originalName ?: group.firstNotNullOfOrNull { it.originalName },
                     imageUrl = group.sortedByDescending { imageSourcePriority(it.xid) }
                         .firstNotNullOfOrNull { it.imageUrl }
                 )
