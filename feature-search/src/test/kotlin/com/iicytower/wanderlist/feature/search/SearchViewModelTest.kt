@@ -18,6 +18,7 @@ import com.iicytower.wanderlist.domain.repository.RemovedAttraction
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -82,6 +83,36 @@ class SearchViewModelTest {
         testDispatcher.scheduler.advanceUntilIdle()
         assertEquals(interests, vm.uiState.value.selectedCategories)
         assertEquals(25, vm.uiState.value.radiusKm)
+    }
+
+    @Test
+    fun settingsInterestsChange_updatesSelectedCategoriesImmediately_withoutRestart() = runTest {
+        val settingsFlow = MutableStateFlow(fakeSettings)
+        every { settingsRepository.getSettings() } returns settingsFlow
+        val vm = SearchViewModel(searchUseCase, filterUseCase, locationService, geocoderService, attractionRepository, settingsRepository)
+        testDispatcher.scheduler.advanceUntilIdle()
+        assertEquals(emptySet<AttractionCategory>(), vm.uiState.value.selectedCategories)
+
+        val newInterests = setOf(AttractionCategory.VIEWPOINTS)
+        settingsFlow.value = fakeSettings.copy(userInterests = newInterests)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals(newInterests, vm.uiState.value.selectedCategories)
+    }
+
+    @Test
+    fun setCategories_manualSelection_survivesLaterSettingsChange() = runTest {
+        val settingsFlow = MutableStateFlow(fakeSettings)
+        every { settingsRepository.getSettings() } returns settingsFlow
+        val vm = SearchViewModel(searchUseCase, filterUseCase, locationService, geocoderService, attractionRepository, settingsRepository)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val manualChoice = setOf(AttractionCategory.CASTLES_AND_FORTIFICATIONS)
+        vm.setCategories(manualChoice)
+        settingsFlow.value = fakeSettings.copy(userInterests = setOf(AttractionCategory.VIEWPOINTS))
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals(manualChoice, vm.uiState.value.selectedCategories)
     }
 
     @Test

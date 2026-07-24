@@ -40,18 +40,24 @@ class SearchViewModel(
     private var filterJob: Job? = null
 
     private var appLanguage: String = "pl"
+    private var categoriesManuallySet = false
 
     init {
-        // Zainteresowania z Ustawień pre-zaznaczają kategorie, a domyślny promień
-        // zasila suwak — tylko dopóki użytkownik niczego sam nie zmienił.
+        // Domyślny promień zasila suwak tylko raz przy starcie, dopóki użytkownik nie wyszukał.
         viewModelScope.launch {
             val settings = settingsRepository.getSettings().first()
             _uiState.update { state ->
                 if (state.hasSearched) return@update state
-                state.copy(
-                    selectedCategories = state.selectedCategories.ifEmpty { settings.userInterests },
-                    radiusKm = settings.defaultRadiusKm
-                )
+                state.copy(radiusKm = settings.defaultRadiusKm)
+            }
+        }
+        // Zainteresowania z Ustawień mają wpływać na wyszukiwanie od razu (FEAT-13),
+        // dopóki użytkownik sam nie wybierze kategorii ręcznie na ekranie wyszukiwania.
+        viewModelScope.launch {
+            settingsRepository.getSettings().collect { settings ->
+                if (!categoriesManuallySet) {
+                    _uiState.update { it.copy(selectedCategories = settings.userInterests) }
+                }
             }
         }
         viewModelScope.launch {
@@ -168,6 +174,7 @@ class SearchViewModel(
     }
 
     fun setCategories(categories: Set<AttractionCategory>) {
+        categoriesManuallySet = true
         _uiState.update { it.copy(selectedCategories = categories) }
     }
 
