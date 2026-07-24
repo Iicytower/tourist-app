@@ -15,7 +15,6 @@ import com.iicytower.wanderlist.domain.usecase.GetMyListUseCase
 import com.iicytower.wanderlist.domain.usecase.GetSettingsUseCase
 import com.iicytower.wanderlist.domain.usecase.GetTripListsUseCase
 import com.iicytower.wanderlist.domain.usecase.GetTripPlanUseCase
-import com.iicytower.wanderlist.domain.usecase.PlanRouteUseCase
 import com.iicytower.wanderlist.domain.usecase.RemoveFromMyListUseCase
 import com.iicytower.wanderlist.domain.usecase.RemoveFromTripListUseCase
 import com.iicytower.wanderlist.domain.usecase.SaveTripPlanNotesUseCase
@@ -48,5 +47,4 @@ val useCaseModule = module {
     factory { DeleteTripPlanUseCase(get()) }
     factory { RevertTripPlanUseCase(get(), get()) }
     factory { AskAboutAttractionUseCase(get(), get(), get(), get()) }
-    factory { PlanRouteUseCase(get()) }
 }

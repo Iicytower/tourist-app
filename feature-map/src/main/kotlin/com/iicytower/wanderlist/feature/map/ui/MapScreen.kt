@@ -7,16 +7,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.Snackbar
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
@@ -38,9 +31,6 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.iicytower.wanderlist.core.model.displayNameRes
 import com.iicytower.wanderlist.core.ui.AttractionImage
-import com.iicytower.wanderlist.core.util.formatDistance
-import com.iicytower.wanderlist.domain.model.totalDistanceKm
-import androidx.compose.foundation.layout.Column as LayoutColumn
 import com.iicytower.wanderlist.feature.map.R
 import com.iicytower.wanderlist.feature.map.viewmodel.MapViewModel
 import org.koin.androidx.compose.koinViewModel
@@ -52,7 +42,6 @@ import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.maps.MapView
 import org.maplibre.android.maps.Style
 import org.maplibre.android.style.layers.CircleLayer
-import org.maplibre.android.style.layers.LineLayer
 import org.maplibre.android.style.layers.PropertyFactory
 import org.maplibre.android.style.sources.GeoJsonSource
 import timber.log.Timber
@@ -119,14 +108,6 @@ fun MapScreen(
                     mapRef.value = map
                     map.setStyle(Style.Builder().fromUri("https://tiles.openfreemap.org/styles/liberty")) { style ->
                         Timber.tag("MAP").d("setStyle callback fired — adding source/layers")
-                        style.addSource(GeoJsonSource("route-source", """{"type":"FeatureCollection","features":[]}"""))
-                        style.addLayer(LineLayer("route-layer", "route-source").apply {
-                            setProperties(
-                                PropertyFactory.lineColor(android.graphics.Color.parseColor("#1565C0")),
-                                PropertyFactory.lineWidth(4f),
-                                PropertyFactory.lineOpacity(0.8f)
-                            )
-                        })
                         style.addSource(GeoJsonSource("attractions-source", """{"type":"FeatureCollection","features":[]}"""))
                         style.addLayer(CircleLayer("attractions-layer", "attractions-source").apply {
                             setProperties(
@@ -176,26 +157,9 @@ fun MapScreen(
                     val json = """{"type":"FeatureCollection","features":[$pinnedFeature]}"""
                     runCatching { src.setGeoJson(json) }.onFailure { Timber.tag("MAP").e(it, "pinned setGeoJson failed") }
                 }
-                (style.getSource("route-source") as? GeoJsonSource)?.let { src ->
-                    val json = if (state.routePoints.size < 2) {
-                        """{"type":"FeatureCollection","features":[]}"""
-                    } else {
-                        val coords = state.routePoints.joinToString(",") {
-                            "[${it.attraction.longitude},${it.attraction.latitude}]"
-                        }
-                        """{"type":"Feature","geometry":{"type":"LineString","coordinates":[$coords]},"properties":{}}"""
-                    }
-                    runCatching { src.setGeoJson(json) }.onFailure { Timber.tag("MAP").e(it, "route setGeoJson failed") }
-                }
             },
             modifier = Modifier.fillMaxSize()
         )
-
-        Card(modifier = Modifier.align(Alignment.TopStart).padding(8.dp)) {
-            TextButton(onClick = { viewModel.planRoute() }) {
-                Text(stringResource(R.string.plan_route), style = MaterialTheme.typography.labelMedium)
-            }
-        }
 
         Card(modifier = Modifier.align(Alignment.TopEnd).padding(8.dp)) {
             androidx.compose.foundation.layout.Row(
@@ -205,13 +169,6 @@ fun MapScreen(
                 Text(stringResource(R.string.my_list_switch), style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(end = 8.dp))
                 Switch(checked = state.showMyListOnly, onCheckedChange = { viewModel.toggleMyListMode() })
             }
-        }
-
-        state.routeError?.let { error ->
-            Snackbar(
-                modifier = Modifier.align(Alignment.BottomCenter).padding(16.dp),
-                action = { TextButton(onClick = { viewModel.clearRouteError() }) { Text(stringResource(R.string.ok)) } }
-            ) { Text(error) }
         }
 
         state.selectedAttraction?.let { attraction ->
@@ -240,45 +197,6 @@ fun MapScreen(
                         modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
                     ) {
                         Text(stringResource(R.string.more_button))
-                    }
-                }
-            }
-        }
-    }
-
-    if (state.showRouteSheet && state.routePoints.isNotEmpty()) {
-        ModalBottomSheet(onDismissRequest = { viewModel.dismissRouteSheet() }) {
-            LayoutColumn(modifier = Modifier.padding(horizontal = 16.dp).padding(bottom = 32.dp)) {
-                Text(stringResource(R.string.route_title), style = MaterialTheme.typography.titleMedium)
-                Spacer(Modifier.height(4.dp))
-                Text(
-                    stringResource(
-                        R.string.route_total,
-                        formatDistance(state.routePoints.totalDistanceKm()),
-                        state.routePoints.size
-                    ),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(Modifier.height(8.dp))
-                LazyColumn {
-                    items(state.routePoints) { point ->
-                        Row(modifier = Modifier.padding(vertical = 6.dp)) {
-                            Text(
-                                "${point.order}.",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.padding(end = 8.dp)
-                            )
-                            LayoutColumn {
-                                Text(point.attraction.name, style = MaterialTheme.typography.bodyMedium)
-                                Text(
-                                    stringResource(point.attraction.category.displayNameRes),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
                     }
                 }
             }

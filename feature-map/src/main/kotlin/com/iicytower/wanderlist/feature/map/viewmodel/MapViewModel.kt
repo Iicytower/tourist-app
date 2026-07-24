@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import com.iicytower.wanderlist.domain.repository.AttractionRepository
 import com.iicytower.wanderlist.domain.repository.SettingsRepository
 import com.iicytower.wanderlist.domain.usecase.GetMyListUseCase
-import com.iicytower.wanderlist.domain.usecase.PlanRouteUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -16,8 +15,7 @@ import timber.log.Timber
 class MapViewModel(
     private val getMyListUseCase: GetMyListUseCase,
     private val attractionRepository: AttractionRepository,
-    private val settingsRepository: SettingsRepository,
-    private val planRouteUseCase: PlanRouteUseCase
+    private val settingsRepository: SettingsRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(MapUiState())
@@ -61,28 +59,6 @@ class MapViewModel(
             all.find { it.xid == xid }
         }
         _uiState.update { it.copy(selectedAttraction = attraction) }
-    }
-
-    fun planRoute() {
-        viewModelScope.launch {
-            planRouteUseCase().fold(
-                onSuccess = { points ->
-                    _uiState.update { it.copy(routePoints = points, showRouteSheet = true, routeError = null) }
-                },
-                onFailure = { e ->
-                    _uiState.update { it.copy(routeError = e.message) }
-                }
-            )
-        }
-    }
-
-    fun dismissRouteSheet() {
-        // zamknięcie arkusza kończy tryb trasy — linia znika z mapy
-        _uiState.update { it.copy(showRouteSheet = false, routePoints = emptyList()) }
-    }
-
-    fun clearRouteError() {
-        _uiState.update { it.copy(routeError = null) }
     }
 
     fun pinTargetAttraction(xid: String) {
